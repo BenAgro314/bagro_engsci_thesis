@@ -69,7 +69,7 @@ M = np.array(
 
 def camera_model(M, T_cw, homo_p_w):
     p_c = T_cw @ homo_p_w
-    assert np.all(p_c[:, 2] > 0)
+    #assert np.all(p_c[:, 2] > 0)
     return M @ p_c / p_c[:, None, 2]
 
 #homo_points = np.concatenate((points, np.ones_like(points[:, 0:1])), axis = 1)[:, :, None]
@@ -131,11 +131,17 @@ def du(x: np.array):
     a[:, 2] = 1
     ax = a.transpose((0, 2, 1)) @ x
 
-    return (1/ax) * M - (1/ax)**2 * M @ x @ a.transpose((0, 2, 1))
+    return (-1/ax) * M + (1/ax)**2 * M @ x @ a.transpose((0, 2, 1))
 
-T_op = np.eye(4) # (4, 4), TODO: how to initialize this?
+def loss(T: np.array, p: np.array):
+    e =  y - camera_model(M, T, p)
+    return np.sum(e.transpose((0, 2, 1)) @ e, axis = 0)[0][0]
 
-for i in range(10):
+
+T_op = T_cw # (4, 4), TODO: how to initialize this?
+T_op[0, 3] += 0.05
+
+for i in range(5):
 
     beta = u(T_op @ p_w)
     assert len(beta.shape) == 3
@@ -152,3 +158,4 @@ for i in range(10):
     T_op = pylgmath.se3.operations.vec2tran(epsilon_star) @ T_op
 
     print(T_op)
+    print(loss(T_op, p_w))

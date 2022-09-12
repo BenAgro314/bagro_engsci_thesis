@@ -30,7 +30,6 @@ def make_stereo_sim_instance(num_points: int, T_wc: np.array, FOV: np.array):
     ax = fig.add_subplot(projection='3d')
     plotting.add_coordinate_frame(np.eye(4), ax, "$\mathfrak{F}_w$")
     plotting.add_coordinate_frame(T_wc, ax, "$\mathfrak{F}_c$")
-    T_cw = np.linalg.inv(T_wc)
     # set aspect ratio
 
     ranges = FOV[:, 1] - FOV[:, 0]
@@ -84,7 +83,7 @@ def generative_camera_model(M: np.array, T_cw: np.array, homo_p_w: np.array) -> 
             y[:, 2:] are points in right image (row, col), indexed from the top left
     """
     p_c = T_cw @ homo_p_w
-    assert np.all(p_c[:, 2] > 0)
+    #assert np.all(p_c[:, 2] > 0)
     return M @ p_c / p_c[:, None, 2]
 
 def render_camera_points(y: np.array, colors: np.array):
