@@ -8,7 +8,7 @@ from matplotlib.patches import FancyArrowPatch
 from mpl_toolkits.mplot3d import proj3d
 from matplotlib.text import Annotation
 from pylgmath.so3.operations import vec2rot
-from . import plotting 
+import plotting
 
 def make_stereo_sim_instance(num_points: int, T_wc: np.array, FOV: np.array):
     """

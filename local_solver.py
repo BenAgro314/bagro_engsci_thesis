@@ -1,7 +1,7 @@
 import numpy as np
 from pylgmath.so3.operations import hat
 from pylgmath.se3.operations import vec2tran
-from . import sim
+import sim
 
 def _u(y: np.array, x: np.array, M: np.array):
     """
