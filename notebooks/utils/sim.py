@@ -1,4 +1,5 @@
 import numpy as np
+from typing import Tuple, Union, Optional
 import pylgmath
 import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
@@ -85,6 +86,12 @@ def generative_camera_model(M: np.array, T_cw: np.array, homo_p_w: np.array) -> 
     p_c = T_cw @ homo_p_w
     #assert np.all(p_c[:, 2] > 0)
     return M @ p_c / p_c[:, None, 2]
+
+def generate_stereo_camera_noise(R: np.array, size: Optional[Union[Tuple, int]] = None):
+    assert len(R.shape) == 2
+    n = R.shape[0]
+    assert R.shape == (n, n)
+    return np.random.multivariate_normal(np.zeros(n), R, size = size)
 
 def render_camera_points(y: np.array, colors: np.array):
     """
