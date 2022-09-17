@@ -1,0 +1,339 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{bm}
+\usepackage{amsfonts}
+
+\setcounter{MaxMatrixCols}{20}
+
+\title{Thesis}
+\author{Ben Agro}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section{SDP Relaxation of Stereo Localization Problem}
+
+\subsection{Re-write as QCQP}
+
+\begin{align}
+\mathbf{T_{cw}} = \text{argmin}_{\mathbf{T}} \sum_k (\mathbf{y}_k - \mathbf{M} \frac{1}{z_k} \mathbf{T} \mathbf{p}_k)^T \mathbf{W}_k (\mathbf{y}_k - \mathbf{M} \frac{1}{z_k} \mathbf{T} \mathbf{p}_k),\\
+\mathbf{T} \in SE(3),\\
+z_k = \mathbf{a}^T \mathbf{T} \mathbf{p}_k,
+\end{align}
+where $\mathbf{a}^T = \begin{bmatrix}0 & 0 & 1 & 0\end{bmatrix}.$
+Let $\mathbf{v}_k = \frac{1}{z_k}\mathbf{T}\mathbf{p}_k$:
+\begin{align}
+\mathbf{v}_kz_k = \mathbf{T}\mathbf{p}_k\\
+\mathbf{v}_k \mathbf{a}^T \mathbf{T} \mathbf{p}_k = \mathbf{T}\mathbf{p}_k\\
+(\mathbf{I} - \mathbf{v}_k \mathbf{a}^T)\mathbf{T}\mathbf{p}_k = \mathbf{0} \in \mathbb R^4
+\end{align}
+Now we can re-write our optimization problem as
+\begin{align}
+\mathbf{T_{cw}} = \text{argmin}_{\mathbf{T}, \mathbf{v}_k} \sum_k (\mathbf{y}_k - \mathbf{M} \mathbf{v}_k)^T \mathbf{W}_k (\mathbf{y}_k - \mathbf{M} \mathbf{v}_k),\\
+\mathbf{T} \in SE(3),\\
+(\forall k) \quad (\mathbf{I} - \mathbf{v}_k \mathbf{a}^T)\mathbf{T}\mathbf{p}_k = \mathbf{0}
+\end{align}
+We want to write this in the standard, homogenous, form 
+\begin{align}
+\mathbf{x}^* = \text{argmin}_{\mathbf{x}} \quad \mathbf{x}^T \mathbf{Q} \mathbf{x}\\
+(\forall i) \quad \mathbf{x}^T \mathbf{A}_i \mathbf{x} = b_i.
+\end{align}
+
+\subsubsection{Cost}
+
+We will start with the cost, adding the homogenization variable $\omega_0$:
+\begin{align}
+\mathbf{T_{cw}} = \text{argmin}_{\mathbf{T}, \mathbf{v}_k, \omega_0} \sum_k (\omega_0\mathbf{y}_k - \mathbf{M} \mathbf{v}_k)^T \mathbf{W}_k (\omega_0 \mathbf{y}_k - \mathbf{M} \mathbf{v}_k),\\
+\mathbf{T} \in SE(3),\\
+(\forall k) \quad (\mathbf{I} - \mathbf{v}_k \mathbf{a}^T)\mathbf{T}\mathbf{p}_k = \mathbf{0}\\
+\omega_0^2 = 1.
+\end{align}
+Expanding the term in the sum:
+\begin{align}
+(\omega_0\mathbf{y}_k - \mathbf{M} \mathbf{v}_k)^T \mathbf{W}_k (\omega_0 \mathbf{y}_k - \mathbf{M} \mathbf{v}_k) = \\
+\omega_0^2 \mathbf{y}_k^T \mathbf{W}_k \mathbf{y_k} - \omega_0\mathbf{y}_k^T \mathbf{W}_k \mathbf{M} \mathbf{v}_k - \omega_0  \mathbf{v}_k^T\mathbf{M}^T\mathbf{W}_k \mathbf{y}_k + \mathbf{v}_k^T\mathbf{M}^T\mathbf{W}_k \mathbf{M} \mathbf{v}_k\\
+=
+\begin{bmatrix} 
+    \mathbf{v}_k \\
+    \omega_0
+\end{bmatrix}^T
+\begin{bmatrix}
+    \mathbf{M}^T\mathbf{W}_k \mathbf{M}     & -\mathbf{M}^T \mathbf{W}_k \mathbf{y}_k \\
+    -\mathbf{y}_k^T \mathbf{W}_k \mathbf{M} & \mathbf{y}^T \mathbf{W}_k \mathbf{y}
+\end{bmatrix}
+\begin{bmatrix}
+    \mathbf{v}_k \\
+    \omega_0
+\end{bmatrix}.
+\end{align}
+We can extend this to express the whole some in quadtratic form:
+\begin{align}
+\sum_k (\omega_0\mathbf{y}_k - \mathbf{M} \mathbf{v}_k)^T \mathbf{W}_k (\omega_0 \mathbf{y}_k - \mathbf{M} \mathbf{v}_k) = \\
+\begin{bmatrix}
+    \mathbf{v}_1 \\
+    \dots \\
+    \mathbf{v}_n \\
+    \omega_0
+\end{bmatrix}^T
+\begin{bmatrix}
+    \mathbf{M}^T\mathbf{W}_1 \mathbf{M} & 0 & \dots & 0 & -\mathbf{M}^T\mathbf{W}_1\mathbf{y}_1 \\
+    0 & \mathbf{M}^T \mathbf{W}_2 \mathbf{M} & \dots & 0 & -\mathbf{M}^T\mathbf{W}_2\mathbf{y}_2 \\
+    \dots \\
+    0 & 0 & \dots & \mathbf{M}^T \mathbf{W}_n \mathbf{M} & -\mathbf{M}^T \mathbf{W}_n \mathbf{y}_n \\
+    -\mathbf{y}_1^T \mathbf{W}_1 \mathbf{M} & -\mathbf{y}_2^T \mathbf{W}_2^T \mathbf{M} & \dots & -\mathbf{y}_n^T \mathbf{W}_n^T \mathbf{M} & \sum_k \mathbf{y}_k^T \mathbf{W}_k \mathbf{y}_k
+\end{bmatrix}
+\begin{bmatrix}
+    \mathbf{v}_1 \\
+    \dots \\
+    \mathbf{v}_n \\
+    \omega_0
+\end{bmatrix}
+\end{align}
+
+\subsubsection{Constraints}
+Lets begin with the constraint $\mathbf{T} \in SE(3)$. 
+Let 
+\begin{align}
+\mathbf{T} = \begin{bmatrix} \mathbf{C} & \mathbf{r} \\ \mathbf{0}^T & 1 \end{bmatrix}, \quad \mathbf{C} \in SO(3).\\
+\mathbf{C}^T\mathbf{C} = \mathbf{I} \quad \text{and} \quad \text{det}(\mathbf{C}) = 1.
+\end{align}
+We will drop the determinate constraint. 
+Write
+\begin{align}
+\mathbf{C} = \begin{bmatrix} \mathbf{c}_1 & \mathbf{c}_2 & \mathbf{c}_3 \end{bmatrix}\\
+\mathbf{C}^T\mathbf{C} = \begin{bmatrix} \mathbf{c}_1^T \\ \mathbf{c}_2^T \\ \mathbf{c}_3^T \end{bmatrix} \begin{bmatrix} \mathbf{c}_1 & \mathbf{c}_2 & \mathbf{c}_3 \end{bmatrix} = \mathbf{I}
+\end{align}
+This implies 9 quadtratic constraints in the form:
+\begin{align}
+\mathbf{c}_i^T \mathbf{c}_j = \delta_{i,j} = \begin{cases} 1 \quad\text{if } i = j\\ 0 \quad\text{else}\end{cases}
+\end{align}
+We can write these in matrix form. Let
+\begin{align}
+\mathbf{x}_1 = \begin{bmatrix} \mathbf{c}_1 \\ \mathbf{c}_2 \\ \mathbf{c}_3 \\ \mathbf{r} \end{bmatrix}.
+\end{align}
+Then the nine constraints are 
+\begin{align}
+    \mathbf{x}_1^T  \begin{bmatrix} 1 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \end{bmatrix} \mathbf{x}_1 = 1,\\
+    \mathbf{x}_1^T  \begin{bmatrix} 0 & 0 & 0 & 0 \\ 0 & 1 & 0 & 0 \\ 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \end{bmatrix} \mathbf{x}_1 = 1,\\
+    \mathbf{x}_1^T  \begin{bmatrix} 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \\ 0 & 0 & 1 & 0 \\ 0 & 0 & 0 & 0 \end{bmatrix} \mathbf{x}_1 = 1,\\
+    \mathbf{x}_1^T  \begin{bmatrix} 0 & 1 & 0 & 0 \\ 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \end{bmatrix} \mathbf{x}_1 = 0,\\
+    \mathbf{x}_1^T  \begin{bmatrix} 0 & 0 & 1 & 0 \\ 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \end{bmatrix} \mathbf{x}_1 = 0,\\
+    \mathbf{x}_1^T  \begin{bmatrix} 0 & 0 & 0 & 0 \\ 1 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \end{bmatrix} \mathbf{x}_1 = 0,\\
+    \mathbf{x}_1^T  \begin{bmatrix} 0 & 0 & 0 & 0 \\ 0 & 0 & 1 & 0 \\ 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \end{bmatrix} \mathbf{x}_1 = 0,\\
+    \mathbf{x}_1^T  \begin{bmatrix} 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \\ 1 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \end{bmatrix} \mathbf{x}_1 = 0,\\
+    \mathbf{x}_1^T  \begin{bmatrix} 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \\ 0 & 1 & 0 & 0 \\ 0 & 0 & 0 & 0 \end{bmatrix} \mathbf{x}_1 = 0.
+\end{align}
+Next lets deal with the constraint $(\forall k) \quad (\mathbf{I} - \mathbf{v}_k \mathbf{a}^T) \mathbf{T} \mathbf{p}_k = \mathbf{0}$. Expand this and add the homogenization variable $\omega_1$:
+\begin{align}
+    \begin{bmatrix} \omega_1 & 0 & 0 & 0 \\ 0 & \omega_1 & 0 & 0 \\ 0 & 0 & \omega_1 & 0 \\ 0 & 0 & 0 & 1\end{bmatrix}\begin{bmatrix} \mathbf{c}_1 & \mathbf{c}_2 & \mathbf{c}_3 & \mathbf{r} \\ 0 & 0 & 0 & 1\end{bmatrix} \begin{bmatrix} p_{k1} \\ p_{k2} \\ p_{k3} \\ 1 \end{bmatrix} - \mathbf{v}_k \begin{bmatrix} 0 & 0 & 1 & 0 \end{bmatrix} \begin{bmatrix} \mathbf{c}_1 & \mathbf{c}_2 & \mathbf{c}_3 & \mathbf{r} \\ 0 & 0 & 0 & 1\end{bmatrix} \begin{bmatrix} p_{k1} \\ p_{k2} \\ p_{k3} \\ 1 \end{bmatrix} = \mathbf{0},
+\end{align}
+with the added constraint:
+\begin{align}
+    \omega_1^2 = 1.
+\end{align}
+Expanding further:
+\begin{align}
+    \begin{bmatrix}\omega_1 p_{k1} \mathbf{c}_1 + \omega_1 p_{k2} \mathbf{c}_2 + \omega_1 p_{k3} \mathbf{c}_3 + \omega_1 \mathbf{r} \\ 1\end{bmatrix} - \mathbf{v}_k \begin{bmatrix} 0 & 0 & 1 & 0 \end{bmatrix} \begin{bmatrix} p_{k1} \mathbf{c}_1 + p_{k2} \mathbf{c}_2 + p_{k3} \mathbf{c}_3 + \mathbf{r} \\ 1\end{bmatrix} = \mathbf{0}.
+\end{align}
+Note that
+\begin{align}
+    \mathbf{C} = \begin{bmatrix} \mathbf{c}_1 & \mathbf{c}_2 & \mathbf{c}_3\end{bmatrix} = \begin{bmatrix} c_{11} & c_{12} & c_{13} \\ c_{21} & c_{22} & c_{23} \\ c_{31} & c_{32} & c_{33} \end{bmatrix},
+\end{align}
+so we can expand the expression above:
+\begin{align}
+    \begin{bmatrix}\omega_1 p_{k1} \mathbf{c}_1 + \omega_1 p_{k2} \mathbf{c}_2 + \omega_1 p_{k3} \mathbf{c}_3 + \omega_1 \mathbf{r} \\ 1\end{bmatrix} - \mathbf{v}_k (p_{k1}c_{31} + p_{k2} c_{32} + p_{k3} c_{33} + r_3) = \mathbf{0}.
+\end{align}
+Write this as four scalar equations:
+\begin{align}
+    p_{k1} \omega_1 c_{11} + p_{k2} \omega_1 c_{12} + p_{k3} \omega_1 + c_{13} + \omega_1 r_1 - p_{k1} c_{31} v_{k1}- p_{k2} c_{32} v_{k1} - p_{k3} c_{33} v_{k1} - r_3 v_{k1}= 0,\\
+    p_{k1} \omega_1 c_{21} + p_{k2} \omega_1 c_{22} + p_{k3} \omega_1 + c_{23} + \omega_1 r_1 - p_{k1} c_{31} v_{k2}- p_{k2} c_{32} v_{k2} - p_{k3} c_{33} v_{k2} - r_3 v_{k2}= 0,\\
+    p_{k1} \omega_1 c_{31} + p_{k2} \omega_1 c_{32} + p_{k3} \omega_1 + c_{33} + \omega_1 r_1 - p_{k1} c_{31} v_{k3}- p_{k2} c_{32} v_{k3} - p_{k3} c_{33} v_{k3} - r_3 v_{k3}= 0,\\
+    1 - p_{k1} c_{31} v_{k4}- p_{k2} c_{32} v_{k4} - p_{k3} c_{33} v_{k4} - r_3 v_{k4}= 0.
+\end{align}
+Now we can turn these into four matrix form:
+\begin{align}
+    \begin{bmatrix}
+        \mathbf{c}_1 \\
+        \mathbf{c}_2 \\
+        \mathbf{c}_3 \\
+        \mathbf{r} \\
+        \mathbf{v}_k \\
+        \omega_1
+    \end{bmatrix}^T 
+    \begin{bmatrix}
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & -p_{k1} & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & -p_{k2} & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & -p_{k3} & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & -1 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        p_{k1} & 0 & 0 & p_{k2} & 0 & 0 & p_{k3} & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0
+    \end{bmatrix}
+    \begin{bmatrix}
+        \mathbf{c}_1 \\
+        \mathbf{c}_2 \\
+        \mathbf{c}_3 \\
+        \mathbf{r} \\
+        \mathbf{v}_k \\
+        \omega_1
+    \end{bmatrix} = 0, \\
+    \begin{bmatrix}
+        \mathbf{c}_1 \\
+        \mathbf{c}_2 \\
+        \mathbf{c}_3 \\
+        \mathbf{r} \\
+        \mathbf{v}_k \\
+        \omega_1
+    \end{bmatrix}^T 
+    \begin{bmatrix}
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & -p_{k1} & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & -p_{k2} & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & -p_{k3} & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & -1 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & p_{k1} & 0 & 0 & p_{k2} & 0 & 0 & p_{k3} & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 & 0
+    \end{bmatrix}
+    \begin{bmatrix}
+        \mathbf{c}_1 \\
+        \mathbf{c}_2 \\
+        \mathbf{c}_3 \\
+        \mathbf{r} \\
+        \mathbf{v}_k \\
+        \omega_1
+    \end{bmatrix} = 0,
+\end{align}
+\begin{align}
+    \begin{bmatrix}
+        \mathbf{c}_1 \\
+        \mathbf{c}_2 \\
+        \mathbf{c}_3 \\
+        \mathbf{r} \\
+        \mathbf{v}_k \\
+        \omega_1
+    \end{bmatrix}^T 
+    \begin{bmatrix}
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & -p_{k1} & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & -p_{k2} & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & -p_{k3} & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & -1 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & p_{k1} & 0 & 0 & p_{k2} & 0 & 0 & p_{k3} & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 0
+    \end{bmatrix}
+    \begin{bmatrix}
+        \mathbf{c}_1 \\
+        \mathbf{c}_2 \\
+        \mathbf{c}_3 \\
+        \mathbf{r} \\
+        \mathbf{v}_k \\
+        \omega_1
+    \end{bmatrix} = 0, \\
+    \begin{bmatrix}
+        \mathbf{c}_1 \\
+        \mathbf{c}_2 \\
+        \mathbf{c}_3 \\
+        \mathbf{r} \\
+        \mathbf{v}_k \\
+        \omega_1
+    \end{bmatrix}^T 
+    \begin{bmatrix}
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & p_{k1} & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & p_{k2} & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & p_{k3} & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0
+    \end{bmatrix}
+    \begin{bmatrix}
+        \mathbf{c}_1 \\
+        \mathbf{c}_2 \\
+        \mathbf{c}_3 \\
+        \mathbf{r} \\
+        \mathbf{v}_k \\
+        \omega_1
+    \end{bmatrix} = 1,
+\end{align}
+Finally, the constraints for the homogenous variables are 
+\begin{align}
+    \omega_0 \begin{bmatrix} 1 \end{bmatrix} \omega_0 = 1,\\
+    \omega_1 \begin{bmatrix} 1 \end{bmatrix} \omega_1 = 1,
+\end{align}
+Let
+\begin{align}
+\mathbf{x} = \begin{bmatrix} \mathbf{c}_1 \\ \mathbf{c}_2 \\ \mathbf{c}_3 \\ \mathbf{r} \\ \mathbf{v}_1 \\ \mathbf{v}_2 \\ \dots \\ \mathbf{v}_n \\ \omega_0 \\ \omega_1 \end{bmatrix} \in \mathbb{R}^{(14 + 4n) \times 1},
+\end{align}
+which includes all the decision variables. 
+All of the $9 + 4 + 2 = 15$ constraints above can be formulated using $\mathbf{x}$ by adding columns and rows of zero to obtain $\mathbf{A}_k$, to ignore the decision variables that are not used in the constraint. 
+
+\subsection{SDP Relaxation}
+
+Now that we have the QCQP in the homogenous form
+\begin{align}
+\mathbf{x}^* = \text{argmin}_{\mathbf{x}} \quad \mathbf{x}^T \mathbf{Q} \mathbf{x}\\
+(\forall i) \quad \mathbf{x}^T \mathbf{A}_i \mathbf{x} = b_i,
+\end{align}
+we can easily turn it into an SDP:
+\begin{align}
+\mathbf{x}^* = \text{argmin}_{\mathbf{x}} \quad \text{tr}(\mathbf{Q}\mathbf{x}\mathbf{x}^T),\\
+\text{s.t}\quad (\forall i) \quad \text{tr}(\mathbf{A}_i \mathbf{x} \mathbf{x}^T) = b_i.
+\end{align}
+Let $\mathbf{X} = \mathbf{x}\mathbf{x}^T \in \mathbb{R}^{(14 + 4n) \times (14 + 4n)}$, then the above is equivalent to:
+\begin{align}
+\mathbf{X}^* = \text{argmin}_{\mathbf{X}} \quad \text{tr}(\mathbf{Q}\mathbf{X}),\\
+\text{s.t}\quad (\forall i) \quad \text{tr}(\mathbf{A}_i \mathbf{X}) = b_i,\\
+\mathbf{X} = \mathbf{x} \mathbf{x}^T\\
+\text{rank}(\mathbf{X}) = 1
+\end{align}
+We can relax these last two constraints to get an SDP:
+\begin{align}
+\mathbf{X}^* = \text{argmin}_{\mathbf{X}} \quad \text{tr}(\mathbf{Q}\mathbf{X}),\\
+\text{s.t}\quad (\forall i) \quad \text{tr}(\mathbf{A}_i \mathbf{X}) = b_i,\\
+\mathbf{X} \succeq 0.
+\end{align}
+
+\end{document}
