@@ -106,37 +106,34 @@ Write
 \mathbf{C} = \begin{bmatrix} \mathbf{c}_1 & \mathbf{c}_2 & \mathbf{c}_3 \end{bmatrix}\\
 \mathbf{C}^T\mathbf{C} = \begin{bmatrix} \mathbf{c}_1^T \\ \mathbf{c}_2^T \\ \mathbf{c}_3^T \end{bmatrix} \begin{bmatrix} \mathbf{c}_1 & \mathbf{c}_2 & \mathbf{c}_3 \end{bmatrix} = \mathbf{I}
 \end{align}
-This implies 9 quadtratic constraints in the form:
+This implies 6 (due to symmetry we don't need all 9) quadtratic constraints in the form:
 \begin{align}
-\mathbf{c}_i^T \mathbf{c}_j = \delta_{i,j} = \begin{cases} 1 \quad\text{if } i = j\\ 0 \quad\text{else}\end{cases}
+\mathbf{c}_i^T \mathbf{c}_j = \delta_{i,j} = \begin{cases} 1 \quad\text{if } i = j\\ 0 \quad\text{else}\end{cases},
 \end{align}
 We can write these in matrix form. Let
 \begin{align}
 \mathbf{x}_1 = \begin{bmatrix} \mathbf{c}_1 \\ \mathbf{c}_2 \\ \mathbf{c}_3 \\ \mathbf{r} \end{bmatrix}.
 \end{align}
-Then the nine constraints are 
+Then the six constraints are 
 \begin{align}
     \mathbf{x}_1^T  \begin{bmatrix} 1 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \end{bmatrix} \mathbf{x}_1 = 1,\\
     \mathbf{x}_1^T  \begin{bmatrix} 0 & 0 & 0 & 0 \\ 0 & 1 & 0 & 0 \\ 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \end{bmatrix} \mathbf{x}_1 = 1,\\
     \mathbf{x}_1^T  \begin{bmatrix} 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \\ 0 & 0 & 1 & 0 \\ 0 & 0 & 0 & 0 \end{bmatrix} \mathbf{x}_1 = 1,\\
     \mathbf{x}_1^T  \begin{bmatrix} 0 & 1 & 0 & 0 \\ 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \end{bmatrix} \mathbf{x}_1 = 0,\\
     \mathbf{x}_1^T  \begin{bmatrix} 0 & 0 & 1 & 0 \\ 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \end{bmatrix} \mathbf{x}_1 = 0,\\
-    \mathbf{x}_1^T  \begin{bmatrix} 0 & 0 & 0 & 0 \\ 1 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \end{bmatrix} \mathbf{x}_1 = 0,\\
     \mathbf{x}_1^T  \begin{bmatrix} 0 & 0 & 0 & 0 \\ 0 & 0 & 1 & 0 \\ 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \end{bmatrix} \mathbf{x}_1 = 0,\\
-    \mathbf{x}_1^T  \begin{bmatrix} 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \\ 1 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \end{bmatrix} \mathbf{x}_1 = 0,\\
-    \mathbf{x}_1^T  \begin{bmatrix} 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \\ 0 & 1 & 0 & 0 \\ 0 & 0 & 0 & 0 \end{bmatrix} \mathbf{x}_1 = 0.
 \end{align}
-Next lets deal with the constraint $(\forall k) \quad (\mathbf{I} - \mathbf{v}_k \mathbf{a}^T) \mathbf{T} \mathbf{p}_k = \mathbf{0}$. Expand this and add the homogenization variable $\omega_1$:
+Next lets deal with the constraint $(\forall k) \quad (\mathbf{I} - \mathbf{v}_k \mathbf{a}^T) \mathbf{T} \mathbf{p}_k = \mathbf{0}$. Expand this and add our homogenization variable $\omega_0$:
 \begin{align}
-    \begin{bmatrix} \omega_1 & 0 & 0 & 0 \\ 0 & \omega_1 & 0 & 0 \\ 0 & 0 & \omega_1 & 0 \\ 0 & 0 & 0 & 1\end{bmatrix}\begin{bmatrix} \mathbf{c}_1 & \mathbf{c}_2 & \mathbf{c}_3 & \mathbf{r} \\ 0 & 0 & 0 & 1\end{bmatrix} \begin{bmatrix} p_{k1} \\ p_{k2} \\ p_{k3} \\ 1 \end{bmatrix} - \mathbf{v}_k \begin{bmatrix} 0 & 0 & 1 & 0 \end{bmatrix} \begin{bmatrix} \mathbf{c}_1 & \mathbf{c}_2 & \mathbf{c}_3 & \mathbf{r} \\ 0 & 0 & 0 & 1\end{bmatrix} \begin{bmatrix} p_{k1} \\ p_{k2} \\ p_{k3} \\ 1 \end{bmatrix} = \mathbf{0},
+    \begin{bmatrix} \omega_0 & 0 & 0 & 0 \\ 0 & \omega_0 & 0 & 0 \\ 0 & 0 & \omega_0 & 0 \\ 0 & 0 & 0 & 1\end{bmatrix}\begin{bmatrix} \mathbf{c}_1 & \mathbf{c}_2 & \mathbf{c}_3 & \mathbf{r} \\ 0 & 0 & 0 & 1\end{bmatrix} \begin{bmatrix} p_{k1} \\ p_{k2} \\ p_{k3} \\ 1 \end{bmatrix} - \mathbf{v}_k \begin{bmatrix} 0 & 0 & 1 & 0 \end{bmatrix} \begin{bmatrix} \mathbf{c}_1 & \mathbf{c}_2 & \mathbf{c}_3 & \mathbf{r} \\ 0 & 0 & 0 & 1\end{bmatrix} \begin{bmatrix} p_{k1} \\ p_{k2} \\ p_{k3} \\ 1 \end{bmatrix} = \mathbf{0},
 \end{align}
 with the added constraint:
 \begin{align}
-    \omega_1^2 = 1.
+    \omega_0^2 = 1.
 \end{align}
 Expanding further:
 \begin{align}
-    \begin{bmatrix}\omega_1 p_{k1} \mathbf{c}_1 + \omega_1 p_{k2} \mathbf{c}_2 + \omega_1 p_{k3} \mathbf{c}_3 + \omega_1 \mathbf{r} \\ 1\end{bmatrix} - \mathbf{v}_k \begin{bmatrix} 0 & 0 & 1 & 0 \end{bmatrix} \begin{bmatrix} p_{k1} \mathbf{c}_1 + p_{k2} \mathbf{c}_2 + p_{k3} \mathbf{c}_3 + \mathbf{r} \\ 1\end{bmatrix} = \mathbf{0}.
+    \begin{bmatrix}\omega_0 p_{k1} \mathbf{c}_1 + \omega_0 p_{k2} \mathbf{c}_2 + \omega_0 p_{k3} \mathbf{c}_3 + \omega_0 \mathbf{r} \\ 1\end{bmatrix} - \mathbf{v}_k \begin{bmatrix} 0 & 0 & 1 & 0 \end{bmatrix} \begin{bmatrix} p_{k1} \mathbf{c}_1 + p_{k2} \mathbf{c}_2 + p_{k3} \mathbf{c}_3 + \mathbf{r} \\ 1\end{bmatrix} = \mathbf{0}.
 \end{align}
 Note that
 \begin{align}
@@ -144,13 +141,13 @@ Note that
 \end{align}
 so we can expand the expression above:
 \begin{align}
-    \begin{bmatrix}\omega_1 p_{k1} \mathbf{c}_1 + \omega_1 p_{k2} \mathbf{c}_2 + \omega_1 p_{k3} \mathbf{c}_3 + \omega_1 \mathbf{r} \\ 1\end{bmatrix} - \mathbf{v}_k (p_{k1}c_{31} + p_{k2} c_{32} + p_{k3} c_{33} + r_3) = \mathbf{0}.
+    \begin{bmatrix}\omega_0 p_{k1} \mathbf{c}_1 + \omega_0 p_{k2} \mathbf{c}_2 + \omega_0 p_{k3} \mathbf{c}_3 + \omega_0 \mathbf{r} \\ 1\end{bmatrix} - \mathbf{v}_k (p_{k1}c_{31} + p_{k2} c_{32} + p_{k3} c_{33} + r_3) = \mathbf{0}.
 \end{align}
 Write this as four scalar equations:
 \begin{align}
-    p_{k1} \omega_1 c_{11} + p_{k2} \omega_1 c_{12} + p_{k3} \omega_1 + c_{13} + \omega_1 r_1 - p_{k1} c_{31} v_{k1}- p_{k2} c_{32} v_{k1} - p_{k3} c_{33} v_{k1} - r_3 v_{k1}= 0,\\
-    p_{k1} \omega_1 c_{21} + p_{k2} \omega_1 c_{22} + p_{k3} \omega_1 + c_{23} + \omega_1 r_1 - p_{k1} c_{31} v_{k2}- p_{k2} c_{32} v_{k2} - p_{k3} c_{33} v_{k2} - r_3 v_{k2}= 0,\\
-    p_{k1} \omega_1 c_{31} + p_{k2} \omega_1 c_{32} + p_{k3} \omega_1 + c_{33} + \omega_1 r_1 - p_{k1} c_{31} v_{k3}- p_{k2} c_{32} v_{k3} - p_{k3} c_{33} v_{k3} - r_3 v_{k3}= 0,\\
+    p_{k1} \omega_0 c_{11} + p_{k2} \omega_0 c_{12} + p_{k3} \omega_0 c_{13} + \omega_0 r_1 - p_{k1} c_{31} v_{k1}- p_{k2} c_{32} v_{k1} - p_{k3} c_{33} v_{k1} - r_3 v_{k1}= 0,\\
+    p_{k1} \omega_0 c_{21} + p_{k2} \omega_0 c_{22} + p_{k3} \omega_0 c_{23} + \omega_0 r_1 - p_{k1} c_{31} v_{k2}- p_{k2} c_{32} v_{k2} - p_{k3} c_{33} v_{k2} - r_3 v_{k2}= 0,\\
+    p_{k1} \omega_0 c_{31} + p_{k2} \omega_0 c_{32} + p_{k3} \omega_0 c_{33} + \omega_0 r_1 - p_{k1} c_{31} v_{k3}- p_{k2} c_{32} v_{k3} - p_{k3} c_{33} v_{k3} - r_3 v_{k3}= 0,\\
     1 - p_{k1} c_{31} v_{k4}- p_{k2} c_{32} v_{k4} - p_{k3} c_{33} v_{k4} - r_3 v_{k4}= 0.
 \end{align}
 Now we can turn these into four matrix form:
@@ -161,7 +158,7 @@ Now we can turn these into four matrix form:
         \mathbf{c}_3 \\
         \mathbf{r} \\
         \mathbf{v}_k \\
-        \omega_1
+        \omega_0
     \end{bmatrix}^T 
     \begin{bmatrix}
         0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
@@ -188,7 +185,7 @@ Now we can turn these into four matrix form:
         \mathbf{c}_3 \\
         \mathbf{r} \\
         \mathbf{v}_k \\
-        \omega_1
+        \omega_0
     \end{bmatrix} = 0, \\
     \begin{bmatrix}
         \mathbf{c}_1 \\
@@ -196,7 +193,7 @@ Now we can turn these into four matrix form:
         \mathbf{c}_3 \\
         \mathbf{r} \\
         \mathbf{v}_k \\
-        \omega_1
+        \omega_0
     \end{bmatrix}^T 
     \begin{bmatrix}
         0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
@@ -223,7 +220,7 @@ Now we can turn these into four matrix form:
         \mathbf{c}_3 \\
         \mathbf{r} \\
         \mathbf{v}_k \\
-        \omega_1
+        \omega_0
     \end{bmatrix} = 0,
 \end{align}
 \begin{align}
@@ -233,7 +230,7 @@ Now we can turn these into four matrix form:
         \mathbf{c}_3 \\
         \mathbf{r} \\
         \mathbf{v}_k \\
-        \omega_1
+        \omega_0
     \end{bmatrix}^T 
     \begin{bmatrix}
         0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
@@ -260,7 +257,7 @@ Now we can turn these into four matrix form:
         \mathbf{c}_3 \\
         \mathbf{r} \\
         \mathbf{v}_k \\
-        \omega_1
+        \omega_0
     \end{bmatrix} = 0, \\
     \begin{bmatrix}
         \mathbf{c}_1 \\
@@ -268,7 +265,7 @@ Now we can turn these into four matrix form:
         \mathbf{c}_3 \\
         \mathbf{r} \\
         \mathbf{v}_k \\
-        \omega_1
+        \omega_0
     \end{bmatrix}^T 
     \begin{bmatrix}
         0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
@@ -295,20 +292,23 @@ Now we can turn these into four matrix form:
         \mathbf{c}_3 \\
         \mathbf{r} \\
         \mathbf{v}_k \\
-        \omega_1
+        \omega_0
     \end{bmatrix} = 1,
 \end{align}
-Finally, the constraints for the homogenous variables are 
+Finally, the constraints for the homogenous variable is 
 \begin{align}
     \omega_0 \begin{bmatrix} 1 \end{bmatrix} \omega_0 = 1,\\
-    \omega_1 \begin{bmatrix} 1 \end{bmatrix} \omega_1 = 1,
 \end{align}
 Let
 \begin{align}
-\mathbf{x} = \begin{bmatrix} \mathbf{c}_1 \\ \mathbf{c}_2 \\ \mathbf{c}_3 \\ \mathbf{r} \\ \mathbf{v}_1 \\ \mathbf{v}_2 \\ \dots \\ \mathbf{v}_n \\ \omega_0 \\ \omega_1 \end{bmatrix} \in \mathbb{R}^{(14 + 4n) \times 1},
+\mathbf{x} = \begin{bmatrix} \mathbf{c}_1 \\ \mathbf{c}_2 \\ \mathbf{c}_3 \\ \mathbf{r} \\ \mathbf{v}_1 \\ \mathbf{v}_2 \\ \dots \\ \mathbf{v}_n \\ \omega_0 \\ \omega_0 \end{bmatrix} \in \mathbb{R}^{(14 + 4n) \times 1},
 \end{align}
 which includes all the decision variables. 
-All of the $9 + 4 + 2 = 15$ constraints above can be formulated using $\mathbf{x}$ by adding columns and rows of zero to obtain $\mathbf{A}_k$, to ignore the decision variables that are not used in the constraint. 
+All of the $9 + 4 + 2 = 15$ constraints above can be formulated using $\mathbf{x}$ by adding columns and rows of zero to the matrices above to obtain $\mathbf{A}_i$,
+to ignore the decision variables that are not used in the constraint. Any non-symmetric $\mathbf{A}_i$ can be made symmetric and preserve the same constraint by doing
+\begin{align}
+    \mathbf{A}_{\text{new}_i} = \frac{1}{2}(\mathbf{A}_i + \mathbf{A}_i^T).
+\end{align}
 
 \subsection{SDP Relaxation}
 
