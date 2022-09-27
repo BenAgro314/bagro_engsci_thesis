@@ -120,4 +120,4 @@ def stereo_localization_gauss_newton(T_init: np.array, y: np.array, p_w: np.arra
             print(f"Loss: {projection_error(y, T_op, M, p_w, W)}")
         perturb_mag = np.linalg.norm(epsilon)
         i = i + 1
-    return T_op
+    return T_op, projection_error(y, T_op, M, p_w, W)
