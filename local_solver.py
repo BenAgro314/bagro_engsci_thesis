@@ -109,7 +109,7 @@ def stereo_localization_gauss_newton(T_init: np.array, y: np.array, p_w: np.arra
     perturb_mag = np.inf
     T_op = T_init.copy()
 
-    while (perturb_mag > 1e-10) and (i < max_iters):
+    while (perturb_mag > min_update_norm) and (i < max_iters):
         delta = _delta(T_op @ p_w, M)
         beta = _u(y, T_op @ p_w, M)
         A = np.sum(delta @ (W + W.T) @ delta.transpose((0, 2, 1)), axis = 0)

@@ -23,7 +23,7 @@ def build_SDP_problem(Q: np.array, As: List[np.array], bs: List[float]):
     assert np.all(Q == Q.T), "Q must be symmetric"
     p = len(As)
     assert len(bs) == p
-    X = cp.Variable((n, n), symmetric = True)
+    X = cp.Variable((n, n), PSD = True)
     constraints = [X >> 0]
     for i in range(p):
         assert As[i].shape == (n, n)
@@ -31,4 +31,32 @@ def build_SDP_problem(Q: np.array, As: List[np.array], bs: List[float]):
         constraints.append(cp.trace(As[i] @ X) == bs[i])
     prob = cp.Problem(cp.Minimize(cp.trace(Q @ X)),
                 constraints)
-    return prob
+    return prob, X
+
+def block_diagonal(x, k):
+    ''' x should be a tensor-3 (#num matrices, n,n)
+        k : int
+        Diagonal in question. it is 0 in case of main diagonal. 
+        Use k>0 for diagonals above the main diagonal, and k<0 for diagonals below the main diagonal.
+    '''
+
+    shape = x.shape
+    n = shape[-1]
+
+    absk = abs(k)
+
+    indx = np.repeat(np.arange(n),n)
+    indy = np.tile(np.arange(n),n)
+
+    indx = np.concatenate([indx + a * n for a in range(shape[0])])
+    indy = np.concatenate([indy + a * n for a in range(shape[0])])
+
+    if k<0: 
+        indx += n*absk
+    else:
+        indy += n*absk
+
+    block = np.zeros(((shape[0]+absk)*n,(shape[0]+absk)*n))
+    block[(indx,indy)] = x.flatten()
+
+    return block

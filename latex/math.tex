@@ -116,21 +116,18 @@ We can write these in matrix form. Let
 \end{align}
 Then the six constraints are 
 \begin{align}
-    \mathbf{x}_1^T  \begin{bmatrix} 1 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \end{bmatrix} \mathbf{x}_1 = 1,\\
-    \mathbf{x}_1^T  \begin{bmatrix} 0 & 0 & 0 & 0 \\ 0 & 1 & 0 & 0 \\ 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \end{bmatrix} \mathbf{x}_1 = 1,\\
-    \mathbf{x}_1^T  \begin{bmatrix} 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \\ 0 & 0 & 1 & 0 \\ 0 & 0 & 0 & 0 \end{bmatrix} \mathbf{x}_1 = 1,\\
-    \mathbf{x}_1^T  \begin{bmatrix} 0 & 1 & 0 & 0 \\ 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \end{bmatrix} \mathbf{x}_1 = 0,\\
-    \mathbf{x}_1^T  \begin{bmatrix} 0 & 0 & 1 & 0 \\ 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \end{bmatrix} \mathbf{x}_1 = 0,\\
-    \mathbf{x}_1^T  \begin{bmatrix} 0 & 0 & 0 & 0 \\ 0 & 0 & 1 & 0 \\ 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \end{bmatrix} \mathbf{x}_1 = 0,\\
+    \mathbf{x}_1^T  \begin{bmatrix} \mathbf{I} & \mathbf{0} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \end{bmatrix} \mathbf{x}_1 = 1,\\
+    \mathbf{x}_1^T  \begin{bmatrix} \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{I} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \end{bmatrix} \mathbf{x}_1 = 1,\\
+    \mathbf{x}_1^T  \begin{bmatrix} \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{I} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \end{bmatrix} \mathbf{x}_1 = 1,\\
+    \mathbf{x}_1^T  \begin{bmatrix} \mathbf{0} & \mathbf{I} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \end{bmatrix} \mathbf{x}_1 = 1,\\
+    \mathbf{x}_1^T  \begin{bmatrix} \mathbf{0} & \mathbf{0} & \mathbf{I} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \end{bmatrix} \mathbf{x}_1 = 1,\\
+    \mathbf{x}_1^T  \begin{bmatrix} \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{I} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \end{bmatrix} \mathbf{x}_1 = 1,\\
 \end{align}
 Next lets deal with the constraint $(\forall k) \quad (\mathbf{I} - \mathbf{v}_k \mathbf{a}^T) \mathbf{T} \mathbf{p}_k = \mathbf{0}$. Expand this and add our homogenization variable $\omega_0$:
 \begin{align}
-    \begin{bmatrix} \omega_0 & 0 & 0 & 0 \\ 0 & \omega_0 & 0 & 0 \\ 0 & 0 & \omega_0 & 0 \\ 0 & 0 & 0 & 1\end{bmatrix}\begin{bmatrix} \mathbf{c}_1 & \mathbf{c}_2 & \mathbf{c}_3 & \mathbf{r} \\ 0 & 0 & 0 & 1\end{bmatrix} \begin{bmatrix} p_{k1} \\ p_{k2} \\ p_{k3} \\ 1 \end{bmatrix} - \mathbf{v}_k \begin{bmatrix} 0 & 0 & 1 & 0 \end{bmatrix} \begin{bmatrix} \mathbf{c}_1 & \mathbf{c}_2 & \mathbf{c}_3 & \mathbf{r} \\ 0 & 0 & 0 & 1\end{bmatrix} \begin{bmatrix} p_{k1} \\ p_{k2} \\ p_{k3} \\ 1 \end{bmatrix} = \mathbf{0},
+    \begin{bmatrix} \omega_0 & 0 & 0 & 0 \\ 0 & \omega_0 & 0 & 0 \\ 0 & 0 & \omega_0 & 0 \\ 0 & 0 & 0 & 1\end{bmatrix}\begin{bmatrix} \mathbf{c}_1 & \mathbf{c}_2 & \mathbf{c}_3 & \mathbf{r} \\ 0 & 0 & 0 & 1\end{bmatrix} \begin{bmatrix} p_{k1} \\ p_{k2} \\ p_{k3} \\ 1 \end{bmatrix} - \mathbf{v}_k \begin{bmatrix} 0 & 0 & 1 & 0 \end{bmatrix} \begin{bmatrix} \mathbf{c}_1 & \mathbf{c}_2 & \mathbf{c}_3 & \mathbf{r} \\ 0 & 0 & 0 & 1\end{bmatrix} \begin{bmatrix} p_{k1} \\ p_{k2} \\ p_{k3} \\ 1 \end{bmatrix} = \mathbf{0}.
 \end{align}
-with the added constraint:
-\begin{align}
-    \omega_0^2 = 1.
-\end{align}
+
 Expanding further:
 \begin{align}
     \begin{bmatrix}\omega_0 p_{k1} \mathbf{c}_1 + \omega_0 p_{k2} \mathbf{c}_2 + \omega_0 p_{k3} \mathbf{c}_3 + \omega_0 \mathbf{r} \\ 1\end{bmatrix} - \mathbf{v}_k \begin{bmatrix} 0 & 0 & 1 & 0 \end{bmatrix} \begin{bmatrix} p_{k1} \mathbf{c}_1 + p_{k2} \mathbf{c}_2 + p_{k3} \mathbf{c}_3 + \mathbf{r} \\ 1\end{bmatrix} = \mathbf{0}.
@@ -143,11 +140,13 @@ so we can expand the expression above:
 \begin{align}
     \begin{bmatrix}\omega_0 p_{k1} \mathbf{c}_1 + \omega_0 p_{k2} \mathbf{c}_2 + \omega_0 p_{k3} \mathbf{c}_3 + \omega_0 \mathbf{r} \\ 1\end{bmatrix} - \mathbf{v}_k (p_{k1}c_{31} + p_{k2} c_{32} + p_{k3} c_{33} + r_3) = \mathbf{0}.
 \end{align}
+Note that due from its definition, $\mathbf{v}_k = \begin{bmatrix} v_1 & v_2 & 1 & v_4 \end{bmatrix}^T$. Because we want homogenous
+constraints, we substitute $\mathbf{v}_k = \begin{bmatrix} v_1 & v_2 & \omega_0 & v_4 \end{bmatrix}^T$ instead:
 Write this as four scalar equations:
 \begin{align}
     p_{k1} \omega_0 c_{11} + p_{k2} \omega_0 c_{12} + p_{k3} \omega_0 c_{13} + \omega_0 r_1 - p_{k1} c_{31} v_{k1}- p_{k2} c_{32} v_{k1} - p_{k3} c_{33} v_{k1} - r_3 v_{k1}= 0,\\
     p_{k1} \omega_0 c_{21} + p_{k2} \omega_0 c_{22} + p_{k3} \omega_0 c_{23} + \omega_0 r_1 - p_{k1} c_{31} v_{k2}- p_{k2} c_{32} v_{k2} - p_{k3} c_{33} v_{k2} - r_3 v_{k2}= 0,\\
-    p_{k1} \omega_0 c_{31} + p_{k2} \omega_0 c_{32} + p_{k3} \omega_0 c_{33} + \omega_0 r_1 - p_{k1} c_{31} v_{k3}- p_{k2} c_{32} v_{k3} - p_{k3} c_{33} v_{k3} - r_3 v_{k3}= 0,\\
+    p_{k1} \omega_0 c_{31} + p_{k2} \omega_0 c_{32} + p_{k3} \omega_0 c_{33} + \omega_0 r_1 - p_{k1} c_{31} \omega_0- p_{k2} c_{32} \omega_0 - p_{k3} c_{33} \omega_0 - r_3 \omega_0 = 0,\\
     1 - p_{k1} c_{31} v_{k4}- p_{k2} c_{32} v_{k4} - p_{k3} c_{33} v_{k4} - r_3 v_{k4}= 0.
 \end{align}
 Now we can turn these into four matrix form:
@@ -235,16 +234,16 @@ Now we can turn these into four matrix form:
     \begin{bmatrix}
         0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
         0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & -p_{k1} & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & -p_{k1} \\
         0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
         0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & -p_{k2} & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & -p_{k2} \\
         0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
         0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & -p_{k3} & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & -p_{k3} \\
         0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
         0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & -1 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & -1 \\
         0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
         0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
         0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
@@ -301,10 +300,10 @@ Finally, the constraints for the homogenous variable is
 \end{align}
 Let
 \begin{align}
-\mathbf{x} = \begin{bmatrix} \mathbf{c}_1 \\ \mathbf{c}_2 \\ \mathbf{c}_3 \\ \mathbf{r} \\ \mathbf{v}_1 \\ \mathbf{v}_2 \\ \dots \\ \mathbf{v}_n \\ \omega_0 \\ \omega_0 \end{bmatrix} \in \mathbb{R}^{(14 + 4n) \times 1},
+\mathbf{x} = \begin{bmatrix} \mathbf{c}_1 \\ \mathbf{c}_2 \\ \mathbf{c}_3 \\ \mathbf{r} \\ \mathbf{v}_1 \\ \mathbf{v}_2 \\ \dots \\ \mathbf{v}_n \\ \omega_0 \end{bmatrix} \in \mathbb{R}^{(13 + 4n) \times 1},
 \end{align}
 which includes all the decision variables. 
-All of the $9 + 4 + 2 = 15$ constraints above can be formulated using $\mathbf{x}$ by adding columns and rows of zero to the matrices above to obtain $\mathbf{A}_i$,
+All of the $12 + 4n + 1$ constraints above can be formulated using $\mathbf{x}$ by adding columns and rows of zero to the matrices above to obtain $\mathbf{A}_i$,
 to ignore the decision variables that are not used in the constraint. Any non-symmetric $\mathbf{A}_i$ can be made symmetric and preserve the same constraint by doing
 \begin{align}
     \mathbf{A}_{\text{new}_i} = \frac{1}{2}(\mathbf{A}_i + \mathbf{A}_i^T).
