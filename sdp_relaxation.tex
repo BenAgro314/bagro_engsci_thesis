@@ -144,9 +144,9 @@ Then the six constraints are
     \mathbf{x}_1^T  \begin{bmatrix} \mathbf{I} & \mathbf{0} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \end{bmatrix} \mathbf{x}_1 = 1,\\
     \mathbf{x}_1^T  \begin{bmatrix} \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{I} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \end{bmatrix} \mathbf{x}_1 = 1,\\
     \mathbf{x}_1^T  \begin{bmatrix} \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{I} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \end{bmatrix} \mathbf{x}_1 = 1,\\
-    \mathbf{x}_1^T  \begin{bmatrix} \mathbf{0} & \mathbf{I} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \end{bmatrix} \mathbf{x}_1 = 1,\\
-    \mathbf{x}_1^T  \begin{bmatrix} \mathbf{0} & \mathbf{0} & \mathbf{I} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \end{bmatrix} \mathbf{x}_1 = 1,\\
-    \mathbf{x}_1^T  \begin{bmatrix} \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{I} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \end{bmatrix} \mathbf{x}_1 = 1,\\
+    \mathbf{x}_1^T  \begin{bmatrix} \mathbf{0} & \mathbf{I} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \end{bmatrix} \mathbf{x}_1 = 0,\\
+    \mathbf{x}_1^T  \begin{bmatrix} \mathbf{0} & \mathbf{0} & \mathbf{I} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \end{bmatrix} \mathbf{x}_1 = 0,\\
+    \mathbf{x}_1^T  \begin{bmatrix} \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{I} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \end{bmatrix} \mathbf{x}_1 = 0,\\
 \end{align}
 
 Next lets deal with the constraint $(\forall k) \quad (\mathbf{I} - \mathbf{v}_k \mathbf{e}_3^T) \mathbf{T} \mathbf{p}_k = \mathbf{0}$. Expand this and add our homogenization variable $\omega$:
@@ -223,6 +223,7 @@ We can write this in matrix form:
         0 & 0 & 0 & 0 & 0 & 0 \\
         0 & 0 & 0 & 0 & 0 & 0 \\
         0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 \\
         -p_{k1}\mathbf{e}_1\mathbf{e}_3^T & -p_{k2}\mathbf{e}_1\mathbf{e}_3^T & -p_{k3}\mathbf{e}_1\mathbf{e}_3^T & -\mathbf{e}_1\mathbf{e}_3^T & 0 & 0 \\
         p_{k1}\mathbf{e}_1^T & p_{k2}\mathbf{e}_1^T & p_{k3}\mathbf{e}_1^T & \mathbf{e}_1^T & 0 &0 
     \end{bmatrix} 
@@ -246,6 +247,7 @@ We can write this in matrix form:
         0 & 0 & 0 & 0 & 0 & 0 \\
         0 & 0 & 0 & 0 & 0 & 0 \\
         0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 \\
         -p_{k1}\mathbf{e}_2\mathbf{e}_3^T & -p_{k2}\mathbf{e}_2\mathbf{e}_3^T & -p_{k3}\mathbf{e}_2\mathbf{e}_3^T & -\mathbf{e}_2\mathbf{e}_3^T & 0 & 0 \\
         p_{k1}\mathbf{e}_2^T & p_{k2}\mathbf{e}_2^T & p_{k3}\mathbf{e}_2^T & \mathbf{e}_2^T & 0 &0 
     \end{bmatrix} 
@@ -266,6 +268,7 @@ We can write this in matrix form:
         \omega
     \end{bmatrix}^T
     \begin{bmatrix}
+        0 & 0 & 0 & 0 & 0 & 0 \\
         0 & 0 & 0 & 0 & 0 & 0 \\
         0 & 0 & 0 & 0 & 0 & 0 \\
         0 & 0 & 0 & 0 & 0 & 0 \\
