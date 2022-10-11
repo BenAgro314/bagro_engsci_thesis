@@ -33,7 +33,7 @@ def stereo_sim_solve_certify(world: sim.World, r0: np.array, gamma_r: float, fil
     T_op = np.eye(4)
     W = np.eye(4)
     T_op, local_minima = local_solver.stereo_localization_gauss_newton(
-        T_op, y, world.p_w, W, world.cam.M(), r_0 = r0, gamma_r = gamma_r
+        T_op, y, world.p_w, W, world.cam.M(), r_0 = r0, gamma_r = gamma_r, log = False
     )
 
     x_1 = T_op[:3, :].T.reshape((12, 1))
@@ -81,21 +81,29 @@ def main():
     """Experiment Outline:
         1. Iterate over noise levels and number of points 
     """
-    cam = sim.Camera(
-        f_u = 100, # focal length in horizonal pixels
-        f_v = 100, # focal length in vertical pixels
-        c_u = 50, # pinhole projection in horizonal pixels
-        c_v = 50, # pinhold projection in vertical pixels
-        b = 0.2, # baseline (meters)
-        R = 1 * np.eye(4), # covarience matrix for image-space noise
-        fov = np.array([[-1,1], [-1, 1], [2, 5]])
-    )
-    world = sim.World(
-        cam = cam,
-        p_wc_extent = np.array([[3], [3], [0]]),
-        num_landmarks = 5,
-    )
-    stereo_sim_solve_certify(world, r0 = np.zeros((3, 1)), gamma_r = 0)
+
+    iters_per_noise = 100
+
+    for var in [1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1]:
+        print(f"Noise Variance: {var}")
+        for i in range(iters_per_noise):
+            if i % 1 == 0:
+                print(f"Iteration [{i}/{iters_per_noise}]")
+            cam = sim.Camera(
+                f_u = 100, # focal length in horizonal pixels
+                f_v = 100, # focal length in vertical pixels
+                c_u = 50, # pinhole projection in horizonal pixels
+                c_v = 50, # pinhold projection in vertical pixels
+                b = 0.2, # baseline (meters)
+                R = 1 * np.eye(4), # covarience matrix for image-space noise
+                fov = np.array([[-1,1], [-1, 1], [2, 5]])
+            )
+            world = sim.World(
+                cam = cam,
+                p_wc_extent = np.array([[3], [3], [0]]),
+                num_landmarks = 5,
+            )
+            stereo_sim_solve_certify(world, r0 = np.zeros((3, 1)), gamma_r = 0)
 
 if __name__ == "__main__":
     main()
