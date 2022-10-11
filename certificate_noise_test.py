@@ -1,4 +1,5 @@
 from typing import Dict, Optional
+from itertools import product
 
 import cvxpy as cp
 import numpy as np
@@ -82,13 +83,16 @@ def main():
         1. Iterate over noise levels and number of points 
     """
 
-    iters_per_noise = 100
+    iters_per = 10
+    var_list = [1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1]
+    num_list = [5*i for i in range(1, 11)]
 
-    for var in [1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1]:
+    for var, num_landmarks in product(var_list, num_list):
         print(f"Noise Variance: {var}")
-        for i in range(iters_per_noise):
+        print(f"Num Landmarks: {num_landmarks}")
+        for i in range(iters_per):
             if i % 1 == 0:
-                print(f"Iteration [{i}/{iters_per_noise}]")
+                print(f"Iteration [{i}/{iters_per}]")
             cam = sim.Camera(
                 f_u = 100, # focal length in horizonal pixels
                 f_v = 100, # focal length in vertical pixels
@@ -101,7 +105,7 @@ def main():
             world = sim.World(
                 cam = cam,
                 p_wc_extent = np.array([[3], [3], [0]]),
-                num_landmarks = 5,
+                num_landmarks = num_landmarks,
             )
             stereo_sim_solve_certify(world, r0 = np.zeros((3, 1)), gamma_r = 0)
 
