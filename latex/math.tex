@@ -335,4 +335,12 @@ We can relax these last two constraints to get an SDP:
 \mathbf{X} \succeq 0.
 \end{align}
 
+\subsection{Redundant Constraints}
+
+Note that $\mathbf{T}\mathbf{p}_k$ and $\mathbf{v}_k$ differ by a constant factor, so we can add
+the constraint
+\begin{align}
+\mathbf{v}_k (\mathbf{T} \mathbf{p}_k)^T = (\mathbf{T} \mathbf{p}_k) \mathbf{v}_k^T \quad \forall k \\
+\end{align}
+
 \end{document}

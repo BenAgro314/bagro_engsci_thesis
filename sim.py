@@ -1,14 +1,18 @@
-import numpy as np
-from typing import Tuple, Union, Optional
-import pylgmath
+from dataclasses import dataclass
+from typing import List, Optional, Tuple, Union
+import json
+
 import matplotlib.pyplot as plt
-from mpl_toolkits import mplot3d
-from mpl_toolkits.mplot3d import Axes3D
+import numpy as np
+import pylgmath
 from matplotlib.patches import FancyArrowPatch
-from mpl_toolkits.mplot3d import proj3d
 from matplotlib.text import Annotation
+from mpl_toolkits import mplot3d
+from mpl_toolkits.mplot3d import Axes3D, proj3d
 from pylgmath.so3.operations import vec2rot
+
 import plotting
+
 
 def make_stereo_sim_instance(num_points: int, T_wc: np.array, FOV: np.array):
     """
@@ -27,6 +31,7 @@ def make_stereo_sim_instance(num_points: int, T_wc: np.array, FOV: np.array):
         2. matplotlib axes
         3. Homogenous reference points in the world frame (N, 4, 1)
     """
+    raise DeprecationWarning("This method is replaced with the World object")
     fig = plt.figure()
     ax = fig.add_subplot(projection='3d')
     plotting.add_coordinate_frame(np.eye(4), ax, "$\mathfrak{F}_w$")
@@ -48,6 +53,7 @@ def make_stereo_sim_instance(num_points: int, T_wc: np.array, FOV: np.array):
     ax.set_box_aspect((world_limits[1]-world_limits[0],world_limits[3]-world_limits[2],world_limits[5]-world_limits[4]))
 
     return fig, ax, p_w, colors
+
 
 def make_stereo_camera_matrix(f_u: int, f_v: int, c_u: int, c_v:int, b: float) -> np.array:
     """
@@ -120,3 +126,96 @@ def render_camera_points(y: np.array, colors: np.array):
     lax.set_aspect('equal')
 
     return camfig, (lax, rax)
+
+@dataclass
+class Camera:
+
+    f_u: int
+    f_v: int
+    c_u: int
+    c_v: int
+    b: float
+    R: np.array # noise covariance matrix
+    fov: np.array # field of view of camera
+
+    def M(self):
+        return make_stereo_camera_matrix(
+            self.f_u,
+            self.f_v,
+            self.c_u, 
+            self.c_v,
+            self.b
+        )
+
+    def take_picture(self, T_wc: np.array, p_w: np.array) -> np.array:
+        """Moves camera to world pose T_wc and takes a picture,
+        with landmarks at p_w. Returns pixel positions of landmarks
+
+        Args:
+            T_wc (np.array): World pose of camera (4, 4)
+            p_w (np.array): Position of landmarks in the world (N, 4, 1)
+
+        Returns:
+            np.array: np.array of shape (N, 4, 1)
+        """
+        T_cw = np.linalg.inv(T_wc)
+        y = generative_camera_model(self.M(), T_cw, p_w)
+        dy = generate_stereo_camera_noise(self.R, size = y.shape[0])[:, :, None]
+        return y + dy
+
+@dataclass
+class World:
+
+    cam: Camera
+    p_wc_extent: np.array # (3, 1) --- x, y, z
+    num_landmarks: int
+    T_wc: Optional[np.array] = None
+    p_w: Optional[np.array] = None
+
+    def place_landmarks_in_camera_fov(self):
+        assert self.T_wc is not None, "Need camera frame in world to place landmarks in camera FOV!"
+        ranges = self.cam.fov[:, 1] - self.cam.fov[:, 0]
+        # generate points
+        p_c = np.random.rand(self.num_landmarks, 3) * ranges + self.cam.fov[:, 0] # (N, 3), camera frame points
+        homo_p_c = np.concatenate((p_c, np.ones_like(p_c[:, 0:1])), axis = 1) # (N, 4, 1)
+        self.p_w = self.T_wc @ homo_p_c[:, :, None] # (N, 4, 1), world frame points
+
+    def clear_sim_instance(self):
+        self.T_wc = None
+        self.p_w = None
+
+    def make_random_sim_instance(self):
+        if self.T_wc is None:
+            a = np.random.rand(3, 1)
+            theta = np.random.rand() * 2*np.pi
+            C_wc = vec2rot(theta * a/np.linalg.norm(a))
+
+            self.T_wc = np.eye(4)
+            self.T_wc[:3, :3] = C_wc
+
+            self.T_wc[:-1, -1:] = self.p_wc_extent * np.random.rand(3, 1)
+
+        if self.p_w is None:
+            self.place_landmarks_in_camera_fov()
+
+    def render(self):
+        assert self.T_wc is not None, "Need to generate sim instance first! see `make_random_sim_instance`"
+        assert self.p_w is not None, "Need to generate sim instance first! see `make_random_sim_instance`"
+        fig = plt.figure()
+        ax = fig.add_subplot(projection='3d')
+        plotting.add_coordinate_frame(np.eye(4), ax, "$\mathfrak{F}_w$")
+        plotting.add_coordinate_frame(self.T_wc, ax, "$\mathfrak{F}_c$")
+        # set aspect ratio
+
+        colors = np.random.rand(self.num_landmarks, 3)
+        colors = np.concatenate((colors, np.ones_like(colors[:, 0:1])), axis = 1)
+        for i, p in enumerate(self.p_w):
+            ax.scatter3D(p[0], p[1], p[2], color = colors[i])
+        
+        world_limits = ax.get_w_lims()
+        ax.set_box_aspect((world_limits[1]-world_limits[0],world_limits[3]-world_limits[2],world_limits[5]-world_limits[4]))
+
+        return fig, ax, colors
+
+        
+

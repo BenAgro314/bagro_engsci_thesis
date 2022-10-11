@@ -1,4 +1,5 @@
 import numpy as np
+from typing import Optional
 from pylgmath.so3.operations import hat
 from pylgmath.se3.operations import vec2tran
 import sim
@@ -90,7 +91,7 @@ def projection_error(y: np.array, T: np.array, M: np.array, p_w: np.array, W: np
     e = y - y_pred
     return np.sum(e.transpose((0, 2, 1)) @ W @ e, axis = 0)[0][0]
 
-def stereo_localization_gauss_newton(T_init: np.array, y: np.array, p_w: np.array, W: np.array, M: np.array, max_iters: int = 1000, min_update_norm: float = 1e-10, log: bool = True):
+def stereo_localization_gauss_newton(T_init: np.array, y: np.array, p_w: np.array, W: np.array, M: np.array, max_iters: int = 1000, min_update_norm: float = 1e-10, gamma_r: float = 0.0, r_0: Optional[np.array] = None, log: bool = True):
     """Solve the stereo localization problem with a gauss-newton method
 
     Args:
@@ -109,15 +110,29 @@ def stereo_localization_gauss_newton(T_init: np.array, y: np.array, p_w: np.arra
     perturb_mag = np.inf
     T_op = T_init.copy()
 
+    if r_0 is not None:
+        assert r_0.shape == (3, 1)
+        r_0 = np.concatenate((r_0, np.array([[1]])), axis = 0)
+
+
     while (perturb_mag > min_update_norm) and (i < max_iters):
         delta = _delta(T_op @ p_w, M)
         beta = _u(y, T_op @ p_w, M)
         A = np.sum(delta @ (W + W.T) @ delta.transpose((0, 2, 1)), axis = 0)
         b = np.sum(-delta @ (W + W.T) @ beta, axis = 0)
+        if r_0 is not None: # prior on position
+            b += (-gamma_r * _odot_exp(T_op[None, :, -1:]).transpose((0, 2, 1)) @ (T_op[None, :, -1:] - r_0[None, :, :])).squeeze(0)
+            A += (gamma_r * _odot_exp(T_op[None, :, -1:]).transpose((0, 2, 1)) @ _odot_exp(T_op[None, :, -1:])).squeeze(0)
         epsilon = _svdsolve(A, b)
         T_op = vec2tran(epsilon) @ T_op
         if log:
-            print(f"Loss: {projection_error(y, T_op, M, p_w, W)}")
+            cost = projection_error(y, T_op, M, p_w, W)
+            if r_0 is not None:
+                cost += gamma_r * (T_op[:, -1:] - r_0).T @ (T_op[:, -1:] - r_0)
+            print(f"Loss: {cost}")
         perturb_mag = np.linalg.norm(epsilon)
         i = i + 1
-    return T_op, projection_error(y, T_op, M, p_w, W)
+    cost = projection_error(y, T_op, M, p_w, W)
+    if r_0 is not None:
+        cost += gamma_r * (T_op[:, -1:] - r_0).T @ (T_op[:, -1:] - r_0)
+    return T_op, cost
