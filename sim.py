@@ -186,14 +186,7 @@ class World:
 
     def make_random_sim_instance(self):
         if self.T_wc is None:
-            a = np.random.rand(3, 1)
-            theta = np.random.rand() * 2*np.pi
-            C_wc = vec2rot(theta * a/np.linalg.norm(a))
-
-            self.T_wc = np.eye(4)
-            self.T_wc[:3, :3] = C_wc
-
-            self.T_wc[:-1, -1:] = self.p_wc_extent * np.random.rand(3, 1)
+            self.T_wc = generate_random_T(self.p_wc_extent)
 
         if self.p_w is None:
             self.place_landmarks_in_camera_fov()
@@ -219,3 +212,13 @@ class World:
 
         
 
+def generate_random_T(p_extent: np.array):
+    a = np.random.rand(3, 1)
+    theta = np.random.rand() * 2*np.pi
+    C_wc = vec2rot(theta * a/np.linalg.norm(a))
+
+    T = np.eye(4)
+    T[:3, :3] = C_wc
+
+    T[:-1, -1:] = p_extent * np.random.rand(3, 1)
+    return T

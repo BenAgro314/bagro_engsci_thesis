@@ -1,4 +1,8 @@
-from typing import Dict, Optional
+import os 
+import pickle
+from datetime import datetime
+from typing import Dict, Optional, Tuple, List
+import tqdm
 from itertools import product
 
 import cvxpy as cp
@@ -23,20 +27,7 @@ from sdp_relaxation import (
 )
 import mosek
 
-def stereo_sim_solve_certify(world: sim.World, r0: np.array, gamma_r: float, filepath: Optional[str] = None):
-    world.clear_sim_instance()
-    world.make_random_sim_instance()
-
-    # Generative camera model 
-    y = world.cam.take_picture(world.T_wc, world.p_w)
-
-    # local solution
-    T_op = np.eye(4)
-    W = np.eye(4)
-    T_op, local_minima = local_solver.stereo_localization_gauss_newton(
-        T_op, y, world.p_w, W, world.cam.M(), r_0 = r0, gamma_r = gamma_r, log = False
-    )
-
+def run_certificate(world: sim.World, y: np.array, T_op: np.array, r0: np.array, gamma_r: float, W: np.array) -> bool:
     x_1 = T_op[:3, :].T.reshape((12, 1))
     x_2 = (T_op @ world.p_w / np.expand_dims((np.array([0, 0, 1, 0]) @ T_op @ world.p_w), -1))[:, [0, 1, 3], :].reshape(-1, 1)
     x_local = np.concatenate((x_1, x_2, np.array([[1]])), axis = 0)
@@ -76,6 +67,26 @@ def stereo_sim_solve_certify(world: sim.World, r0: np.array, gamma_r: float, fil
     H = Q - sum([A * lag_mult[i] for i, A in enumerate(As)])
     #np.all(np.linalg.eigvals(H) > 0)
     eig_values, _ = np.linalg.eig(H)
+    real_parts = eig_values.real
+    imag_parts = eig_values.imag
+    
+    #print(eig_values)
+    certificate = (real_parts.min() > -10e-3) and np.allclose(imag_parts, 0)
+    return certificate, H
+
+
+def make_sim_instances(num_instances: int, num_landmarks: int, p_wc_extent: np.array, cam: sim.Camera) -> List[Tuple[np.array, np.array]]:
+    instances = []
+    for _ in range(num_instances):
+        world = sim.World(
+            cam = cam,
+            p_wc_extent = p_wc_extent,
+            num_landmarks = num_landmarks,
+        )
+        world.clear_sim_instance()
+        world.make_random_sim_instance()
+        instances.append((world.T_wc, world.p_w))
+    return instances
 
 
 def main():
@@ -83,31 +94,84 @@ def main():
         1. Iterate over noise levels and number of points 
     """
 
-    iters_per = 10
-    var_list = [1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1]
-    num_list = [5*i for i in range(1, 11)]
+    exp_time = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    exp_dir = os.path.join(dir_path, f"outputs/{exp_time}") 
+    if not os.path.isdir(exp_dir):
+        os.mkdir(exp_dir)
 
-    for var, num_landmarks in product(var_list, num_list):
+    var_list = [1e-8, 0, 1e-10, 1e-8, 1e-6, 1e-4, 1e-2, 1]
+    num_instances = 50
+    num_landmarks = 10
+    cam = sim.Camera(
+        f_u = 160, # focal length in horizonal pixels
+        f_v = 160, # focal length in vertical pixels
+        c_u = 320, # pinhole projection in horizonal pixels
+        c_v = 240, # pinhold projection in vertical pixels
+        b = 0.25, # baseline (meters)
+        R = 0 * np.eye(4), # covarience matrix for image-space noise
+        fov = np.array([[-1,1], [-1, 1], [2, 5]])
+    )
+    p_wc_extent = np.array([[3], [3], [0]])
+    instances = make_sim_instances(num_instances, num_landmarks, p_wc_extent, cam)
+    num_local_solves = 50
+    r0 = np.zeros((3, 1))
+    gamma_r = 0
+    W = np.eye(4)
+    world = sim.World(
+        cam = cam,
+        p_wc_extent = p_wc_extent,
+        num_landmarks = num_landmarks,
+    )
+    num_certified_per_var = {}
+    saved_solutions = {} 
+    for var in var_list:
+        num_certified_per_var[var] = 0
+        saved_solutions[var] = {}
+        world.cam.R = var * np.eye(4)
         print(f"Noise Variance: {var}")
-        print(f"Num Landmarks: {num_landmarks}")
-        for i in range(iters_per):
-            if i % 1 == 0:
-                print(f"Iteration [{i}/{iters_per}]")
-            cam = sim.Camera(
-                f_u = 100, # focal length in horizonal pixels
-                f_v = 100, # focal length in vertical pixels
-                c_u = 50, # pinhole projection in horizonal pixels
-                c_v = 50, # pinhold projection in vertical pixels
-                b = 0.2, # baseline (meters)
-                R = 1 * np.eye(4), # covarience matrix for image-space noise
-                fov = np.array([[-1,1], [-1, 1], [2, 5]])
-            )
-            world = sim.World(
-                cam = cam,
-                p_wc_extent = np.array([[3], [3], [0]]),
-                num_landmarks = num_landmarks,
-            )
-            stereo_sim_solve_certify(world, r0 = np.zeros((3, 1)), gamma_r = 0)
+        for scene_ind in range(num_instances):
+            saved_solutions[var][scene_ind] = {}
+            world.T_wc = instances[scene_ind][0]
+            world.p_w = instances[scene_ind][1]
+            print(f"Scene ind: {scene_ind}")
+            y = world.cam.take_picture(world.T_wc, world.p_w)
+            best_solution = None
+            min_cost = float('inf')
+            for _ in tqdm.tqdm(range(num_local_solves)):
+                # local solution
+                T_op = sim.generate_random_T(p_wc_extent)
+                T_op, local_minima = local_solver.stereo_localization_gauss_newton(
+                    T_op, y, world.p_w, W, world.cam.M(), r_0 = r0, gamma_r = gamma_r, log = False
+                )
+                if local_minima < min_cost:
+                    best_solution = T_op
+                    min_cost = local_minima
+
+
+            certificate, H = run_certificate(world, y, best_solution, r0, gamma_r, W)
+            print(f"Certificate: {certificate}")
+            if certificate:
+                num_certified_per_var[var] += 1
+
+            saved_solutions[var][scene_ind]["best_local_solution"] = best_solution
+            saved_solutions[var][scene_ind]["world"] = world
+            saved_solutions[var][scene_ind]["y"] = y
+            saved_solutions[var][scene_ind]["local_minima"] = local_minima
+            saved_solutions[var][scene_ind]["certificate"] = certificate
+            saved_solutions[var][scene_ind]["H"] = H
+
+    with open(os.path.join(exp_dir, f"saved_solutions.pkl"), "wb") as f:
+        pickle.dump(saved_solutions, f, protocol=pickle.HIGHEST_PROTOCOL)
+
+    heights = [num_certified_per_var[k]/num_instances for k in var_list]
+    plt.bar([str(v) for v in var_list], heights)
+    plt.ylabel("Percentage of 'globally optimal' solutions that were certified")
+    plt.xlabel("Pixel space gaussian measurement variance")
+    plt.savefig(os.path.join(exp_dir, f"noise_plot.png"))
+    plt.show()
+    print(var_list)
+    print(heights)
 
 if __name__ == "__main__":
     main()
