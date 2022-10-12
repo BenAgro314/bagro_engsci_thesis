@@ -179,6 +179,7 @@ def main():
             best_minima = local_solutions[var][scene_ind][best_solution_ind][1]
             colors = ["b" if np.isclose(v[1], best_minima) else "r" for v in local_solutions[var][scene_ind]]
             plt.scatter([var] * num_local_solves, [min(v[3].real) for v  in local_solutions[var][scene_ind]], color = colors)
+    plt.hlines([-10e-3], xmin = -1, xmax = 1, colors = ["b"], linestyles = ["dashed"])
     plt.yscale("symlog")
     plt.ylabel("Log of minimum eigenvalue from local solver")
     plt.xlabel("Pixel space gaussian measurement variance")
