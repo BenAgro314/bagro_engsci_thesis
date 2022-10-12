@@ -1,6 +1,7 @@
 import os 
 import pickle
 from datetime import datetime
+from turtle import color
 from typing import Dict, Optional, Tuple, List
 import tqdm
 from itertools import product
@@ -72,7 +73,7 @@ def run_certificate(world: sim.World, y: np.array, T_op: np.array, r0: np.array,
     
     #print(eig_values)
     certificate = (real_parts.min() > -10e-3) and np.allclose(imag_parts, 0)
-    return certificate, H
+    return certificate, H, eig_values
 
 
 def make_sim_instances(num_instances: int, num_landmarks: int, p_wc_extent: np.array, cam: sim.Camera) -> List[Tuple[np.array, np.array]]:
@@ -100,8 +101,8 @@ def main():
     if not os.path.isdir(exp_dir):
         os.mkdir(exp_dir)
 
-    var_list = [1e-8, 0, 1e-10, 1e-8, 1e-6, 1e-4, 1e-2, 1]
-    num_instances = 50
+    var_list = [0, 1e-10, 1e-8, 1e-6, 1e-4, 1e-2, 1]
+    num_instances = 1 #10# 50
     num_landmarks = 10
     cam = sim.Camera(
         f_u = 160, # focal length in horizonal pixels
@@ -114,7 +115,7 @@ def main():
     )
     p_wc_extent = np.array([[3], [3], [0]])
     instances = make_sim_instances(num_instances, num_landmarks, p_wc_extent, cam)
-    num_local_solves = 50
+    num_local_solves = 100 #50
     r0 = np.zeros((3, 1))
     gamma_r = 0
     W = np.eye(4)
@@ -124,9 +125,13 @@ def main():
         num_landmarks = num_landmarks,
     )
     num_certified_per_var = {}
+    local_solutions = {}
+    best_local_solutions = {}
     saved_solutions = {} 
     for var in var_list:
+        local_solutions[var] = {}
         num_certified_per_var[var] = 0
+        best_local_solutions[var] = {}
         saved_solutions[var] = {}
         world.cam.R = var * np.eye(4)
         print(f"Noise Variance: {var}")
@@ -136,39 +141,56 @@ def main():
             world.p_w = instances[scene_ind][1]
             print(f"Scene ind: {scene_ind}")
             y = world.cam.take_picture(world.T_wc, world.p_w)
-            best_solution = None
+            best_solution_ind = None
             min_cost = float('inf')
-            for _ in tqdm.tqdm(range(num_local_solves)):
+            local_solutions[var][scene_ind] = []
+
+            for i in tqdm.tqdm(range(num_local_solves)):
                 # local solution
                 T_op = sim.generate_random_T(p_wc_extent)
                 T_op, local_minima = local_solver.stereo_localization_gauss_newton(
                     T_op, y, world.p_w, W, world.cam.M(), r_0 = r0, gamma_r = gamma_r, log = False
                 )
                 if local_minima < min_cost:
-                    best_solution = T_op
+                    best_solution_ind = i
                     min_cost = local_minima
+                certificate, H, eig_values = run_certificate(world, y, T_op, r0, gamma_r, W)
+                local_solutions[var][scene_ind].append((T_op, local_minima, certificate, eig_values, H))
 
+            best_local_solutions[var][scene_ind] = best_solution_ind
 
-            certificate, H = run_certificate(world, y, best_solution, r0, gamma_r, W)
             print(f"Certificate: {certificate}")
             if certificate:
-                num_certified_per_var[var] += 1
+                num_certified_per_var[var] += local_solutions[var][scene_ind][best_solution_ind][2]
 
-            saved_solutions[var][scene_ind]["best_local_solution"] = best_solution
+            saved_solutions[var][scene_ind]["best_local_solution"] = local_solutions[var][scene_ind][best_solution_ind][0]
             saved_solutions[var][scene_ind]["world"] = world
             saved_solutions[var][scene_ind]["y"] = y
-            saved_solutions[var][scene_ind]["local_minima"] = local_minima
-            saved_solutions[var][scene_ind]["certificate"] = certificate
-            saved_solutions[var][scene_ind]["H"] = H
+            saved_solutions[var][scene_ind]["local_minima"] = local_solutions[var][scene_ind][best_solution_ind][1]
+            saved_solutions[var][scene_ind]["certificate"] = local_solutions[var][scene_ind][best_solution_ind][2]
+            saved_solutions[var][scene_ind]["H"] = local_solutions[var][scene_ind][best_solution_ind][4]
 
     with open(os.path.join(exp_dir, f"saved_solutions.pkl"), "wb") as f:
         pickle.dump(saved_solutions, f, protocol=pickle.HIGHEST_PROTOCOL)
+
+    for var in local_solutions:
+        for scene_ind in local_solutions[var]:
+            best_solution_ind = best_local_solutions[var][scene_ind]
+            best_minima = local_solutions[var][scene_ind][best_solution_ind][1]
+            colors = ["b" if np.isclose(v[1], best_minima) else "r" for v in local_solutions[var][scene_ind]]
+            plt.scatter([var] * num_local_solves, [min(v[3].real) for v  in local_solutions[var][scene_ind]], color = colors)
+    plt.yscale("symlog")
+    plt.ylabel("Log of minimum eigenvalue from local solver")
+    plt.xlabel("Pixel space gaussian measurement variance")
+    plt.savefig(os.path.join(exp_dir, f"eig_plot.png"))
+    plt.show()
+    plt.close("all")
 
     heights = [num_certified_per_var[k]/num_instances for k in var_list]
     plt.bar([str(v) for v in var_list], heights)
     plt.ylabel("Percentage of 'globally optimal' solutions that were certified")
     plt.xlabel("Pixel space gaussian measurement variance")
-    plt.savefig(os.path.join(exp_dir, f"noise_plot.png"))
+    plt.savefig(os.path.join(exp_dir, f"certified_plot.png"))
     plt.show()
     print(var_list)
     print(heights)
