@@ -4,6 +4,40 @@ from pylgmath.so3.operations import hat
 from pylgmath.se3.operations import vec2tran
 import sim
 
+class StereoLocalizationProblem:
+
+    def __init__(
+        self,
+        T_wc: np.array,
+        p_w: np.array,
+        M: np.array,
+        W: Optional[np.array] = None,
+        y: Optional[np.array] = None,
+        gamma_r: float = 0.0,
+        r_0: Optional[np.array] = None,
+        gamma_C: float = 0.0,
+        C_0: Optional[np.array] = None,
+    ):
+        self.T_wc = T_wc
+        self.p_w = p_w
+        self.y = y
+        self.W = W
+        self.M = M
+        self.gamma_r = gamma_r
+        self.r_0 = r_0
+        self.gamma_C = gamma_C
+        self.C_0 = C_0
+
+class StereoLocalizationSolution:
+
+    def __init__(self, solved: bool, T_cw: Optional[np.array] = None, cost: Optional[float] = None):
+        self.solved = solved
+        assert solved == (T_cw is not None), "solved <==> T_cw is not None"
+        assert not solved == (cost == float('inf')), "not solved <==> cost is inf"
+        self.T_cw = T_cw
+        self.cost = cost
+
+
 def _u(y: np.array, x: np.array, M: np.array):
     """
     Internal function used for local solver. See stereo_camera_sim.ipynb for definition.
@@ -91,7 +125,34 @@ def projection_error(y: np.array, T: np.array, M: np.array, p_w: np.array, W: np
     e = y - y_pred
     return np.sum(e.transpose((0, 2, 1)) @ W @ e, axis = 0)[0][0]
 
-def stereo_localization_gauss_newton(T_init: np.array, y: np.array, p_w: np.array, W: np.array, M: np.array, max_iters: int = 1000, min_update_norm: float = 1e-10, gamma_r: float = 0.0, r_0: Optional[np.array] = None, log: bool = True):
+def stereo_localization_gauss_newton(problem: StereoLocalizationProblem, T_init: Optional[np.array] = np.eye(4), max_iters: int = 1000, min_update_norm = 1e-10, log: bool = False):
+    assert problem.y is not None and problem.T_wc is not None and problem.p_w is not None
+    assert problem.W is not None, problem.M is not None
+    return _stereo_localization_gauss_newton(
+        T_init,
+        problem.y,
+        problem.p_w,
+        problem.W,
+        problem.M,
+        max_iters,
+        min_update_norm,
+        problem.gamma_r,
+        problem.r_0,
+        log,
+    )
+
+def _stereo_localization_gauss_newton(
+    T_init: np.array,
+    y: np.array,
+    p_w: np.array,
+    W: np.array,
+    M: np.array,
+    max_iters: int = 1000,
+    min_update_norm: float = 1e-10,
+    gamma_r: float = 0.0,
+    r_0: Optional[np.array] = None,
+    log: bool = True
+) -> StereoLocalizationSolution:
     """Solve the stereo localization problem with a gauss-newton method
 
     Args:
@@ -114,7 +175,6 @@ def stereo_localization_gauss_newton(T_init: np.array, y: np.array, p_w: np.arra
         assert r_0.shape == (3, 1)
         r_0 = np.concatenate((r_0, np.array([[1]])), axis = 0)
 
-
     while (perturb_mag > min_update_norm) and (i < max_iters):
         delta = _delta(T_op @ p_w, M)
         beta = _u(y, T_op @ p_w, M)
@@ -132,7 +192,9 @@ def stereo_localization_gauss_newton(T_init: np.array, y: np.array, p_w: np.arra
             print(f"Loss: {cost}")
         perturb_mag = np.linalg.norm(epsilon)
         i = i + 1
+        if i == max_iters:
+            return StereoLocalizationSolution(False, None, float('inf'))
     cost = projection_error(y, T_op, M, p_w, W)
     if r_0 is not None:
         cost += gamma_r * (T_op[:, -1:] - r_0).T @ (T_op[:, -1:] - r_0)
-    return T_op, cost
+    return StereoLocalizationSolution(True, T_op, cost)
