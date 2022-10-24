@@ -91,10 +91,6 @@ def main():
             problem.r_0 = r0
             problem.gamma_r = gamma_r
 
-            best_solution_ind = None
-            min_cost = float('inf')
-
-
             for _ in tqdm.tqdm(range(num_local_solve_tries)):
                 # local solution
                 datum = {}
@@ -111,18 +107,7 @@ def main():
     with open(os.path.join(exp_dir, "metrics.pkl"), "wb") as f:
         pickle.dump(metrics, f)
 
-    plotting.plot_minimum_eigenvalues(metrics)
-    #for var in local_solutions:
-    #    for scene_ind in local_solutions[var]:
-    #        best_solution_ind = best_local_solutions[var][scene_ind]
-    #        if best_solution_ind is None:
-    #            continue
-    #        best_minima = local_solutions[var][scene_ind][best_solution_ind]["local_minima"]
-    #        colors = ["b" if np.isclose(v["local_minima"], best_minima, rtol = 0, atol = 1e-3) else "r" for v in local_solutions[var][scene_ind]]
-    #        num_global = colors.count('b')
-    #        num_not_global = colors.count('r')
-    #        print(f"Fraction of solutions that are global for {var}: {num_global}/{num_global + num_not_global}")
-    #        plt.scatter([var] * len(local_solutions[var][scene_ind]), [min(v["eig_values"].real) for v  in local_solutions[var][scene_ind]], color = colors)
+    plotting.plot_minimum_eigenvalues(metrics, os.path.join(exp_dir, "min_eigs_plt.png"))
 
 
 if __name__ == "__main__":

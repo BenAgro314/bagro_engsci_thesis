@@ -67,27 +67,29 @@ def add_coordinate_frame(T_wc: np.array, ax: plt.axes, label: str):
         ax.scatter3D(v[0], v[1], v[2], s = 0)
         ax.add_artist(a)
 
-def plot_minimum_eigenvalues(metrics):
+def plot_minimum_eigenvalues(metrics, path):
     # metrics[var][scene_ind][0, ..., num_local_solve_tries][{problem, solution, certificate}]
 
     for var in metrics:
         for scene_ind in metrics[var]:
-            print(var)
+            num_tries = len(metrics[var][scene_ind])
             metrics[var][scene_ind] = [v for v in metrics[var][scene_ind] if v["solution"].solved]
             if len(metrics[var][scene_ind]) == 0:
                 continue
             metrics[var][scene_ind].sort(key = lambda x: x["solution"].cost)    
             npts = len(metrics[var][scene_ind])
-            print(npts)
             min_cost = metrics[var][scene_ind][0]["solution"].cost 
             colors = ["b" if np.isclose(v["solution"].cost, min_cost, rtol = 0, atol = 1e-3) else "r" for v in metrics[var][scene_ind]]
             plt.scatter([var] * npts, [min(v["certificate"].eig_values.real) for v  in metrics[var][scene_ind]], color = colors)
+            print(f"Percentage Solved: {len(colors)/num_tries}")
+            percent_global = colors.count('b')/len(colors)
+            print(f"Percentage Of Solved that Are Global Solutions: {percent_global}")
+            plt.annotate(f"{percent_global:.2f}", xy = (var, 0.1), fontsize = 8)
 
-    plt.hlines([-10e-3], xmin = -1, xmax = 1, colors = ["b"], linestyles = ["dashed"])
     plt.yscale("symlog")
     plt.xscale("log")
     plt.ylabel("Log of minimum eigenvalue from local solver")
     plt.xlabel("Pixel space gaussian measurement variance")
+    plt.savefig(path)
     plt.show()
     plt.close("all")
-    plt.show()
