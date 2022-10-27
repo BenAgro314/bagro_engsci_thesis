@@ -36,6 +36,8 @@ def run_certificate(problem: StereoLocalizationProblem, solution: StereoLocaliza
     # build cost matrix and compare to local solution
     n = 13 + 3 * num_landmarks
     Q = build_cost_matrix(num_landmarks, problem.y, Ws, problem.M, problem.r_0, problem.gamma_r)
+    #print(np.max(Q))
+    Q = Q / np.abs(np.mean(Q))
     As = []
     bs = []
 
@@ -60,7 +62,6 @@ def run_certificate(problem: StereoLocalizationProblem, solution: StereoLocaliza
     lhs = np.concatenate([A @ x_local for A in As], axis = 1) # \in R^((12 + J*5 + 1), (12 + J*3 + 1))
     rhs = Q @ x_local
     lag_mult = np.linalg.lstsq(lhs, rhs, rcond = None)[0]
-    lag_mult.shape
     H = Q - sum([A * lag_mult[i] for i, A in enumerate(As)])
     #np.all(np.linalg.eigvals(H) > 0)
     eig_values, _ = np.linalg.eig(H)

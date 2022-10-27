@@ -45,10 +45,10 @@ def main():
     if not os.path.isdir(exp_dir):
         os.mkdir(exp_dir)
 
-    var_list = [0, 1e-10, 1e-8, 1e-6, 1e-4, 1e-2, 1]
-    num_problem_instances = 1#5
+    var_list = [1e-9, 1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1, 10]
+    num_problem_instances = 3 
     num_landmarks = 10
-    num_local_solve_tries = 20 #100
+    num_local_solve_tries = 40 #100
 
     cam = sim.Camera(
         f_u = 160, # focal length in horizonal pixels
@@ -64,8 +64,7 @@ def main():
     instances = make_sim_instances(num_problem_instances, num_landmarks, p_wc_extent, cam)
 
     r0 = np.zeros((3, 1))
-    gamma_r = 0
-    W = np.eye(4)
+    gamma_r = 1
 
     world = sim.World(
         cam = cam,
@@ -79,6 +78,7 @@ def main():
         print(f"Noise Variance: {var}")
         metrics[var] = {}
 
+
         world.cam.R = var * np.eye(4)
         for scene_ind in range(num_problem_instances):
             print(f"Scene ind: {scene_ind}")
@@ -87,11 +87,12 @@ def main():
 
             problem = instances[scene_ind]
             problem.y = world.cam.take_picture(problem.T_wc, problem.p_w)
-            problem.W = W
+            problem.W = (1/var)*np.eye(4)
             problem.r_0 = r0
             problem.gamma_r = gamma_r
 
-            for _ in tqdm.tqdm(range(num_local_solve_tries)):
+            #for _ in tqdm.tqdm(range(num_local_solve_tries)):
+            for _ in range(num_local_solve_tries):
                 # local solution
                 datum = {}
                 T_op = sim.generate_random_T(p_wc_extent)

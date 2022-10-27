@@ -79,12 +79,12 @@ def plot_minimum_eigenvalues(metrics, path):
             metrics[var][scene_ind].sort(key = lambda x: x["solution"].cost)    
             npts = len(metrics[var][scene_ind])
             min_cost = metrics[var][scene_ind][0]["solution"].cost 
-            colors = ["b" if np.isclose(v["solution"].cost, min_cost, rtol = 0, atol = 1e-3) else "r" for v in metrics[var][scene_ind]]
+            colors = ["b" if np.isclose(v["solution"].cost, min_cost) else "r" for v in metrics[var][scene_ind]]
             plt.scatter([var] * npts, [min(v["certificate"].eig_values.real) for v  in metrics[var][scene_ind]], color = colors)
             print(f"Percentage Solved: {len(colors)/num_tries}")
-            percent_global = colors.count('b')/len(colors)
-            print(f"Percentage Of Solved that Are Global Solutions: {percent_global}")
-            plt.annotate(f"{percent_global:.2f}", xy = (var, 0.1), fontsize = 8)
+            #percent_global = colors.count('b')/len(colors)
+            #print(f"Percentage Of Solved that Are Global Solutions: {percent_global}")
+            #plt.annotate(f"{percent_global:.2f}", xy = (var, 0.1), fontsize = 8)
 
     plt.yscale("symlog")
     plt.xscale("log")
