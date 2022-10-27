@@ -64,7 +64,7 @@ def main():
     instances = make_sim_instances(num_problem_instances, num_landmarks, p_wc_extent, cam)
 
     r0 = np.zeros((3, 1))
-    gamma_r = 1
+    gamma_r = 0
 
     world = sim.World(
         cam = cam,

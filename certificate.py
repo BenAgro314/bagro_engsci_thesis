@@ -36,8 +36,7 @@ def run_certificate(problem: StereoLocalizationProblem, solution: StereoLocaliza
     # build cost matrix and compare to local solution
     n = 13 + 3 * num_landmarks
     Q = build_cost_matrix(num_landmarks, problem.y, Ws, problem.M, problem.r_0, problem.gamma_r)
-    #print(np.max(Q))
-    Q = Q / np.abs(np.mean(Q))
+    Q = Q / np.mean(np.abs(Q)) # improve conditioning
     As = []
     bs = []
 
