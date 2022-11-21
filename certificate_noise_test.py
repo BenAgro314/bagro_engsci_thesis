@@ -1,21 +1,9 @@
 import os 
 import pickle
 from datetime import datetime
-from turtle import color
-from typing import Dict, Optional, Tuple, List
-import tqdm
-from itertools import product
+from typing import Dict, Tuple, List
 
-import cvxpy as cp
 import numpy as np
-import pylgmath
-import matplotlib.pyplot as plt
-from mpl_toolkits import mplot3d
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib.patches import FancyArrowPatch
-from mpl_toolkits.mplot3d import proj3d
-from matplotlib.text import Annotation
-from pylgmath.so3.operations import vec2rot
 from certificate import run_certificate
 import plotting
 import sim
@@ -35,9 +23,6 @@ def make_sim_instances(num_instances: int, num_landmarks: int, p_wc_extent: np.a
     return instances
 
 def main():
-    """Experiment Outline:
-        1. Iterate over noise levels and number of points 
-    """
 
     exp_time = datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
     dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -45,9 +30,9 @@ def main():
     if not os.path.isdir(exp_dir):
         os.mkdir(exp_dir)
 
-    var_list = [1e-9, 1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1, 10]
-    num_problem_instances = 3 
-    num_landmarks = 10
+    var_list = [0.1, 0.3, 0.5 , 0.7, 0.9, 1, 3, 5, 7, 9, 10]
+    num_problem_instances = 10
+    num_landmarks = 20
     num_local_solve_tries = 40 #100
 
     cam = sim.Camera(
@@ -64,7 +49,7 @@ def main():
     instances = make_sim_instances(num_problem_instances, num_landmarks, p_wc_extent, cam)
 
     r0 = np.zeros((3, 1))
-    gamma_r = 0
+    gamma_r = 1e-1
 
     world = sim.World(
         cam = cam,

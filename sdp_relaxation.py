@@ -182,7 +182,7 @@ def build_general_SDP_problem(Q: np.array, As: List[np.array], bs: List[float]):
     assert len(Q.shape) == 2, "Q must have two dimensions"
     n = Q.shape[0]
     assert Q.shape == (n, n), "Q must be square"
-    assert np.all(Q == Q.T), "Q must be symmetric"
+    #assert np.allclose(Q, Q.T, atol=1e-5), f"Q must be symmetric: Q - Q.T = \n{Q - Q.T}"
     p = len(As)
     assert len(bs) == p
     X = cp.Variable((n, n), PSD = True)
@@ -222,3 +222,17 @@ def block_diagonal(x, k):
     block[(indx,indy)] = x.flatten()
 
     return block
+
+def extract_solution_from_X(X: np.array) -> np.array:
+    # The ordering of x needs to be c_1, c_2, c_3, r, and
+    # there needs to be a homogenization variable in the last entry.
+    # X = x @ x.T
+    x = X[:, -1:] # last col
+    C_est = x[:9].real.reshape((3, 3)).T
+    r = x[9:12].real.reshape((3,1))
+    v, s, ut = np.linalg.svd(C_est, full_matrices = True)
+    C = v @ np.array([[1, 0, 0], [0, 1, 0], [0, 0, np.linalg.det(ut)*np.linalg.det(v)]]) @ ut
+    T = np.eye(4)
+    T[:3, :3] = C
+    T[:3, -1:] = r
+    return T

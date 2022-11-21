@@ -5,7 +5,6 @@ from pylgmath.se3.operations import vec2tran
 import sim
 
 class StereoLocalizationProblem:
-
     def __init__(
         self,
         T_wc: np.array,
