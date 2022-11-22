@@ -94,9 +94,11 @@ def projection_error(y: np.array, T: np.array, M: np.array, p_w: np.array, W: np
     e = y - y_pred
     return np.sum(e.transpose((0, 2, 1)) @ W @ e, axis = 0)[0][0]
 
-def stereo_localization_gauss_newton(problem: StereoLocalizationProblem, T_init: Optional[np.array] = np.eye(4), max_iters: int = 1000, min_update_norm = 1e-10, log: bool = False):
+def stereo_localization_gauss_newton(problem: StereoLocalizationProblem, max_iters: int = 1000, min_update_norm = 1e-10, log: bool = False):
     assert problem.y is not None and problem.T_wc is not None and problem.p_w is not None
     assert problem.W is not None, problem.M is not None
+    assert problem.T_init is not None
+    T_init = problem.T_init
     return _stereo_localization_gauss_newton(
         T_init,
         problem.y,

@@ -1,16 +1,16 @@
 from typing import List, Optional, Dict
+from copy import deepcopy
+import plotting
 import os
 import pickle
-import matplotlib.pyplot as plt
 from scipy.linalg import fractional_matrix_power
-from experiments import StereoLocalizationSolution, StereoLocalizationProblem
+from experiments import StereoLocalizationSolution, StereoLocalizationProblem, run_experiment
 
 import numpy as np
 import sim
 import local_solver
-from local_solver import StereoLocalizationProblem, StereoLocalizationSolution, projection_error
+from local_solver import projection_error
 from sdp_relaxation import build_rotation_constraint_matrices, build_general_SDP_problem, extract_solution_from_X
-from datetime import datetime
 import cvxpy as cp
 
 def vec(A: np.array) -> np.array:
@@ -112,25 +112,29 @@ def iterative_sdp_solution(
     else:
         T = extract_solution_from_X(X_sdp)
         if refine:
-            return local_solver.stereo_localization_gauss_newton(problem, T, log = False, max_iters = 100)
+            problem = deepcopy(problem)
+            problem.T_init = T
+            return local_solver.stereo_localization_gauss_newton(problem, log = False, max_iters = 100)
         else:
             cost = projection_error(problem.y, T, problem.M, problem.p_w, problem.W)
             return StereoLocalizationSolution(True, T, cost)
 
+def metrics_fcn(problem):
+    mosek_params = {}
+    datum = {}
+    local_solution = local_solver.stereo_localization_gauss_newton(problem, log = False, max_iters = 100)
+    iter_sdp_soln = iterative_sdp_solution(problem, problem.T_init, max_iters = 1, return_X = False, mosek_params=mosek_params)
+    datum["problem"] = problem
+    datum["local_solution"] = local_solution
+    datum["iterative_sdp_solution"] = iter_sdp_soln
 
+    return datum
 
 def main():
-    from certificate_noise_test import make_sim_instances
-
-    exp_time = datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    exp_dir = os.path.join(dir_path, f"outputs/{exp_time}") 
-    if not os.path.isdir(exp_dir):
-        os.mkdir(exp_dir)
 
     var_list = [0.1] #, 0.3, 0.5, 0.7, 0.9, 1, 3, 5, 7, 9, 10]
-    num_problem_instances = 10
-    num_landmarks = 20
+    num_problem_instances = 1 #10
+    num_landmarks = 10 #20
     num_local_solve_tries = 100 # 40
 
     cam = sim.Camera(
@@ -144,70 +148,10 @@ def main():
     )
 
     p_wc_extent = np.array([[3], [3], [0]])
-    instances = make_sim_instances(num_problem_instances, num_landmarks, p_wc_extent, cam)
 
-    world = sim.World(
-        cam = cam,
-        p_wc_extent = p_wc_extent,
-        num_landmarks = num_landmarks,
-    )
+    metrics, exp_dir = run_experiment(metrics_fcn, var_list, num_problem_instances, num_landmarks, num_local_solve_tries, cam, p_wc_extent)
 
-    metrics = []
-    #eps = 1e-7 # try 1e-10
-    #mosek_params = {
-    #    "MSK_DPAR_INTPNT_CO_TOL_DFEAS": eps,
-    #    "MSK_DPAR_INTPNT_CO_TOL_PFEAS": eps,
-    #    "MSK_DPAR_INTPNT_CO_TOL_REL_GAP": eps,
-    #    "MSK_IPAR_INTPNT_MAX_ITERATIONS": 800
-    #}
-    mosek_params = {}
-
-    for var in var_list:
-        print(f"Noise Variance: {var}")
-        world.cam.R = var * np.eye(4)
-        for scene_ind in range(num_problem_instances):
-            print(f"Scene ind: {scene_ind}")
-
-            problem = instances[scene_ind]
-            problem.y = world.cam.take_picture(problem.T_wc, problem.p_w)
-            problem.W = (1/var)*np.eye(4)
-
-            #for _ in tqdm.tqdm(range(num_local_solve_tries)):
-            for _ in range(num_local_solve_tries):
-                # local solution
-                datum = {}
-                T_op = sim.generate_random_T(p_wc_extent)
-                local_solution = local_solver.stereo_localization_gauss_newton(problem, T_op, log = False, max_iters = 100)
-                iter_sdp_soln = iterative_sdp_solution(problem, T_op, max_iters = 1, return_X = False, mosek_params=mosek_params)
-                datum["problem"] = problem
-                datum["local_solution"] = local_solution
-                datum["iterative_sdp_solution"] = iter_sdp_soln
-                datum["noise_var"] = var
-                datum["scene_ind"] = scene_ind
-
-                metrics.append(datum)
-    
-    fig, axs = plt.subplots(2, 1)
-    axs[0].set_xscale('log')
-    axs[1].set_xscale('log')
-
-    local_solution_costs = [m["local_solution"].cost for m in metrics]
-    iterative_sdp_costs = [m["iterative_sdp_solution"].cost for m in metrics]
-
-    min_cost = min(min(local_solution_costs), min(iterative_sdp_costs))
-    max_cost = max(max(local_solution_costs), max(iterative_sdp_costs))
-    bins = np.logspace(np.log10(min_cost),np.log10(max_cost), 50)
-    axs[0].hist(local_solution_costs, bins=bins)
-    axs[0].set_xlabel("Local Solver Solution Cost")
-    axs[1].hist(iterative_sdp_costs, bins=bins)
-    axs[1].set_xlabel("Iterative SDP Solution Cost")
-    fig.subplots_adjust(hspace=0.5)
-    plt.savefig("test.png")
-
-    with open(os.path.join(exp_dir, "metrics.pkl"), "wb") as f:
-        pickle.dump(metrics, f)
-
-
+    plotting.plot_local_and_iterative_compare(metrics, os.path.join(exp_dir, "local_vs_iterative.png"))
 
 if __name__ == "__main__":
     main()

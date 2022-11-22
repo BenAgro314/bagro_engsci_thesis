@@ -95,3 +95,23 @@ def plot_minimum_eigenvalues(metrics: List[Dict[str, Any]], path: str):
     plt.savefig(path)
     plt.show()
     plt.close("all")
+
+def plot_local_and_iterative_compare(metrics: List[Dict[str, Any]], path: str):
+    fig, axs = plt.subplots(2, 1)
+    axs[0].set_xscale('log')
+    axs[1].set_xscale('log')
+
+    local_solution_costs = [m["local_solution"].cost for m in metrics]
+    iterative_sdp_costs = [m["iterative_sdp_solution"].cost for m in metrics]
+
+    min_cost = min(min(local_solution_costs), min(iterative_sdp_costs))
+    max_cost = max(max(local_solution_costs), max(iterative_sdp_costs))
+    bins = np.logspace(np.log10(min_cost),np.log10(max_cost), 50)
+    axs[0].hist(local_solution_costs, bins=bins)
+    axs[0].set_xlabel("Local Solver Solution Cost")
+    axs[1].hist(iterative_sdp_costs, bins=bins)
+    axs[1].set_xlabel("Iterative SDP Solution Cost")
+    fig.subplots_adjust(hspace=0.5)
+    plt.savefig(path)
+    plt.show()
+    plt.close("all")

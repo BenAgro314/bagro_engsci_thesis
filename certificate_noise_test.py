@@ -3,6 +3,7 @@ import pickle
 from datetime import datetime
 from typing import Dict, Tuple, List
 
+from experiments import run_experiment
 import numpy as np
 from certificate import run_certificate
 import plotting
@@ -22,13 +23,17 @@ def make_sim_instances(num_instances: int, num_landmarks: int, p_wc_extent: np.a
         instances.append(local_solver.StereoLocalizationProblem(world.T_wc, world.p_w, cam.M()))
     return instances
 
-def main():
+def metrics_fcn(problem):
+    datum = {}
+    solution = local_solver.stereo_localization_gauss_newton(problem, log = False, max_iters = 100)
+    datum["problem"] = problem
+    datum["local_solution"] = solution
+    if solution.T_cw is not None:
+        certificate = run_certificate(problem, solution)
+        datum["certificate"] = certificate
+    return datum
 
-    exp_time = datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    exp_dir = os.path.join(dir_path, f"outputs/{exp_time}") 
-    if not os.path.isdir(exp_dir):
-        os.mkdir(exp_dir)
+def main():
 
     var_list = [0.1, 0.3,  0.5 , 0.7, 0.9, 1, 3, 5, 7, 9, 10]
     num_problem_instances = 10
@@ -46,52 +51,13 @@ def main():
     )
 
     p_wc_extent = np.array([[3], [3], [0]])
-    instances = make_sim_instances(num_problem_instances, num_landmarks, p_wc_extent, cam)
 
     r0 = np.zeros((3, 1))
     gamma_r = 0#1e-1
 
-    world = sim.World(
-        cam = cam,
-        p_wc_extent = p_wc_extent,
-        num_landmarks = num_landmarks,
-    )
-
     metrics = []
 
-    for var in var_list:
-        print(f"Noise Variance: {var}")
-
-
-        world.cam.R = var * np.eye(4)
-        for scene_ind in range(num_problem_instances):
-            print(f"Scene ind: {scene_ind}")
-
-
-            problem = instances[scene_ind]
-            problem.y = world.cam.take_picture(problem.T_wc, problem.p_w)
-            problem.W = (1/var)*np.eye(4)
-            problem.r_0 = r0
-            problem.gamma_r = gamma_r
-
-            for _ in range(num_local_solve_tries):
-                datum = {}
-                T_op = sim.generate_random_T(p_wc_extent)
-                solution = local_solver.stereo_localization_gauss_newton(problem, T_op, log = False, max_iters = 100)
-                datum["problem"] = problem
-                datum["local_solution"] = solution
-                datum["noise_var"] = var
-                datum["scene_ind"] = scene_ind
-
-                if solution.T_cw is not None:
-                    certificate = run_certificate(problem, solution)
-                    datum["certificate"] = certificate
-
-                metrics.append(datum)
-
-    with open(os.path.join(exp_dir, "metrics.pkl"), "wb") as f:
-        pickle.dump(metrics, f)
-
+    metrics, exp_dir = run_experiment(metrics_fcn, var_list, num_problem_instances, num_landmarks, num_local_solve_tries, cam, p_wc_extent, r0, gamma_r)
     plotting.plot_minimum_eigenvalues(metrics, os.path.join(exp_dir, "min_eigs_plt.png"))
 
 
