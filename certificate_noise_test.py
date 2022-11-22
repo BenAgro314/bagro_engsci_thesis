@@ -30,7 +30,7 @@ def main():
     if not os.path.isdir(exp_dir):
         os.mkdir(exp_dir)
 
-    var_list = [0.1, 0.3, 0.5 , 0.7, 0.9, 1, 3, 5, 7, 9, 10]
+    var_list = [0.1, 0.3,  0.5 , 0.7, 0.9, 1, 3, 5, 7, 9, 10]
     num_problem_instances = 10
     num_landmarks = 20
     num_local_solve_tries = 40 #100
@@ -49,7 +49,7 @@ def main():
     instances = make_sim_instances(num_problem_instances, num_landmarks, p_wc_extent, cam)
 
     r0 = np.zeros((3, 1))
-    gamma_r = 1e-1
+    gamma_r = 0#1e-1
 
     world = sim.World(
         cam = cam,
@@ -57,17 +57,15 @@ def main():
         num_landmarks = num_landmarks,
     )
 
-    metrics = {}
+    metrics = []
 
     for var in var_list:
         print(f"Noise Variance: {var}")
-        metrics[var] = {}
 
 
         world.cam.R = var * np.eye(4)
         for scene_ind in range(num_problem_instances):
             print(f"Scene ind: {scene_ind}")
-            metrics[var][scene_ind] = []
 
 
             problem = instances[scene_ind]
@@ -76,19 +74,20 @@ def main():
             problem.r_0 = r0
             problem.gamma_r = gamma_r
 
-            #for _ in tqdm.tqdm(range(num_local_solve_tries)):
             for _ in range(num_local_solve_tries):
-                # local solution
                 datum = {}
                 T_op = sim.generate_random_T(p_wc_extent)
                 solution = local_solver.stereo_localization_gauss_newton(problem, T_op, log = False, max_iters = 100)
                 datum["problem"] = problem
-                datum["solution"] = solution
+                datum["local_solution"] = solution
+                datum["noise_var"] = var
+                datum["scene_ind"] = scene_ind
 
                 if solution.T_cw is not None:
                     certificate = run_certificate(problem, solution)
                     datum["certificate"] = certificate
-                metrics[var][scene_ind].append(datum)
+
+                metrics.append(datum)
 
     with open(os.path.join(exp_dir, "metrics.pkl"), "wb") as f:
         pickle.dump(metrics, f)

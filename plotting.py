@@ -1,4 +1,5 @@
 from re import I
+from typing import List, Dict, Any
 import numpy as np
 from matplotlib.patches import FancyArrowPatch
 from mpl_toolkits.mplot3d import proj3d
@@ -67,24 +68,25 @@ def add_coordinate_frame(T_wc: np.array, ax: plt.axes, label: str):
         ax.scatter3D(v[0], v[1], v[2], s = 0)
         ax.add_artist(a)
 
-def plot_minimum_eigenvalues(metrics, path):
-    # metrics[var][scene_ind][0, ..., num_local_solve_tries][{problem, solution, certificate}]
+def plot_minimum_eigenvalues(metrics: List[Dict[str, Any]], path: str):
+    vars = [m["noise_var"] for m in metrics]
+    vars_set = set(vars)
+    scene_inds = [m["scene_ind"] for m in metrics]
+    min_costs = {}
+    for var in vars_set:
+        min_costs[var] = {}
+        for scene_ind in scene_inds:
+            min_costs[var][scene_ind] = min([m["local_solution"].cost for m in metrics if (m["noise_var"] == var and m["scene_ind"] == scene_ind)])
 
-    for var in metrics:
-        for scene_ind in metrics[var]:
-            num_tries = len(metrics[var][scene_ind])
-            metrics[var][scene_ind] = [v for v in metrics[var][scene_ind] if v["solution"].solved]
-            if len(metrics[var][scene_ind]) == 0:
-                continue
-            metrics[var][scene_ind].sort(key = lambda x: x["solution"].cost)    
-            npts = len(metrics[var][scene_ind])
-            min_cost = metrics[var][scene_ind][0]["solution"].cost 
-            colors = ["b" if np.isclose(v["solution"].cost, min_cost) else "r" for v in metrics[var][scene_ind]]
-            plt.scatter([var] * npts, [min(v["certificate"].eig_values.real) for v  in metrics[var][scene_ind]], color = colors)
-            print(f"Percentage Solved: {len(colors)/num_tries}")
-            #percent_global = colors.count('b')/len(colors)
-            #print(f"Percentage Of Solved that Are Global Solutions: {percent_global}")
-            #plt.annotate(f"{percent_global:.2f}", xy = (var, 0.1), fontsize = 8)
+    for m in metrics:
+        if not m["local_solution"].solved:
+            continue
+        var = m["noise_var"]
+        cost = m["local_solution"].cost
+        scene_ind = m["scene_ind"]
+        min_cost = min_costs[var][scene_ind]
+        color = 'b' if np.isclose(min_cost, cost) else 'r'
+        plt.scatter([var], min(m["certificate"].eig_values.real), color = color)
 
     plt.yscale("symlog")
     plt.xscale("log")
