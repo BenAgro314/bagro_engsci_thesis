@@ -1,7 +1,9 @@
-from typing import List, Optional
+from typing import List, Optional, Dict
 import os
 import pickle
 import matplotlib.pyplot as plt
+from scipy.linalg import fractional_matrix_power
+from experiments import StereoLocalizationSolution, StereoLocalizationProblem
 
 import numpy as np
 import sim
@@ -53,8 +55,21 @@ def _build_Q(problem: StereoLocalizationProblem, X_prev: np.array) -> np.array:
         Q = np.delete(Q, [3, 7, 11], axis = a)
     return Q
 
-def iterative_sdp_solution(problem: StereoLocalizationProblem, T_init: Optional[np.array] = np.eye(4), max_iters = 100, return_X: bool = True):
+def iterative_sdp_solution(
+    problem: StereoLocalizationProblem,
+    T_init: Optional[np.array] = np.eye(4),
+    min_update_norm = 1e-10, max_iters = 100,
+    return_X: bool = True,
+    momentum_param_k: float = None,
+    mosek_params: Dict[str, float] = {},
+    log: bool = False,
+    refine: bool = True,
+):
     X_sdp = vec_T(T_init) @ vec_T(T_init).T # remove last row; we already know those values
+    T = None
+    if momentum_param_k is not None:
+        assert momentum_param_k > 0 and momentum_param_k < 1
+        T = T_init
     # rotation matrix constraints
     rot_As, bs = build_rotation_constraint_matrices()
     As = []
@@ -67,25 +82,40 @@ def iterative_sdp_solution(problem: StereoLocalizationProblem, T_init: Optional[
     A[-1, -1] = 1
     As.append(A)
     bs.append(1)
+    X_old = X_sdp
     for i in range(max_iters) :
         Q = _build_Q(problem, _X_sdp_to_X(X_sdp))
         prob, X_var = build_general_SDP_problem(Q, As, bs)
         try:
-            prob.solve(solver=cp.MOSEK)
+            prob.solve(solver=cp.MOSEK, mosek_params = mosek_params)#, verbose = True)
+            if prob.status != "optimal":
+                assert False
         except Exception:
             print("Failed to solve SDP, breaking")
             break
-        if X_var.value is None:
-            print("Failed to solve SDP, breaking")
+        X_sdp = X_var.value
+        if momentum_param_k is not None:
+            T_sdp = extract_solution_from_X(X_sdp)
+            T = fractional_matrix_power(np.linalg.inv(T) @ T_sdp, momentum_param_k).real @ T
+            X_sdp = vec_T(T) @ vec_T(T).T
+        assert X_sdp is not None, f"{prob.status}, {X_sdp}"
+        assert X_old is not None, f"{prob.status}, {X_old}"
+        norm = np.linalg.norm(X_sdp - X_old, ord = "fro")
+        if log:
+            print(f"Update norm: {norm}")
+        if norm < min_update_norm:
+            print(f"Small update, breaking on iteration {i + 1}")
             break
-        else:
-            X_sdp = X_var.value
+        X_old = X_sdp
     if return_X:
         return X_sdp
     else:
         T = extract_solution_from_X(X_sdp)
-        cost = projection_error(problem.y, T, problem.M, problem.p_w, problem.W)
-        return StereoLocalizationSolution(True, T, cost)
+        if refine:
+            return local_solver.stereo_localization_gauss_newton(problem, T, log = False, max_iters = 100)
+        else:
+            cost = projection_error(problem.y, T, problem.M, problem.p_w, problem.W)
+            return StereoLocalizationSolution(True, T, cost)
 
 
 
@@ -99,9 +129,9 @@ def main():
         os.mkdir(exp_dir)
 
     var_list = [0.1] #, 0.3, 0.5, 0.7, 0.9, 1, 3, 5, 7, 9, 10]
-    num_problem_instances = 2 #10
-    num_landmarks = 5 # 20
-    num_local_solve_tries = 40 #100
+    num_problem_instances = 10
+    num_landmarks = 20
+    num_local_solve_tries = 100 # 40
 
     cam = sim.Camera(
         f_u = 160, # focal length in horizonal pixels
@@ -122,18 +152,21 @@ def main():
         num_landmarks = num_landmarks,
     )
 
-    metrics = {}
+    metrics = []
+    #eps = 1e-7 # try 1e-10
+    #mosek_params = {
+    #    "MSK_DPAR_INTPNT_CO_TOL_DFEAS": eps,
+    #    "MSK_DPAR_INTPNT_CO_TOL_PFEAS": eps,
+    #    "MSK_DPAR_INTPNT_CO_TOL_REL_GAP": eps,
+    #    "MSK_IPAR_INTPNT_MAX_ITERATIONS": 800
+    #}
+    mosek_params = {}
 
     for var in var_list:
         print(f"Noise Variance: {var}")
-        metrics[var] = {}
-
-
         world.cam.R = var * np.eye(4)
         for scene_ind in range(num_problem_instances):
             print(f"Scene ind: {scene_ind}")
-            metrics[var][scene_ind] = []
-
 
             problem = instances[scene_ind]
             problem.y = world.cam.take_picture(problem.T_wc, problem.p_w)
@@ -145,34 +178,35 @@ def main():
                 datum = {}
                 T_op = sim.generate_random_T(p_wc_extent)
                 local_solution = local_solver.stereo_localization_gauss_newton(problem, T_op, log = False, max_iters = 100)
-                iter_sdp_soln = iterative_sdp_solution(problem, T_op, max_iters = 1, return_X = False)
+                iter_sdp_soln = iterative_sdp_solution(problem, T_op, max_iters = 1, return_X = False, mosek_params=mosek_params)
                 datum["problem"] = problem
                 datum["local_solution"] = local_solution
                 datum["iterative_sdp_solution"] = iter_sdp_soln
+                datum["noise_var"] = var
+                datum["scene_ind"] = scene_ind
 
-                metrics[var][scene_ind].append(datum)
+                metrics.append(datum)
+    
+    fig, axs = plt.subplots(2, 1)
+    axs[0].set_xscale('log')
+    axs[1].set_xscale('log')
+
+    local_solution_costs = [m["local_solution"].cost for m in metrics]
+    iterative_sdp_costs = [m["iterative_sdp_solution"].cost for m in metrics]
+
+    min_cost = min(min(local_solution_costs), min(iterative_sdp_costs))
+    max_cost = max(max(local_solution_costs), max(iterative_sdp_costs))
+    bins = np.logspace(np.log10(min_cost),np.log10(max_cost), 50)
+    axs[0].hist(local_solution_costs, bins=bins)
+    axs[0].set_xlabel("Local Solver Solution Cost")
+    axs[1].hist(iterative_sdp_costs, bins=bins)
+    axs[1].set_xlabel("Iterative SDP Solution Cost")
+    fig.subplots_adjust(hspace=0.5)
+    plt.savefig("test.png")
 
     with open(os.path.join(exp_dir, "metrics.pkl"), "wb") as f:
         pickle.dump(metrics, f)
 
-    fix, axs = plt.subplots(2)
-    for var in metrics:
-        num_local = 0
-        num_iter = 0
-        for scene_ind in metrics[var]:
-            num_tries = len(metrics[var][scene_ind])
-            metrics[var][scene_ind].sort(key = lambda x: x["local_solution"].cost)    
-            npts = len(metrics[var][scene_ind])
-            min_cost = metrics[var][scene_ind][0]["local_solution"].cost 
-
-            max_non_finite_cost = max([v["local_solution"].cost for v in metrics[var][scene_ind] if np.isfinite(v["local_solution"].cost)])
-            local_costs = [v["local_solution"].cost if np.isfinite(v["local_solution"].cost) else max_non_finite_cost for v in metrics[var][scene_ind]]
-
-            axs[0].scatter([var] * npts, local_costs, color = ['b'] * npts)
-            axs[1].scatter([var] * npts, [v["iterative_sdp_solution"].cost for v in metrics[var][scene_ind]], color = ['b'] * npts)
-            axs[0].set_ylim([0, max_non_finite_cost])
-            axs[1].set_ylim([0, max_non_finite_cost])
-    plt.savefig("test.png")
 
 
 if __name__ == "__main__":

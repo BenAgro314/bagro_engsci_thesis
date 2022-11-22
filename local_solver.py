@@ -3,38 +3,8 @@ from typing import Optional
 from pylgmath.so3.operations import hat
 from pylgmath.se3.operations import vec2tran
 import sim
+from experiments import StereoLocalizationProblem, StereoLocalizationSolution
 
-class StereoLocalizationProblem:
-    def __init__(
-        self,
-        T_wc: np.array,
-        p_w: np.array,
-        M: np.array,
-        W: Optional[np.array] = None,
-        y: Optional[np.array] = None,
-        gamma_r: float = 0.0,
-        r_0: Optional[np.array] = None,
-        gamma_C: float = 0.0,
-        C_0: Optional[np.array] = None,
-    ):
-        self.T_wc = T_wc
-        self.p_w = p_w
-        self.y = y
-        self.W = W
-        self.M = M
-        self.gamma_r = gamma_r
-        self.r_0 = r_0
-        self.gamma_C = gamma_C
-        self.C_0 = C_0
-
-class StereoLocalizationSolution:
-
-    def __init__(self, solved: bool, T_cw: Optional[np.array] = None, cost: Optional[float] = None):
-        self.solved = solved
-        assert solved == (T_cw is not None), "solved <==> T_cw is not None"
-        assert not solved == (cost == float('inf')), "not solved <==> cost is inf"
-        self.T_cw = T_cw
-        self.cost = cost
 
 
 def _u(y: np.array, x: np.array, M: np.array):
@@ -174,6 +144,7 @@ def _stereo_localization_gauss_newton(
         assert r_0.shape == (3, 1)
         r_0 = np.concatenate((r_0, np.array([[1]])), axis = 0)
 
+    solved = True
     while (perturb_mag > min_update_norm) and (i < max_iters):
         delta = _delta(T_op @ p_w, M)
         beta = _u(y, T_op @ p_w, M)
@@ -192,8 +163,8 @@ def _stereo_localization_gauss_newton(
         perturb_mag = np.linalg.norm(epsilon)
         i = i + 1
         if i == max_iters:
-            return StereoLocalizationSolution(False, None, float('inf'))
+            solved = False
     cost = projection_error(y, T_op, M, p_w, W)
     if r_0 is not None:
         cost += gamma_r * (T_op[:, -1:] - r_0).T @ (T_op[:, -1:] - r_0)
-    return StereoLocalizationSolution(True, T_op, cost)
+    return StereoLocalizationSolution(solved, T_op, cost)
