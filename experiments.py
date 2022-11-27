@@ -2,6 +2,7 @@ import os
 import pickle
 from datetime import datetime
 from typing import Optional, List, Tuple
+from copy import deepcopy
 
 import numpy as np
 
@@ -88,6 +89,8 @@ def run_experiment(metrics_fcn, var_list, num_problem_instances, num_landmarks, 
                 T_op = sim.generate_random_T(p_wc_extent)
                 problem.T_init = T_op
                 metrics.append(metrics_fcn(problem))
+                metrics[-1]["world"] = deepcopy(world)
+                metrics[-1]["problem"] = deepcopy(problem)
                 metrics[-1]['noise_var'] = var
                 metrics[-1]['scene_ind'] = scene_ind
 

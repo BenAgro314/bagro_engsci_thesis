@@ -26,7 +26,6 @@ def make_sim_instances(num_instances: int, num_landmarks: int, p_wc_extent: np.a
 def metrics_fcn(problem):
     datum = {}
     solution = local_solver.stereo_localization_gauss_newton(problem, log = False, max_iters = 100)
-    datum["problem"] = problem
     datum["local_solution"] = solution
     if solution.T_cw is not None:
         certificate = run_certificate(problem, solution)

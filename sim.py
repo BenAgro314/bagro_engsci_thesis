@@ -170,11 +170,13 @@ class World:
         return fig, ax, colors
 
         
-
-def generate_random_T(p_extent: np.array):
+def generate_random_rot():
     a = np.random.rand(3, 1)
     theta = np.random.rand() * 2*np.pi
-    C_wc = vec2rot(theta * a/np.linalg.norm(a))
+    return  vec2rot(theta * a/np.linalg.norm(a))
+
+def generate_random_T(p_extent: np.array):
+    C_wc = generate_random_rot()
 
     T = np.eye(4)
     T[:3, :3] = C_wc
