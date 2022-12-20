@@ -1,4 +1,5 @@
 import numpy as np
+from copy import deepcopy
 from typing import Optional
 from pylgmath.so3.operations import hat
 from pylgmath.se3.operations import vec2tran
@@ -94,23 +95,31 @@ def projection_error(y: np.array, T: np.array, M: np.array, p_w: np.array, W: np
     e = y - y_pred
     return np.sum(e.transpose((0, 2, 1)) @ W @ e, axis = 0)[0][0]
 
-def stereo_localization_gauss_newton(problem: StereoLocalizationProblem, max_iters: int = 1000, min_update_norm = 1e-10, log: bool = False):
+def stereo_localization_gauss_newton(problem: StereoLocalizationProblem, max_iters: int = 1000, min_update_norm = 1e-10, log: bool = False, num_tries: int = 1):
+    problem = deepcopy(problem)
     assert problem.y is not None and problem.T_wc is not None and problem.p_w is not None
     assert problem.W is not None, problem.M is not None
     assert problem.T_init is not None
     T_init = problem.T_init
-    return _stereo_localization_gauss_newton(
-        T_init,
-        problem.y,
-        problem.p_w,
-        problem.W,
-        problem.M,
-        max_iters,
-        min_update_norm,
-        problem.gamma_r,
-        problem.r_0,
-        log,
-    )
+    count_local_tries = 0
+    while count_local_tries < num_tries:
+        soln = _stereo_localization_gauss_newton(
+            T_init,
+            problem.y,
+            problem.p_w,
+            problem.W,
+            problem.M,
+            max_iters,
+            min_update_norm,
+            problem.gamma_r,
+            problem.r_0,
+            log,
+        )
+        if soln.solved:
+            break
+        problem.T_init[:3, :3] = sim.generate_random_rot()
+        count_local_tries+=1
+    return soln
 
 def _stereo_localization_gauss_newton(
     T_init: np.array,
@@ -122,7 +131,7 @@ def _stereo_localization_gauss_newton(
     min_update_norm: float = 1e-10,
     gamma_r: float = 0.0,
     r_0: Optional[np.array] = None,
-    log: bool = True
+    log: bool = True,
 ) -> StereoLocalizationSolution:
     """Solve the stereo localization problem with a gauss-newton method
 
@@ -145,6 +154,7 @@ def _stereo_localization_gauss_newton(
     if r_0 is not None:
         assert r_0.shape == (3, 1)
         r_0 = np.concatenate((r_0, np.array([[1]])), axis = 0)
+
 
     solved = True
     while (perturb_mag > min_update_norm) and (i < max_iters):

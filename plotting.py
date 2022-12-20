@@ -116,6 +116,32 @@ def plot_local_and_iterative_compare(metrics: List[Dict[str, Any]], path: str):
     plt.show()
     plt.close("all")
 
+def plot_min_cost_vs_noise(metrics: List[Dict[str, Any]], path: str):
+    vars = [m["noise_var"] for m in metrics]
+    vars = list(set(vars))
+    vars.sort()
+    scene_inds = [m["scene_ind"] for m in metrics]
+    min_costs = {}
+
+    for var in vars:
+        min_costs[var] = {}
+        for scene_ind in scene_inds:
+            min_costs[var][scene_ind] = min([m["local_solution"].cost for m in metrics if (m["noise_var"] == var and m["scene_ind"] == scene_ind)])
+
+    data = {
+        "": [sum(list(min_costs[var].values()))/len(min_costs[var]) for var in vars],
+    }
+
+    fig, ax = plt.subplots()
+    bar_plot(ax, data, tick_labels = vars)
+    ax.set_ylabel("Minimum Cost")
+    ax.set_xlabel("Pixel-space Noise Variance")
+
+    #fig.subplots_adjust(hspace=0.5)
+    plt.savefig(path)
+    plt.show()
+    plt.close("all")
+
 def plot_percent_succ_vs_noise(metrics: List[Dict[str, Any]], path: str):
 
     vars = [m["noise_var"] for m in metrics]
@@ -236,3 +262,4 @@ def bar_plot(ax, data, colors=None, total_width=0.8, single_width=1, legend=True
     if tick_labels is not None:
         ax.set_xticks(list(range(len(tick_labels))))
         ax.set_xticklabels([str(t) for t in tick_labels])
+

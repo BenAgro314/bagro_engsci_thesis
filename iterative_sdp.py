@@ -131,11 +131,11 @@ def iterative_sdp_solution(
             cost = projection_error(problem.y, T, problem.M, problem.p_w, problem.W)
             return StereoLocalizationSolution(True, T, cost)
 
-def metrics_fcn(problem):
+def metrics_fcn(problem, num_tries = 100):
     mosek_params = {}
     datum = {}
-    local_solution = local_solver.stereo_localization_gauss_newton(problem, log = False, max_iters = 100)
-    iter_sdp_soln = iterative_sdp_solution(problem, problem.T_init, max_iters = 10, return_X = False, mosek_params=mosek_params, max_num_tries = 5)
+    local_solution = local_solver.stereo_localization_gauss_newton(problem, log = False, max_iters = 100, num_tries = num_tries)
+    iter_sdp_soln = iterative_sdp_solution(problem, problem.T_init, max_iters = 1, min_update_norm = 1e-10, return_X = False, mosek_params=mosek_params, max_num_tries = num_tries)
     datum["local_solution"] = local_solution
     datum["iterative_sdp_solution"] = iter_sdp_soln
 
@@ -146,7 +146,7 @@ def main():
     var_list = [0.1, 0.3, 0.5, 0.7, 0.9, 1, 3, 5, 7, 9, 10]
     num_problem_instances = 2 #10
     num_landmarks = 10 #20
-    num_local_solve_tries = 100 # 40
+    num_local_solve_tries = 100
 
     cam = sim.Camera(
         f_u = 160, # focal length in horizonal pixels
@@ -160,10 +160,11 @@ def main():
 
     p_wc_extent = np.array([[3], [3], [0]])
 
-    metrics, exp_dir = run_experiment(metrics_fcn, var_list, num_problem_instances, num_landmarks, num_local_solve_tries, cam, p_wc_extent)
+    metrics, exp_dir = run_experiment(metrics_fcn, var_list, num_problem_instances, num_landmarks, num_local_solve_tries, cam, p_wc_extent, W = np.eye(4))
 
     #plotting.plot_local_and_iterative_compare(metrics, os.path.join(exp_dir, "local_vs_iterative_cost.png"))
     plotting.plot_percent_succ_vs_noise(metrics, os.path.join(exp_dir, "local_vs_iterative_bar.png"))
+    plotting.plot_min_cost_vs_noise(metrics, os.path.join(exp_dir, "local_cost_vs_noise_level.png"))
 
 if __name__ == "__main__":
     main()

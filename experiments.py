@@ -55,7 +55,7 @@ def make_sim_instances(num_instances: int, num_landmarks: int, p_wc_extent: np.a
     return instances
 
 
-def run_experiment(metrics_fcn, var_list, num_problem_instances, num_landmarks, num_local_solve_tries, cam, p_wc_extent, r0 = None, gamma_r = 0):
+def run_experiment(metrics_fcn, var_list, num_problem_instances, num_landmarks, num_local_solve_tries, cam, p_wc_extent, W = None, r0 = None, gamma_r = 0):
 
     exp_time = datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
     dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -81,7 +81,10 @@ def run_experiment(metrics_fcn, var_list, num_problem_instances, num_landmarks, 
 
             problem = instances[scene_ind]
             problem.y = world.cam.take_picture(problem.T_wc, problem.p_w)
-            problem.W = (1/var)*np.eye(4)
+            if W is None:
+                problem.W = (1/var)*np.eye(4)
+            else:
+                problem.W = W
             problem.r_0 = r0
             problem.gamma_r = gamma_r
 
