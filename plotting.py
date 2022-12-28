@@ -1,10 +1,16 @@
-from re import I
+import os
+import random
 from typing import List, Dict, Any
 import numpy as np
 from matplotlib.patches import FancyArrowPatch
 from mpl_toolkits.mplot3d import proj3d
+from copy import deepcopy
 from matplotlib.text import Annotation
-import matplotlib.pyplot as plt 
+import matplotlib.pyplot as plt
+
+from experiments import StereoLocalizationProblem, StereoLocalizationSolution
+from sim import World
+import plotting
 
 class Arrow3D(FancyArrowPatch):
     """Add an arrow with start and end coords to a 3d plot"""
@@ -182,6 +188,39 @@ def plot_percent_succ_vs_noise(metrics: List[Dict[str, Any]], path: str):
     plt.savefig(path)
     plt.show()
     plt.close("all")
+
+def plot_solution_history(path: str, problem: StereoLocalizationProblem, solution: StereoLocalizationSolution, world: World):
+    assert solution.T_cw_history is not None
+    world = deepcopy(world)
+    world.T_wc = problem.T_wc
+    world.p_w = problem.p_w
+    fig, ax, colors = world.render(include_world_frame = False)
+    T_cw_history = solution.T_cw_history
+    for i, T_cw in enumerate(T_cw_history):
+        plotting.add_coordinate_frame(np.linalg.inv(T_cw), ax, "$\mathcal{F}" + f"_{i}$")
+    fig.savefig(path)
+    #plt.show()
+    plt.close("all")
+
+def plot_select_solutions_history(metrics: List[Dict[str, Any]], exp_dir: str, num_per_noise: int = 1):
+    metrics_by_noise = {}
+    for m in metrics:
+        var = m["noise_var"]
+        if var not in metrics_by_noise:
+            metrics_by_noise[var] = [m]
+            os.mkdir(os.path.join(exp_dir, str(var)))
+        else:
+            metrics_by_noise[var].append(m)
+
+    for var in metrics_by_noise:
+        ms = random.choices(metrics_by_noise[var], k = num_per_noise)
+        for i, m in enumerate(ms):
+            local_solution = m["local_solution"]
+            iterative_sdp_solution = m["iterative_sdp_solution"]
+            world = m["world"]
+            problem = m["problem"]
+            plot_solution_history(os.path.join(exp_dir, str(var), f"local_solution_{var}_{i}.png"), problem, local_solution, world)
+            plot_solution_history(os.path.join(exp_dir, str(var), f"iterative_sdp_solution_{var}_{i}.png"), problem, iterative_sdp_solution, world)
 
 def bar_plot(ax, data, colors=None, total_width=0.8, single_width=1, legend=True, tick_labels = None):
     """Draws a bar plot with multiple bars per data point.

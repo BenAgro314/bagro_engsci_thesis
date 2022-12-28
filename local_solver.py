@@ -95,7 +95,7 @@ def projection_error(y: np.array, T: np.array, M: np.array, p_w: np.array, W: np
     e = y - y_pred
     return np.sum(e.transpose((0, 2, 1)) @ W @ e, axis = 0)[0][0]
 
-def stereo_localization_gauss_newton(problem: StereoLocalizationProblem, max_iters: int = 1000, min_update_norm = 1e-10, log: bool = False, num_tries: int = 1):
+def stereo_localization_gauss_newton(problem: StereoLocalizationProblem, max_iters: int = 1000, min_update_norm = 1e-10, log: bool = False, num_tries: int = 1, record_history: bool = False):
     problem = deepcopy(problem)
     assert problem.y is not None and problem.T_wc is not None and problem.p_w is not None
     assert problem.W is not None, problem.M is not None
@@ -114,6 +114,7 @@ def stereo_localization_gauss_newton(problem: StereoLocalizationProblem, max_ite
             problem.gamma_r,
             problem.r_0,
             log,
+            record_history=record_history,
         )
         if soln.solved:
             break
@@ -132,6 +133,7 @@ def _stereo_localization_gauss_newton(
     gamma_r: float = 0.0,
     r_0: Optional[np.array] = None,
     log: bool = True,
+    record_history: bool = False,
 ) -> StereoLocalizationSolution:
     """Solve the stereo localization problem with a gauss-newton method
 
@@ -155,9 +157,11 @@ def _stereo_localization_gauss_newton(
         assert r_0.shape == (3, 1)
         r_0 = np.concatenate((r_0, np.array([[1]])), axis = 0)
 
-
+    T_cw_history = [] if record_history else None
     solved = True
     while (perturb_mag > min_update_norm) and (i < max_iters):
+        if record_history:
+            T_cw_history.append(T_op)
         delta = _delta(T_op @ p_w, M)
         beta = _u(y, T_op @ p_w, M)
         A = np.sum(delta @ (W + W.T) @ delta.transpose((0, 2, 1)), axis = 0)
@@ -176,7 +180,9 @@ def _stereo_localization_gauss_newton(
         i = i + 1
         if i == max_iters:
             solved = False
+    if record_history:
+        T_cw_history.append(T_op)
     cost = projection_error(y, T_op, M, p_w, W)
     if r_0 is not None:
         cost += gamma_r * (T_op[:, -1:] - r_0).T @ (T_op[:, -1:] - r_0)
-    return StereoLocalizationSolution(solved, T_op, cost)
+    return StereoLocalizationSolution(solved, T_op, cost, T_cw_history)

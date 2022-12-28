@@ -150,12 +150,13 @@ class World:
         if self.p_w is None:
             self.place_landmarks_in_camera_fov()
 
-    def render(self):
+    def render(self, include_world_frame: bool = True):
         assert self.T_wc is not None, "Need to generate sim instance first! see `make_random_sim_instance`"
         assert self.p_w is not None, "Need to generate sim instance first! see `make_random_sim_instance`"
         fig = plt.figure()
         ax = fig.add_subplot(projection='3d')
-        plotting.add_coordinate_frame(np.eye(4), ax, "$\mathfrak{F}_w$")
+        if include_world_frame:
+            plotting.add_coordinate_frame(np.eye(4), ax, "$\mathfrak{F}_w$")
         plotting.add_coordinate_frame(self.T_wc, ax, "$\mathfrak{F}_c$")
         # set aspect ratio
 

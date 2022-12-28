@@ -12,6 +12,8 @@ from local_solver import projection_error
 from sdp_relaxation import build_rotation_constraint_matrices, build_general_SDP_problem, extract_solution_from_X
 import cvxpy as cp
 
+RECORD_HISTORY=True
+
 def vec(A: np.array) -> np.array:
     assert len(A.shape) == 2
     res = A.T.reshape(-1, 1)
@@ -65,6 +67,7 @@ def iterative_sdp_solution(
     log: bool = False,
     refine: bool = True,
     max_num_tries: int = 1,
+    record_history: bool = False,
 ):
     success = False
     num_tries = 0
@@ -90,7 +93,10 @@ def iterative_sdp_solution(
         bs.append(1)
         X_old = X_sdp
         num_tries += 1
+        T_cw_history = [] if record_history else None
         for i in range(max_iters):
+            if record_history:
+                T_cw_history.append(extract_solution_from_X(X_sdp))
             Q = _build_Q(problem, _X_sdp_to_X(X_sdp))
             prob, X_var = build_general_SDP_problem(Q, As, bs)
             try:
@@ -126,16 +132,21 @@ def iterative_sdp_solution(
         if refine:
             problem = deepcopy(problem)
             problem.T_init = T
-            return local_solver.stereo_localization_gauss_newton(problem, log = False, max_iters = 100)
+            soln = local_solver.stereo_localization_gauss_newton(problem, log = False, max_iters = 100, record_history = record_history)
+            if record_history:
+                soln.T_cw_history = T_cw_history + soln.T_cw_history
+            return soln
         else:
+            if record_history:
+                T_cw_history.append(T)
             cost = projection_error(problem.y, T, problem.M, problem.p_w, problem.W)
-            return StereoLocalizationSolution(True, T, cost)
+            return StereoLocalizationSolution(True, T, cost, T_cw_history)
 
 def metrics_fcn(problem, num_tries = 100):
     mosek_params = {}
     datum = {}
-    local_solution = local_solver.stereo_localization_gauss_newton(problem, log = False, max_iters = 100, num_tries = num_tries)
-    iter_sdp_soln = iterative_sdp_solution(problem, problem.T_init, max_iters = 1, min_update_norm = 1e-10, return_X = False, mosek_params=mosek_params, max_num_tries = num_tries)
+    local_solution = local_solver.stereo_localization_gauss_newton(problem, log = False, max_iters = 100, num_tries = num_tries, record_history=RECORD_HISTORY)
+    iter_sdp_soln = iterative_sdp_solution(problem, problem.T_init, max_iters = 1, min_update_norm = 1e-10, return_X = False, mosek_params=mosek_params, max_num_tries = num_tries, record_history=RECORD_HISTORY)
     datum["local_solution"] = local_solution
     datum["iterative_sdp_solution"] = iter_sdp_soln
 
@@ -165,6 +176,8 @@ def main():
     #plotting.plot_local_and_iterative_compare(metrics, os.path.join(exp_dir, "local_vs_iterative_cost.png"))
     plotting.plot_percent_succ_vs_noise(metrics, os.path.join(exp_dir, "local_vs_iterative_bar.png"))
     plotting.plot_min_cost_vs_noise(metrics, os.path.join(exp_dir, "local_cost_vs_noise_level.png"))
+    plotting.plot_select_solutions_history(metrics, exp_dir)
+
 
 if __name__ == "__main__":
     main()
