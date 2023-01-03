@@ -95,7 +95,7 @@ class Camera:
     c_v: int
     b: float
     R: np.array # noise covariance matrix
-    fov: np.array # field of view of camera
+    fov: Optional[np.array] # field of view of camera 
 
     def M(self):
         return make_stereo_camera_matrix(
@@ -126,8 +126,8 @@ class Camera:
 class World:
 
     cam: Camera
-    p_wc_extent: np.array # (3, 1) --- x, y, z
-    num_landmarks: int
+    p_wc_extent: Optional[np.array] # (3, 1) --- x, y, z
+    num_landmarks: Optional[int]
     T_wc: Optional[np.array] = None
     p_w: Optional[np.array] = None
 

@@ -5,7 +5,6 @@ from typing import Optional, List, Tuple
 from copy import deepcopy
 
 import numpy as np
-
 import sim
 
 
@@ -56,7 +55,7 @@ def make_sim_instances(num_instances: int, num_landmarks: int, p_wc_extent: np.a
     return instances
 
 
-def run_experiment(metrics_fcn, var_list, num_problem_instances, num_landmarks, num_local_solve_tries, cam, p_wc_extent, W = None, r0 = None, gamma_r = 0):
+def run_experiment(metrics_fcn, var_list, num_problem_instances, num_landmarks, num_local_solve_tries, cam, p_wc_extent, W = None, r0 = None, gamma_r = 0, problem_instances = None):
 
     exp_time = datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
     dir_path = os.path.dirname(os.path.realpath(__file__))

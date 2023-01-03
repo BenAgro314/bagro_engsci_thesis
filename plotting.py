@@ -8,9 +8,6 @@ from copy import deepcopy
 from matplotlib.text import Annotation
 import matplotlib.pyplot as plt
 
-from experiments import StereoLocalizationProblem, StereoLocalizationSolution
-from sim import World
-import plotting
 
 class Arrow3D(FancyArrowPatch):
     """Add an arrow with start and end coords to a 3d plot"""
@@ -40,7 +37,7 @@ class Annotation3D(Annotation):
         self.xy=(xs,ys)
         Annotation.draw(self, renderer)
 
-def add_coordinate_frame(T_wc: np.array, ax: plt.axes, label: str):
+def add_coordinate_frame(T_wc: np.array, ax: plt.axes, label: str, size: float = 1):
     """
     Adds a coordinate frame (x,y,z axes) to a 3d plot
 
@@ -58,9 +55,9 @@ def add_coordinate_frame(T_wc: np.array, ax: plt.axes, label: str):
     assert np.allclose(C @ C.T, np.eye(3))
 
     ax.scatter3D(r[0], r[1], r[2], s = 0)
-    x = T_wc @ np.array([[1], [0], [0], [1]])
-    y = T_wc @ np.array([[0], [1], [0], [1]])
-    z = T_wc @ np.array([[0], [0], [1], [1]])
+    x = T_wc @ np.array([[size], [0], [0], [1]])
+    y = T_wc @ np.array([[0], [size], [0], [1]])
+    z = T_wc @ np.array([[0], [0], [size], [1]])
 
     tag = Annotation3D(label, r, fontsize=10, xytext=(-3,3),
                textcoords='offset points', ha='right',va='bottom')
@@ -148,6 +145,7 @@ def plot_min_cost_vs_noise(metrics: List[Dict[str, Any]], path: str):
     plt.show()
     plt.close("all")
 
+
 def plot_percent_succ_vs_noise(metrics: List[Dict[str, Any]], path: str):
 
     vars = [m["noise_var"] for m in metrics]
@@ -189,7 +187,7 @@ def plot_percent_succ_vs_noise(metrics: List[Dict[str, Any]], path: str):
     plt.show()
     plt.close("all")
 
-def plot_solution_history(path: str, problem: StereoLocalizationProblem, solution: StereoLocalizationSolution, world: World):
+def plot_solution_history(path: str, problem, solution, world):
     assert solution.T_cw_history is not None
     world = deepcopy(world)
     world.T_wc = problem.T_wc
@@ -197,7 +195,7 @@ def plot_solution_history(path: str, problem: StereoLocalizationProblem, solutio
     fig, ax, colors = world.render(include_world_frame = False)
     T_cw_history = solution.T_cw_history
     for i, T_cw in enumerate(T_cw_history):
-        plotting.add_coordinate_frame(np.linalg.inv(T_cw), ax, "$\mathcal{F}" + f"_{i}$")
+        add_coordinate_frame(np.linalg.inv(T_cw), ax, "$\mathcal{F}" + f"_{i}$")
     fig.savefig(path)
     #plt.show()
     plt.close("all")
