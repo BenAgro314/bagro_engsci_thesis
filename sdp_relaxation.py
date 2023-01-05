@@ -72,9 +72,10 @@ def build_cost_matrix(num_datapoints: int, y: np.array, Ws: np.array, M: np.arra
     Q = Q + gamma_r * Q_r_prior  + gamma_c * Q_c_prior
     return Q
 
-def build_measurement_constraint_matrices(num_datapoints: int, p_w: np.array) -> Tuple[List[np.array], List[np.array]]:
+def build_measurement_constraint_matrices(p_w: np.array) -> Tuple[List[np.array], List[np.array]]:
     As = []
     bs = []
+    num_datapoints = p_w.shape[0]
     n = 13 + 3 * num_datapoints
     e_1 = np.zeros((3, 1))
     e_1[0, 0] = 1
@@ -101,7 +102,6 @@ def build_measurement_constraint_matrices(num_datapoints: int, p_w: np.array) ->
         m = m.reshape((3, -1))
         A[12 + 3*k : 12 + 3*k + 3, 0:12] = m
         A[-1, 0:12] = (e_2.T * np.expand_dims(p_w[k], -1)).flatten()
-        A = 0.5 * (A + A.T)
         A = 0.5 * (A + A.T)
         As.append(A)
         bs.append(0)
@@ -163,6 +163,45 @@ def build_rotation_constraint_matrices() -> Tuple[List[np.array], List[np.array]
     As.append(A)
     bs.append(0)
 
+    return As, bs
+
+def build_parallel_constraint_matrices(p_w: np.array) -> Tuple[List[np.array], List[np.array]]:
+    As = []
+    bs = []
+    num_datapoints = p_w.shape[0]
+    n = 13 + 3 * num_datapoints
+    e_1 = np.zeros((4, 1))
+    e_1[0, 0] = 1
+    e_2 = np.zeros((4, 1))
+    e_2[1, 0] = 1
+    e_3 = np.zeros((4, 1))
+    e_3[2, 0] = 1
+    e_4 = np.zeros((4, 1))
+    e_4[3, 0] = 1
+
+    e = [e_1, e_2, e_3, e_4]
+
+    for k in range(num_datapoints):
+        C_k = np.zeros((4, n))
+        C_k[-1, -1] = 1
+        for i in range(4):
+            C_k[:3, 3*i:3*i+3] = np.eye(3) * p_w[k, i, 0]
+        B_k = np.zeros((4, n))
+        B_k[:, -1:] = e_3
+
+        B_k[:, 12 + 3*k : 12 + 3*k + 1] = e_1
+        B_k[:, 12 + 3*k + 1 : 12 + 3*k + 2] = e_2
+        B_k[:, 12 + 3*k + 2 : 12 + 3*k + 3] = e_4
+
+
+        for i in range(4):
+            for j in range(4):
+                if i == j:
+                    continue
+                A = C_k.T @ e[j] @ e[i].T @ B_k - B_k.T @ e[j] @ e[i].T @ C_k
+                A = 0.5 * (A + A.T)
+                As.append(A)
+                bs.append(0)
     return As, bs
 
 

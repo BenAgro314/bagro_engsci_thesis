@@ -311,4 +311,54 @@ We can relax these last two constraints to get an SDP:
 \mathbf{X} \succeq 0.
 \end{align}
 
+\newpage
+\section{Redundant Constraints}
+
+\subsection{Parallel Constraints}
+
+Note that because $\mathbf{v}_k = \frac{1}{z_k} \mathbf{T} \mathbf{p}_k$, $\mathbf{v}_k$ and $\mathbf{T} \mathbf{p}_k$ are parallel.
+Further, for any parallel column vectors $\mathbf{u}, \mathbf{w}$, $\exists \alpha \in \mathbb{R}$ such that
+\begin{align}
+    \mathbf{u} &= \alpha \mathbf{w}
+    \implies \mathbf{u}\mathbf{w}^T = \alpha \mathbf{w}\mathbf{w}^T = \mathbf{w} \mathbf{u}^T.
+\end{align}
+Thus, we can right:
+\begin{align}
+    \mathbf{v}_k (\mathbf{T} \mathbf{p}_k)^T = (\mathbf{T} \mathbf{p}_k)\mathbf{v}_k^T \in \mathbb{R}^{4 \times 4}.
+\end{align}
+We want to re-write these 16 scalar equality constraints in the form $\mathbf{x}^T \mathbf{A} \mathbf{x} = b$ for some $A$, $b$.
+Note that
+\begin{align}
+    \mathbf{v}_k = \begin{bmatrix}
+        0 & \dots & 0 & \mathbf{e}_1 & \mathbf{e}_2 & \mathbf{e}_4 & 0 & \dots 0 & \mathbf{e}_3
+    \end{bmatrix} \mathbf{x} = \mathbf{B}_k \mathbf{x},
+\end{align}
+and
+\begin{align}
+    \mathbf{T} \mathbf{p}_k = \begin{bmatrix}
+        p_{k1} \mathbf{c}_1 + p_{k2} \mathbf{c}_2 + p_{k3} \mathbf{c}_3 + \mathbf{r} \\
+        1
+    \end{bmatrix} \\
+    = \begin{bmatrix}
+        p_{k1} \mathbf{I} & p_{k2} \mathbf{I} & p_{k3} \mathbf{I}  & \mathbf{I} & \mathbf{0} & \dots & 0 \\
+        \mathbf{0}        & \mathbf{0}        & \mathbf{0}         & \mathbf{0} & \mathbf{0} & \dots & 1
+    \end{bmatrix} \mathbf{x} = \mathbf{C}_k \mathbf{x}.
+\end{align}
+Now the $i^{th}, j^{th}$ constraint is
+\begin{align}
+    \mathbf{e}_i^T \mathbf{v}_k (\mathbf{T} \mathbf{p}_k)^T \mathbf{e}_j = \mathbf{e}_i^T (\mathbf{T} \mathbf{p}_k)\mathbf{v}_k^T \mathbf{e}_j, \forall i,j \in {1, \dots, 4} \\
+    \implies
+    \mathbf{e}_i^T  \mathbf{B}_k \mathbf{x} \mathbf{x}^T \mathbf{C}_k^T \mathbf{e}_j = \mathbf{e}_i^T  \mathbf{C}_k \mathbf{x} \mathbf{x}^T \mathbf{B}_k^T \mathbf{e}_j.
+\end{align}
+Because $\mathbf{x}^T \mathbf{C}_k^T \mathbf{e}_j$ and $\mathbf{e}_i^T  \mathbf{B}_k \mathbf{x}$ are scalars, they commute:
+\begin{align}
+    \mathbf{x}^T \mathbf{C}_k^T \mathbf{e}_j \mathbf{e}_i^T  \mathbf{B}_k \mathbf{x} - \mathbf{x}^T \mathbf{B}_k^T \mathbf{e}_j \mathbf{e}_i^T  \mathbf{C}_k \mathbf{x} = 0 \\
+    \implies
+    \mathbf{x}^T (\mathbf{C}_k^T \mathbf{e}_j \mathbf{e}_i^T  \mathbf{B}_k - \mathbf{B}_k^T \mathbf{e}_j \mathbf{e}_i^T \mathbf{C}_k) \mathbf{x} = 0 \label{eq:par}
+\end{align}
+which is of the desired form. Note that when $i = j$, $(\mathbf{C}_k^T \mathbf{e}_j \mathbf{e}_i^T  \mathbf{B}_k - \mathbf{B}_k^T \mathbf{e}_j \mathbf{e}_i^T \mathbf{C}_k)$
+is skew symmetric, so equation \ref{eq:par} is trivially satisfied. Therefore, we will add $(16 - 4)K = 12K$ constraints to the SDP.
+
+\section{Iterative SDP Method}
+
 \end{document}

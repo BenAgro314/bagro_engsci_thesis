@@ -126,7 +126,6 @@ def run_experiment(problems: List[StereoLocalizationProblem], num_local_solve_tr
 
 
 def main():
-    
     num_local_solve_tries = 20
 
     problems, p_wc_extent, y_var = read_dataset('dataset3/dataset3.mat')
