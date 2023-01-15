@@ -34,18 +34,18 @@ def metrics_fcn(problem):
 
 def main():
 
-    var_list = [0.1, 0.3, 0.5, 0.7, 0.9, 1]#, 3, 5, 7, 9, 10]
+    var_list = [0.1, 0.3, 0.5, 0.7, 0.9, 1, 3, 5, 7, 9, 10]
     num_problem_instances = 5
-    num_landmarks = 3
+    num_landmarks = 4
     num_local_solve_tries = 100
 
     cam = sim.Camera(
-        f_u = 160, # focal length in horizonal pixels
+        f_u = 160, # focal length in horizontal pixels
         f_v = 160, # focal length in vertical pixels
-        c_u = 320, # pinhole projection in horizonal pixels
-        c_v = 240, # pinhold projection in vertical pixels
+        c_u = 320, # pinhole projection in horizontal pixels
+        c_v = 240, # pinhole projection in vertical pixels
         b = 0.25, # baseline (meters)
-        R = 0 * np.eye(4), # covarience matrix for image-space noise
+        R = 0 * np.eye(4), # co-variance matrix for image-space noise
         fov = np.array([[-1,1], [-1, 1], [2, 5]])
     )
 
