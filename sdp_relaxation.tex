@@ -4,6 +4,10 @@
 \usepackage{upgreek}
 \usepackage{amsfonts}
 
+\newcommand{\mbf}[1]{\mathbf{#1}}
+\newcommand{\bbm}{\begin{bmatrix}}
+\newcommand{\ebm}{\end{bmatrix}}
+
 \setcounter{MaxMatrixCols}{20}
 
 \title{Thesis}
@@ -19,296 +23,296 @@
 \subsection{Re-write as QCQP}
 
 \begin{align}
-\mathbf{T_{cw}} = \text{argmin}_{\mathbf{T}} \sum_k (\mathbf{y}_k - \mathbf{M} \frac{1}{z_k} \mathbf{T} \mathbf{p}_k)^T \mathbf{W}_k (\mathbf{y}_k - \mathbf{M} \frac{1}{z_k} \mathbf{T} \mathbf{p}_k),\\
-\mathbf{T} \in SE(3),\\
-z_k = \mathbf{e}_3^T \mathbf{T} \mathbf{p}_k,
+\mbf{T_{cw}} = \text{argmin}_{\mbf{T}} \sum_k (\mbf{y}_k - \mbf{M} \frac{1}{z_k} \mbf{T} \mbf{p}_k)^T \mbf{W}_k (\mbf{y}_k - \mbf{M} \frac{1}{z_k} \mbf{T} \mbf{p}_k),\\
+\mbf{T} \in SE(3),\\
+z_k = \mbf{e}_3^T \mbf{T} \mbf{p}_k,
 \end{align}
-where $\mathbf{e}_3^T = \begin{bmatrix}0 & 0 & 1 & 0\end{bmatrix}.$
-Let $\mathbf{v}_k = \frac{1}{z_k}\mathbf{T}\mathbf{p}_k$:
+where $\mbf{e}_3^T = \bbm0 & 0 & 1 & 0\ebm.$
+Let $\mbf{v}_k = \frac{1}{z_k}\mbf{T}\mbf{p}_k$:
 \begin{align}
-\mathbf{v}_kz_k = \mathbf{T}\mathbf{p}_k\\
-\mathbf{v}_k \mathbf{e}_3^T \mathbf{T} \mathbf{p}_k = \mathbf{T}\mathbf{p}_k\\
-(\mathbf{I} - \mathbf{v}_k \mathbf{e}_3^T)\mathbf{T}\mathbf{p}_k = \mathbf{0} \in \mathbb R^4
+\mbf{v}_kz_k = \mbf{T}\mbf{p}_k\\
+\mbf{v}_k \mbf{e}_3^T \mbf{T} \mbf{p}_k = \mbf{T}\mbf{p}_k\\
+(\mbf{I} - \mbf{v}_k \mbf{e}_3^T)\mbf{T}\mbf{p}_k = \mbf{0} \in \mathbb R^4
 \end{align}
 Now we can re-write our optimization problem as
 \begin{align}
-\mathbf{T_{cw}} = \text{argmin}_{\mathbf{T}, \mathbf{v}_k} \sum_k (\mathbf{y}_k - \mathbf{M} \mathbf{v}_k)^T \mathbf{W}_k (\mathbf{y}_k - \mathbf{M} \mathbf{v}_k),\\
-\mathbf{T} \in SE(3),\\
-(\forall k) \quad (\mathbf{I} - \mathbf{v}_k \mathbf{e}_3^T)\mathbf{T}\mathbf{p}_k = \mathbf{0}
+\mbf{T_{cw}} = \text{argmin}_{\mbf{T}, \mbf{v}_k} \sum_k (\mbf{y}_k - \mbf{M} \mbf{v}_k)^T \mbf{W}_k (\mbf{y}_k - \mbf{M} \mbf{v}_k),\\
+\mbf{T} \in SE(3),\\
+(\forall k) \quad (\mbf{I} - \mbf{v}_k \mbf{e}_3^T)\mbf{T}\mbf{p}_k = \mbf{0}
 \end{align}
 We want to write this in the standard, homogenous, form 
 \begin{align}
-\mathbf{x}^* = \text{argmin}_{\mathbf{x}} \quad \mathbf{x}^T \mathbf{Q} \mathbf{x}\\
-(\forall i) \quad \mathbf{x}^T \mathbf{A}_i \mathbf{x} = b_i.
+\mbf{x}^* = \text{argmin}_{\mbf{x}} \quad \mbf{x}^T \mbf{Q} \mbf{x}\\
+(\forall i) \quad \mbf{x}^T \mbf{A}_i \mbf{x} = b_i.
 \end{align}
 
 \subsubsection{Cost}
 
 We will start with the cost, adding the homogenization variable $\omega$:
 \begin{align}
-\mathbf{T_{cw}} = \text{argmin}_{\mathbf{T}, \mathbf{v}_k, \omega} \sum_k (\omega \mathbf{y}_k - \mathbf{M} \mathbf{v}_k)^T \mathbf{W}_k (\omega \mathbf{y}_k - \mathbf{M} \mathbf{v}_k),\\
-\mathbf{T} \in SE(3),\\
-(\forall k) \quad (\mathbf{I} - \mathbf{v}_k \mathbf{a}^T)\mathbf{T}\mathbf{p}_k = \mathbf{0}\\
+\mbf{T_{cw}} = \text{argmin}_{\mbf{T}, \mbf{v}_k, \omega} \sum_k (\omega \mbf{y}_k - \mbf{M} \mbf{v}_k)^T \mbf{W}_k (\omega \mbf{y}_k - \mbf{M} \mbf{v}_k),\\
+\mbf{T} \in SE(3),\\
+(\forall k) \quad (\mbf{I} - \mbf{v}_k \mbf{a}^T)\mbf{T}\mbf{p}_k = \mbf{0}\\
 \omega^2 = 1.
 \end{align}
 We denote
 \begin{align}
-    \mathbf{v}_k = \frac{\mathbf{T}\mathbf{p}_k}{\mathbf{e}_3^T \mathbf{T} \mathbf{p}_k} = \begin{bmatrix}
+    \mbf{v}_k = \frac{\mbf{T}\mbf{p}_k}{\mbf{e}_3^T \mbf{T} \mbf{p}_k} = \bbm
         v_{k1} \\
         v_{k2} \\
         1 \\
         v_{k4}
-    \end{bmatrix} = \begin{bmatrix}
+    \ebm = \bbm
         v_{k1} \\
         v_{k2} \\
         \omega \\
         v_{k4}
-    \end{bmatrix}.
+    \ebm.
 \end{align}
 We add the homogenization variable so the cost and constraints remain quadtratic.
 
 Expanding the term in the sum:
 \begin{align}
-(\omega\mathbf{y}_k - \mathbf{M} \mathbf{v}_k)^T \mathbf{W}_k (\omega \mathbf{y}_k - \mathbf{M} \mathbf{v}_k) = \\
-\omega^2 \mathbf{y}_k^T \mathbf{W}_k \mathbf{y_k} - \omega\mathbf{y}_k^T \mathbf{W}_k \mathbf{M} \mathbf{v}_k - \omega  \mathbf{v}_k^T\mathbf{M}^T\mathbf{W}_k \mathbf{y}_k + \mathbf{v}_k^T\mathbf{M}^T\mathbf{W}_k \mathbf{M} \mathbf{v}_k \label{eq:in-sum}
+(\omega\mbf{y}_k - \mbf{M} \mbf{v}_k)^T \mbf{W}_k (\omega \mbf{y}_k - \mbf{M} \mbf{v}_k) = \\
+\omega^2 \mbf{y}_k^T \mbf{W}_k \mbf{y_k} - \omega\mbf{y}_k^T \mbf{W}_k \mbf{M} \mbf{v}_k - \omega  \mbf{v}_k^T\mbf{M}^T\mbf{W}_k \mbf{y}_k + \mbf{v}_k^T\mbf{M}^T\mbf{W}_k \mbf{M} \mbf{v}_k \label{eq:in-sum}
 \end{align}
 Let
 \begin{align}
-    \mathbf{E} = \begin{bmatrix}
-        \mathbf{e}_1 & \mathbf{e}_2 & \mathbf{e}_4
-    \end{bmatrix} \in \mathbb{R}^{4 \times 3},
+    \mbf{E} = \bbm
+        \mbf{e}_1 & \mbf{e}_2 & \mbf{e}_4
+    \ebm \in \mathbb{R}^{4 \times 3},
 \end{align}
 and
 \begin{align}
-    \mathbf{u}_k = \begin{bmatrix}
+    \mbf{u}_k = \bbm
         v_{k1} \\
         v_{k2} \\
         v_{k4}
-    \end{bmatrix},
+    \ebm,
 \end{align}
-where $\mathbf{e}_i \in \mathbb{R}^{4\times 1}$ is all zeros except for the $i^{th}$ entry which is 1.
-We can then re-write $\mathbf{v}_k$:
+where $\mbf{e}_i \in \mathbb{R}^{4\times 1}$ is all zeros except for the $i^{th}$ entry which is 1.
+We can then re-write $\mbf{v}_k$:
 \begin{align}
-    \mathbf{v}_k = \mathbf{E}\mathbf{u}_k + \mathbf{e}_3 \omega,
+    \mbf{v}_k = \mbf{E}\mbf{u}_k + \mbf{e}_3 \omega,
 \end{align}
 and use this to expand equation \ref{eq:in-sum}:
 \begin{align}
-    &\omega^2 \mathbf{y}_k^T \mathbf{W}_k \mathbf{y}_k \\
-    &- \omega \mathbf{y}_k^T \mathbf{W}_k \mathbf{M} \mathbf{E} \mathbf{u}_k - \mathbf{y}_k^T \mathbf{W}_k \mathbf{M} \mathbf{e}_3^T \omega^2 \\
-    &- \omega \mathbf{u}_k^T \mathbf{E}^T \mathbf{M}^T \mathbf{W}_k \mathbf{y}_k - \mathbf{e}_3^T \mathbf{M}^T \mathbf{W}_k \mathbf{y}_k \omega^2 \\
-    &+ \mathbf{u}_k \mathbf{E}^T \mathbf{M}^T \mathbf{W}_k \mathbf{M} \mathbf{E} \mathbf{u}_k + \omega \mathbf{e}_3^T \mathbf{M}^T \mathbf{W}_k \mathbf{M} \mathbf{E} \mathbf{u}_k + \mathbf{u}_k^T \mathbf{E}^T \mathbf{M}^T \mathbf{W}_k \mathbf{M} \mathbf{e}_3 \omega + \mathbf{e}_3^T \mathbf{M}^T \mathbf{W}_k \mathbf{M} \mathbf{e}_3 \omega^T.
+    &\omega^2 \mbf{y}_k^T \mbf{W}_k \mbf{y}_k \\
+    &- \omega \mbf{y}_k^T \mbf{W}_k \mbf{M} \mbf{E} \mbf{u}_k - \mbf{y}_k^T \mbf{W}_k \mbf{M} \mbf{e}_3^T \omega^2 \\
+    &- \omega \mbf{u}_k^T \mbf{E}^T \mbf{M}^T \mbf{W}_k \mbf{y}_k - \mbf{e}_3^T \mbf{M}^T \mbf{W}_k \mbf{y}_k \omega^2 \\
+    &+ \mbf{u}_k \mbf{E}^T \mbf{M}^T \mbf{W}_k \mbf{M} \mbf{E} \mbf{u}_k + \omega \mbf{e}_3^T \mbf{M}^T \mbf{W}_k \mbf{M} \mbf{E} \mbf{u}_k + \mbf{u}_k^T \mbf{E}^T \mbf{M}^T \mbf{W}_k \mbf{M} \mbf{e}_3 \omega + \mbf{e}_3^T \mbf{M}^T \mbf{W}_k \mbf{M} \mbf{e}_3 \omega^T.
 \end{align}
 Now we can write the cost in matrix form:
 \begin{align}
-    \mathbf{x}_2^T
-    \begin{bmatrix}
-        \mathbf{H}_1 & 0 & \dots & 0 & \mathbf{g}_1 \\
-        0 & \mathbf{H}_2 & \dots & 0 & \mathbf{g}_2 \\
+    \mbf{x}_2^T
+    \bbm
+        \mbf{H}_1 & 0 & \dots & 0 & \mbf{g}_1 \\
+        0 & \mbf{H}_2 & \dots & 0 & \mbf{g}_2 \\
         \dots \\
-        0 & 0 & \dots & \mathbf{H}_N & \mathbf{g}_N \\ 
-        \mathbf{g}_1^T & \mathbf{g}_2^T & \dots &  \mathbf{g}_N^T & \mathbf{\Omega}
-    \end{bmatrix}  
-    \mathbf{x}_2
+        0 & 0 & \dots & \mbf{H}_N & \mbf{g}_N \\ 
+        \mbf{g}_1^T & \mbf{g}_2^T & \dots &  \mbf{g}_N^T & \mbf{\Omega}
+    \ebm  
+    \mbf{x}_2
 \end{align}
 where
 \begin{align}
-    \mathbf{x}_2 = \begin{bmatrix} \mathbf{u}_1 \\ \mathbf{u}_2 \\ \dots \\ \mathbf{u}_N \\ \omega \end{bmatrix}, \\
-    \mathbf{\Omega} = \sum_k \left( \mathbf{y}_k^T \mathbf{W}_k \mathbf{y}_k - \mathbf{y}_k^T \mathbf{W}_k \mathbf{M} \mathbf{e}_3 - \mathbf{e}_3^T \mathbf{M}^T \mathbf{W}_k \mathbf{y}_k + \mathbf{e}_3^T \mathbf{M}^T \mathbf{W}_k \mathbf{M} \mathbf{e}_3 \right) \in \mathbb{R}, \\
-    \mathbf{g}_k = -\mathbf{E}^T\mathbf{M}^T\mathbf{W}_k\mathbf{y}_k + \mathbf{E}^T\mathbf{M}^T\mathbf{W}_k\mathbf{M}\mathbf{e}_3  \in \mathbb{R}^{3 \times 1}, \\
-    \mathbf{H}_k = \mathbf{E}^T \mathbf{M}^T \mathbf{W}_k \mathbf{M} \mathbf{E} \in \mathbb{R}^{3 \times 3}
+    \mbf{x}_2 = \bbm \mbf{u}_1 \\ \mbf{u}_2 \\ \dots \\ \mbf{u}_N \\ \omega \ebm, \\
+    \mbf{\Omega} = \sum_k \left( \mbf{y}_k^T \mbf{W}_k \mbf{y}_k - \mbf{y}_k^T \mbf{W}_k \mbf{M} \mbf{e}_3 - \mbf{e}_3^T \mbf{M}^T \mbf{W}_k \mbf{y}_k + \mbf{e}_3^T \mbf{M}^T \mbf{W}_k \mbf{M} \mbf{e}_3 \right) \in \mathbb{R}, \\
+    \mbf{g}_k = -\mbf{E}^T\mbf{M}^T\mbf{W}_k\mbf{y}_k + \mbf{E}^T\mbf{M}^T\mbf{W}_k\mbf{M}\mbf{e}_3  \in \mathbb{R}^{3 \times 1}, \\
+    \mbf{H}_k = \mbf{E}^T \mbf{M}^T \mbf{W}_k \mbf{M} \mbf{E} \in \mathbb{R}^{3 \times 3}
 \end{align}
 
 \subsubsection{Constraints}
-Lets begin with the constraint $\mathbf{T} \in SE(3)$. 
+Lets begin with the constraint $\mbf{T} \in SE(3)$. 
 Let 
 \begin{align}
-\mathbf{T} = \begin{bmatrix} \mathbf{C} & \mathbf{r} \\ \mathbf{0}^T & 1 \end{bmatrix}, \quad \mathbf{C} \in SO(3).\\
-\mathbf{C}^T\mathbf{C} = \mathbf{I} \quad \text{and} \quad \text{det}(\mathbf{C}) = 1.
+\mbf{T} = \bbm \mbf{C} & \mbf{r} \\ \mbf{0}^T & 1 \ebm, \quad \mbf{C} \in SO(3).\\
+\mbf{C}^T\mbf{C} = \mbf{I} \quad \text{and} \quad \text{det}(\mbf{C}) = 1.
 \end{align}
 We will drop the determinate constraint. 
 Write
 \begin{align}
-\mathbf{C} = \begin{bmatrix} \mathbf{c}_1 & \mathbf{c}_2 & \mathbf{c}_3 \end{bmatrix}\\
-\mathbf{C}^T\mathbf{C} = \begin{bmatrix} \mathbf{c}_1^T \\ \mathbf{c}_2^T \\ \mathbf{c}_3^T \end{bmatrix} \begin{bmatrix} \mathbf{c}_1 & \mathbf{c}_2 & \mathbf{c}_3 \end{bmatrix} = \mathbf{I}
+\mbf{C} = \bbm \mbf{c}_1 & \mbf{c}_2 & \mbf{c}_3 \ebm\\
+\mbf{C}^T\mbf{C} = \bbm \mbf{c}_1^T \\ \mbf{c}_2^T \\ \mbf{c}_3^T \ebm \bbm \mbf{c}_1 & \mbf{c}_2 & \mbf{c}_3 \ebm = \mbf{I}
 \end{align}
 This implies 6 (due to symmetry we don't need all 9) quadtratic constraints in the form:
 \begin{align}
-\mathbf{c}_i^T \mathbf{c}_j = \delta_{i,j} = \begin{cases} 1 \quad\text{if } i = j\\ 0 \quad\text{else}\end{cases},
+\mbf{c}_i^T \mbf{c}_j = \delta_{i,j} = \begin{cases} 1 \quad\text{if } i = j\\ 0 \quad\text{else}\end{cases},
 \end{align}
 We can write these in matrix form. Let
 \begin{align}
-\mathbf{x}_1 = \begin{bmatrix} \mathbf{c}_1 \\ \mathbf{c}_2 \\ \mathbf{c}_3 \\ \mathbf{r} \end{bmatrix}.
+\mbf{x}_1 = \bbm \mbf{c}_1 \\ \mbf{c}_2 \\ \mbf{c}_3 \\ \mbf{r} \ebm.
 \end{align}
 Then the six constraints are 
 \begin{align}
-    \mathbf{x}_1^T  \begin{bmatrix} \mathbf{I} & \mathbf{0} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \end{bmatrix} \mathbf{x}_1 = 1,\\
-    \mathbf{x}_1^T  \begin{bmatrix} \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{I} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \end{bmatrix} \mathbf{x}_1 = 1,\\
-    \mathbf{x}_1^T  \begin{bmatrix} \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{I} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \end{bmatrix} \mathbf{x}_1 = 1,\\
-    \mathbf{x}_1^T  \begin{bmatrix} \mathbf{0} & \mathbf{I} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \end{bmatrix} \mathbf{x}_1 = 0,\\
-    \mathbf{x}_1^T  \begin{bmatrix} \mathbf{0} & \mathbf{0} & \mathbf{I} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \end{bmatrix} \mathbf{x}_1 = 0,\\
-    \mathbf{x}_1^T  \begin{bmatrix} \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{I} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \\ \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \end{bmatrix} \mathbf{x}_1 = 0,\\
+    \mbf{x}_1^T  \bbm \mbf{I} & \mbf{0} & \mbf{0} & \mbf{0} \\ \mbf{0} & \mbf{0} & \mbf{0} & \mbf{0} \\ \mbf{0} & \mbf{0} & \mbf{0} & \mbf{0} \\ \mbf{0} & \mbf{0} & \mbf{0} & \mbf{0} \ebm \mbf{x}_1 = 1,\\
+    \mbf{x}_1^T  \bbm \mbf{0} & \mbf{0} & \mbf{0} & \mbf{0} \\ \mbf{0} & \mbf{I} & \mbf{0} & \mbf{0} \\ \mbf{0} & \mbf{0} & \mbf{0} & \mbf{0} \\ \mbf{0} & \mbf{0} & \mbf{0} & \mbf{0} \ebm \mbf{x}_1 = 1,\\
+    \mbf{x}_1^T  \bbm \mbf{0} & \mbf{0} & \mbf{0} & \mbf{0} \\ \mbf{0} & \mbf{0} & \mbf{0} & \mbf{0} \\ \mbf{0} & \mbf{0} & \mbf{I} & \mbf{0} \\ \mbf{0} & \mbf{0} & \mbf{0} & \mbf{0} \ebm \mbf{x}_1 = 1,\\
+    \mbf{x}_1^T  \bbm \mbf{0} & \mbf{I} & \mbf{0} & \mbf{0} \\ \mbf{0} & \mbf{0} & \mbf{0} & \mbf{0} \\ \mbf{0} & \mbf{0} & \mbf{0} & \mbf{0} \\ \mbf{0} & \mbf{0} & \mbf{0} & \mbf{0} \ebm \mbf{x}_1 = 0,\\
+    \mbf{x}_1^T  \bbm \mbf{0} & \mbf{0} & \mbf{I} & \mbf{0} \\ \mbf{0} & \mbf{0} & \mbf{0} & \mbf{0} \\ \mbf{0} & \mbf{0} & \mbf{0} & \mbf{0} \\ \mbf{0} & \mbf{0} & \mbf{0} & \mbf{0} \ebm \mbf{x}_1 = 0,\\
+    \mbf{x}_1^T  \bbm \mbf{0} & \mbf{0} & \mbf{0} & \mbf{0} \\ \mbf{0} & \mbf{0} & \mbf{I} & \mbf{0} \\ \mbf{0} & \mbf{0} & \mbf{0} & \mbf{0} \\ \mbf{0} & \mbf{0} & \mbf{0} & \mbf{0} \ebm \mbf{x}_1 = 0,\\
 \end{align}
 
-Next lets deal with the constraint $(\forall k) \quad (\mathbf{I} - \mathbf{v}_k \mathbf{e}_3^T) \mathbf{T} \mathbf{p}_k = \mathbf{0}$. Expand this and add our homogenization variable $\omega$:
+Next lets deal with the constraint $(\forall k) \quad (\mbf{I} - \mbf{v}_k \mbf{e}_3^T) \mbf{T} \mbf{p}_k = \mbf{0}$. Expand this and add our homogenization variable $\omega$:
 \begin{align}
-    (\mathbf{I} - \mathbf{v}_k \mathbf{e}_3^T) \mathbf{T} \mathbf{p}_k = \mathbf{0} \\
-    \left( \begin{bmatrix}
+    (\mbf{I} - \mbf{v}_k \mbf{e}_3^T) \mbf{T} \mbf{p}_k = \mbf{0} \\
+    \left( \bbm
         \omega & 0 & 0 & 0 \\
         0 & \omega & 0 & 0 \\
         0 & 0 & \omega & 0 \\ 
         0 & 0 & 0 & 1 \\
-    \end{bmatrix} - \begin{bmatrix}
+    \ebm - \bbm
         v_{k1} \\
         v_{k2} \\
         \omega \\
         v_{k4} 
-    \end{bmatrix} \begin{bmatrix}
+    \ebm \bbm
         0 & 0 & 1 & 0
-    \end{bmatrix} \right) \begin{bmatrix}
-        \mathbf{c}_1 & \mathbf{c}_2 & \mathbf{c}_3 & \mathbf{r} \\
+    \ebm \right) \bbm
+        \mbf{c}_1 & \mbf{c}_2 & \mbf{c}_3 & \mbf{r} \\
         0 & 0 & 0 & 1
-    \end{bmatrix} \begin{bmatrix}
+    \ebm \bbm
         p_{k1} \\
         p_{k2} \\
         p_{k3} \\
         1
-    \end{bmatrix} = \mathbf{0} \\
-    \begin{bmatrix}
+    \ebm = \mbf{0} \\
+    \bbm
         \omega & 0 & -v_{k1} & 0 \\
         0 & \omega & -v_{k2} & 0 \\
         0 & 0 & 0 & 0 \\
         0 & 0 & -v_{k4} & 1 \\
-    \end{bmatrix} \begin{bmatrix}
-        \mathbf{c}_1 p_{k1} + \mathbf{c}_2 p_{k2} + \mathbf{c}_3 p_{k3} + \mathbf{r} \\
+    \ebm \bbm
+        \mbf{c}_1 p_{k1} + \mbf{c}_2 p_{k2} + \mbf{c}_3 p_{k3} + \mbf{r} \\
         1
-    \end{bmatrix} = \mathbf{0} \\
+    \ebm = \mbf{0} \\
 \end{align}
 This last equation yields four three equality constraints:
 {\small
 \begin{align}
-    \omega \mathbf{e}_1^T \mathbf{c}_1 p_{k1}
-    + \omega \mathbf{e}_1^T \mathbf{c}_2 p_{k2}
-    + \omega \mathbf{e}_1^T \mathbf{c}_3 p_{k3}
-    + \omega \mathbf{e}_1^T \mathbf{r}
-    - v_{k1}\mathbf{e}_3^T  \mathbf{c}_1 p_{k1}
-    - v_{k1}\mathbf{e}_3^T \mathbf{c}_2 p_{k2}
-    - v_{k1}\mathbf{e}_3^T \mathbf{c}_3 p_{k3}
-    - v_{k1}\mathbf{e}_3^T \mathbf{r} = 0, \\
-    \omega \mathbf{e}_2^T \mathbf{c}_1 p_{k1}
-    + \omega \mathbf{e}_2^T \mathbf{c}_2 p_{k2}
-    + \omega \mathbf{e}_2^T \mathbf{c}_3 p_{k3}
-    + \omega \mathbf{e}_2^T \mathbf{r}
-    - v_{k2}\mathbf{e}_3^T  \mathbf{c}_1 p_{k1}
-    - v_{k2}\mathbf{e}_3^T \mathbf{c}_2 p_{k2}
-    - v_{k2}\mathbf{e}_3^T \mathbf{c}_3 p_{k3}
-    - v_{k2}\mathbf{e}_3^T \mathbf{r} = 0, \\
-    v_{k4}\mathbf{e}_3^T  \mathbf{c}_1 p_{k1}
-    + v_{k4}\mathbf{e}_3^T \mathbf{c}_2 p_{k2}
-    + v_{k4}\mathbf{e}_3^T \mathbf{c}_3 p_{k3}
-    + v_{k4}\mathbf{e}_3^T \mathbf{r} = 1, \\
+    \omega \mbf{e}_1^T \mbf{c}_1 p_{k1}
+    + \omega \mbf{e}_1^T \mbf{c}_2 p_{k2}
+    + \omega \mbf{e}_1^T \mbf{c}_3 p_{k3}
+    + \omega \mbf{e}_1^T \mbf{r}
+    - v_{k1}\mbf{e}_3^T  \mbf{c}_1 p_{k1}
+    - v_{k1}\mbf{e}_3^T \mbf{c}_2 p_{k2}
+    - v_{k1}\mbf{e}_3^T \mbf{c}_3 p_{k3}
+    - v_{k1}\mbf{e}_3^T \mbf{r} = 0, \\
+    \omega \mbf{e}_2^T \mbf{c}_1 p_{k1}
+    + \omega \mbf{e}_2^T \mbf{c}_2 p_{k2}
+    + \omega \mbf{e}_2^T \mbf{c}_3 p_{k3}
+    + \omega \mbf{e}_2^T \mbf{r}
+    - v_{k2}\mbf{e}_3^T  \mbf{c}_1 p_{k1}
+    - v_{k2}\mbf{e}_3^T \mbf{c}_2 p_{k2}
+    - v_{k2}\mbf{e}_3^T \mbf{c}_3 p_{k3}
+    - v_{k2}\mbf{e}_3^T \mbf{r} = 0, \\
+    v_{k4}\mbf{e}_3^T  \mbf{c}_1 p_{k1}
+    + v_{k4}\mbf{e}_3^T \mbf{c}_2 p_{k2}
+    + v_{k4}\mbf{e}_3^T \mbf{c}_3 p_{k3}
+    + v_{k4}\mbf{e}_3^T \mbf{r} = 1, \\
 \end{align}
 }
-where we have slightly abused notation, because in the above equation $\mathbf{e}_i \in \mathbb{R}^{3 \times 1}$.
+where we have slightly abused notation, because in the above equation $\mbf{e}_i \in \mathbb{R}^{3 \times 1}$.
 We can write this in matrix form:
 \begin{align}
-    \begin{bmatrix}
-        \mathbf{c}_1 \\
-        \mathbf{c}_2 \\
-        \mathbf{c}_3 \\
-        \mathbf{r} \\
-        \mathbf{u}_k \\
+    \bbm
+        \mbf{c}_1 \\
+        \mbf{c}_2 \\
+        \mbf{c}_3 \\
+        \mbf{r} \\
+        \mbf{u}_k \\
         \omega
-    \end{bmatrix}^T
-    \begin{bmatrix}
+    \ebm^T
+    \bbm
         0 & 0 & 0 & 0 & 0 & 0 \\
         0 & 0 & 0 & 0 & 0 & 0 \\
         0 & 0 & 0 & 0 & 0 & 0 \\
         0 & 0 & 0 & 0 & 0 & 0 \\
-        -p_{k1}\mathbf{e}_1\mathbf{e}_3^T & -p_{k2}\mathbf{e}_1\mathbf{e}_3^T & -p_{k3}\mathbf{e}_1\mathbf{e}_3^T & -\mathbf{e}_1\mathbf{e}_3^T & 0 & 0 \\
-        p_{k1}\mathbf{e}_1^T & p_{k2}\mathbf{e}_1^T & p_{k3}\mathbf{e}_1^T & \mathbf{e}_1^T & 0 &0 
-    \end{bmatrix} 
-    \begin{bmatrix}
-        \mathbf{c}_1 \\
-        \mathbf{c}_2 \\
-        \mathbf{c}_3 \\
-        \mathbf{r} \\
-        \mathbf{u}_k \\
+        -p_{k1}\mbf{e}_1\mbf{e}_3^T & -p_{k2}\mbf{e}_1\mbf{e}_3^T & -p_{k3}\mbf{e}_1\mbf{e}_3^T & -\mbf{e}_1\mbf{e}_3^T & 0 & 0 \\
+        p_{k1}\mbf{e}_1^T & p_{k2}\mbf{e}_1^T & p_{k3}\mbf{e}_1^T & \mbf{e}_1^T & 0 &0 
+    \ebm 
+    \bbm
+        \mbf{c}_1 \\
+        \mbf{c}_2 \\
+        \mbf{c}_3 \\
+        \mbf{r} \\
+        \mbf{u}_k \\
         \omega
-    \end{bmatrix} = 0 \\
-    \begin{bmatrix}
-        \mathbf{c}_1 \\
-        \mathbf{c}_2 \\
-        \mathbf{c}_3 \\
-        \mathbf{r} \\
-        \mathbf{u}_k \\
+    \ebm = 0 \\
+    \bbm
+        \mbf{c}_1 \\
+        \mbf{c}_2 \\
+        \mbf{c}_3 \\
+        \mbf{r} \\
+        \mbf{u}_k \\
         \omega
-    \end{bmatrix}^T
-    \begin{bmatrix}
+    \ebm^T
+    \bbm
         0 & 0 & 0 & 0 & 0 & 0 \\
         0 & 0 & 0 & 0 & 0 & 0 \\
         0 & 0 & 0 & 0 & 0 & 0 \\
         0 & 0 & 0 & 0 & 0 & 0 \\
-        -p_{k1}\mathbf{e}_2\mathbf{e}_3^T & -p_{k2}\mathbf{e}_2\mathbf{e}_3^T & -p_{k3}\mathbf{e}_2\mathbf{e}_3^T & -\mathbf{e}_2\mathbf{e}_3^T & 0 & 0 \\
-        p_{k1}\mathbf{e}_2^T & p_{k2}\mathbf{e}_2^T & p_{k3}\mathbf{e}_2^T & \mathbf{e}_2^T & 0 &0 
-    \end{bmatrix} 
-    \begin{bmatrix}
-        \mathbf{c}_1 \\
-        \mathbf{c}_2 \\
-        \mathbf{c}_3 \\
-        \mathbf{r} \\
-        \mathbf{u}_k \\
+        -p_{k1}\mbf{e}_2\mbf{e}_3^T & -p_{k2}\mbf{e}_2\mbf{e}_3^T & -p_{k3}\mbf{e}_2\mbf{e}_3^T & -\mbf{e}_2\mbf{e}_3^T & 0 & 0 \\
+        p_{k1}\mbf{e}_2^T & p_{k2}\mbf{e}_2^T & p_{k3}\mbf{e}_2^T & \mbf{e}_2^T & 0 &0 
+    \ebm 
+    \bbm
+        \mbf{c}_1 \\
+        \mbf{c}_2 \\
+        \mbf{c}_3 \\
+        \mbf{r} \\
+        \mbf{u}_k \\
         \omega
-    \end{bmatrix} = 0 \\
-    \begin{bmatrix}
-        \mathbf{c}_1 \\
-        \mathbf{c}_2 \\
-        \mathbf{c}_3 \\
-        \mathbf{r} \\
-        \mathbf{u}_k \\
+    \ebm = 0 \\
+    \bbm
+        \mbf{c}_1 \\
+        \mbf{c}_2 \\
+        \mbf{c}_3 \\
+        \mbf{r} \\
+        \mbf{u}_k \\
         \omega
-    \end{bmatrix}^T
-    \begin{bmatrix}
+    \ebm^T
+    \bbm
         0 & 0 & 0 & 0 & 0 & 0 \\
         0 & 0 & 0 & 0 & 0 & 0 \\
         0 & 0 & 0 & 0 & 0 & 0 \\
         0 & 0 & 0 & 0 & 0 & 0 \\
-        p_{k1}\mathbf{e}_3\mathbf{e}_3^T & p_{k2}\mathbf{e}_3\mathbf{e}_3^T & p_{k3}\mathbf{e}_3\mathbf{e}_3^T & \mathbf{e}_3\mathbf{e}_3^T & 0 & 0 \\
+        p_{k1}\mbf{e}_3\mbf{e}_3^T & p_{k2}\mbf{e}_3\mbf{e}_3^T & p_{k3}\mbf{e}_3\mbf{e}_3^T & \mbf{e}_3\mbf{e}_3^T & 0 & 0 \\
         0 & 0 & 0 & 0 & 0 & 0 \\
-    \end{bmatrix} 
-    \begin{bmatrix}
-        \mathbf{c}_1 \\
-        \mathbf{c}_2 \\
-        \mathbf{c}_3 \\
-        \mathbf{r} \\
-        \mathbf{u}_k \\
+    \ebm 
+    \bbm
+        \mbf{c}_1 \\
+        \mbf{c}_2 \\
+        \mbf{c}_3 \\
+        \mbf{r} \\
+        \mbf{u}_k \\
         \omega
-    \end{bmatrix} = 1 
+    \ebm = 1 
 \end{align}
 
 \subsection{SDP Relaxation}
 
 Now that we have the QCQP in the homogenous form
 \begin{align}
-\mathbf{x}^* = \text{argmin}_{\mathbf{x}} \quad \mathbf{x}^T \mathbf{Q} \mathbf{x}\\
-(\forall i) \quad \mathbf{x}^T \mathbf{A}_i \mathbf{x} = b_i,
+\mbf{x}^* = \text{argmin}_{\mbf{x}} \quad \mbf{x}^T \mbf{Q} \mbf{x}\\
+(\forall i) \quad \mbf{x}^T \mbf{A}_i \mbf{x} = b_i,
 \end{align}
 we can easily turn it into an SDP:
 \begin{align}
-\mathbf{x}^* = \text{argmin}_{\mathbf{x}} \quad \text{tr}(\mathbf{Q}\mathbf{x}\mathbf{x}^T),\\
-\text{s.t}\quad (\forall i) \quad \text{tr}(\mathbf{A}_i \mathbf{x} \mathbf{x}^T) = b_i.
+\mbf{x}^* = \text{argmin}_{\mbf{x}} \quad \text{tr}(\mbf{Q}\mbf{x}\mbf{x}^T),\\
+\text{s.t}\quad (\forall i) \quad \text{tr}(\mbf{A}_i \mbf{x} \mbf{x}^T) = b_i.
 \end{align}
-Let $\mathbf{X} = \mathbf{x}\mathbf{x}^T \in \mathbb{R}^{(14 + 4n) \times (14 + 4n)}$, then the above is equivalent to:
+Let $\mbf{X} = \mbf{x}\mbf{x}^T \in \mathbb{R}^{(14 + 4n) \times (14 + 4n)}$, then the above is equivalent to:
 \begin{align}
-\mathbf{X}^* = \text{argmin}_{\mathbf{X}} \quad \text{tr}(\mathbf{Q}\mathbf{X}),\\
-\text{s.t}\quad (\forall i) \quad \text{tr}(\mathbf{A}_i \mathbf{X}) = b_i,\\
-\mathbf{X} = \mathbf{x} \mathbf{x}^T\\
-\text{rank}(\mathbf{X}) = 1
+\mbf{X}^* = \text{argmin}_{\mbf{X}} \quad \text{tr}(\mbf{Q}\mbf{X}),\\
+\text{s.t}\quad (\forall i) \quad \text{tr}(\mbf{A}_i \mbf{X}) = b_i,\\
+\mbf{X} = \mbf{x} \mbf{x}^T\\
+\text{rank}(\mbf{X}) = 1
 \end{align}
 We can relax these last two constraints to get an SDP:
 \begin{align}
-\mathbf{X}^* = \text{argmin}_{\mathbf{X}} \quad \text{tr}(\mathbf{Q}\mathbf{X}),\\
-\text{s.t}\quad (\forall i) \quad \text{tr}(\mathbf{A}_i \mathbf{X}) = b_i,\\
-\mathbf{X} \succeq 0.
+\mbf{X}^* = \text{argmin}_{\mbf{X}} \quad \text{tr}(\mbf{Q}\mbf{X}),\\
+\text{s.t}\quad (\forall i) \quad \text{tr}(\mbf{A}_i \mbf{X}) = b_i,\\
+\mbf{X} \succeq 0.
 \end{align}
 
 \newpage
@@ -316,47 +320,47 @@ We can relax these last two constraints to get an SDP:
 
 \subsection{Parallel Constraints}
 
-Note that because $\mathbf{v}_k = \frac{1}{z_k} \mathbf{T} \mathbf{p}_k$, $\mathbf{v}_k$ and $\mathbf{T} \mathbf{p}_k$ are parallel.
-Further, for any parallel column vectors $\mathbf{u}, \mathbf{w}$, $\exists \alpha \in \mathbb{R}$ such that
+Note that because $\mbf{v}_k = \frac{1}{z_k} \mbf{T} \mbf{p}_k$, $\mbf{v}_k$ and $\mbf{T} \mbf{p}_k$ are parallel.
+Further, for any parallel column vectors $\mbf{u}, \mbf{w}$, $\exists \alpha \in \mathbb{R}$ such that
 \begin{align}
-    \mathbf{u} &= \alpha \mathbf{w}
-    \implies \mathbf{u}\mathbf{w}^T = \alpha \mathbf{w}\mathbf{w}^T = \mathbf{w} \mathbf{u}^T.
+    \mbf{u} &= \alpha \mbf{w}
+    \implies \mbf{u}\mbf{w}^T = \alpha \mbf{w}\mbf{w}^T = \mbf{w} \mbf{u}^T.
 \end{align}
 Thus, we can right:
 \begin{align}
-    \mathbf{v}_k (\mathbf{T} \mathbf{p}_k)^T = (\mathbf{T} \mathbf{p}_k)\mathbf{v}_k^T \in \mathbb{R}^{4 \times 4}.
+    \mbf{v}_k (\mbf{T} \mbf{p}_k)^T = (\mbf{T} \mbf{p}_k)\mbf{v}_k^T \in \mathbb{R}^{4 \times 4}.
 \end{align}
-We want to re-write these 16 scalar equality constraints in the form $\mathbf{x}^T \mathbf{A} \mathbf{x} = b$ for some $A$, $b$.
+We want to re-write these 16 scalar equality constraints in the form $\mbf{x}^T \mbf{A} \mbf{x} = b$ for some $A$, $b$.
 Note that
 \begin{align}
-    \mathbf{v}_k = \begin{bmatrix}
-        0 & \dots & 0 & \mathbf{e}_1 & \mathbf{e}_2 & \mathbf{e}_4 & 0 & \dots 0 & \mathbf{e}_3
-    \end{bmatrix} \mathbf{x} = \mathbf{B}_k \mathbf{x},
+    \mbf{v}_k = \bbm
+        0 & \dots & 0 & \mbf{e}_1 & \mbf{e}_2 & \mbf{e}_4 & 0 & \dots 0 & \mbf{e}_3
+    \ebm \mbf{x} = \mbf{B}_k \mbf{x},
 \end{align}
 and
 \begin{align}
-    \mathbf{T} \mathbf{p}_k = \begin{bmatrix}
-        p_{k1} \mathbf{c}_1 + p_{k2} \mathbf{c}_2 + p_{k3} \mathbf{c}_3 + \mathbf{r} \\
+    \mbf{T} \mbf{p}_k = \bbm
+        p_{k1} \mbf{c}_1 + p_{k2} \mbf{c}_2 + p_{k3} \mbf{c}_3 + \mbf{r} \\
         1
-    \end{bmatrix} \\
-    = \begin{bmatrix}
-        p_{k1} \mathbf{I} & p_{k2} \mathbf{I} & p_{k3} \mathbf{I}  & \mathbf{I} & \mathbf{0} & \dots & 0 \\
-        \mathbf{0}        & \mathbf{0}        & \mathbf{0}         & \mathbf{0} & \mathbf{0} & \dots & 1
-    \end{bmatrix} \mathbf{x} = \mathbf{C}_k \mathbf{x}.
+    \ebm \\
+    = \bbm
+        p_{k1} \mbf{I} & p_{k2} \mbf{I} & p_{k3} \mbf{I}  & \mbf{I} & \mbf{0} & \dots & 0 \\
+        \mbf{0}        & \mbf{0}        & \mbf{0}         & \mbf{0} & \mbf{0} & \dots & 1
+    \ebm \mbf{x} = \mbf{C}_k \mbf{x}.
 \end{align}
 Now the $i^{th}, j^{th}$ constraint is
 \begin{align}
-    \mathbf{e}_i^T \mathbf{v}_k (\mathbf{T} \mathbf{p}_k)^T \mathbf{e}_j = \mathbf{e}_i^T (\mathbf{T} \mathbf{p}_k)\mathbf{v}_k^T \mathbf{e}_j, \forall i,j \in {1, \dots, 4} \\
+    \mbf{e}_i^T \mbf{v}_k (\mbf{T} \mbf{p}_k)^T \mbf{e}_j = \mbf{e}_i^T (\mbf{T} \mbf{p}_k)\mbf{v}_k^T \mbf{e}_j, \forall i,j \in {1, \dots, 4} \\
     \implies
-    \mathbf{e}_i^T  \mathbf{B}_k \mathbf{x} \mathbf{x}^T \mathbf{C}_k^T \mathbf{e}_j = \mathbf{e}_i^T  \mathbf{C}_k \mathbf{x} \mathbf{x}^T \mathbf{B}_k^T \mathbf{e}_j.
+    \mbf{e}_i^T  \mbf{B}_k \mbf{x} \mbf{x}^T \mbf{C}_k^T \mbf{e}_j = \mbf{e}_i^T  \mbf{C}_k \mbf{x} \mbf{x}^T \mbf{B}_k^T \mbf{e}_j.
 \end{align}
-Because $\mathbf{x}^T \mathbf{C}_k^T \mathbf{e}_j$ and $\mathbf{e}_i^T  \mathbf{B}_k \mathbf{x}$ are scalars, they commute:
+Because $\mbf{x}^T \mbf{C}_k^T \mbf{e}_j$ and $\mbf{e}_i^T  \mbf{B}_k \mbf{x}$ are scalars, they commute:
 \begin{align}
-    \mathbf{x}^T \mathbf{C}_k^T \mathbf{e}_j \mathbf{e}_i^T  \mathbf{B}_k \mathbf{x} - \mathbf{x}^T \mathbf{B}_k^T \mathbf{e}_j \mathbf{e}_i^T  \mathbf{C}_k \mathbf{x} = 0 \\
+    \mbf{x}^T \mbf{C}_k^T \mbf{e}_j \mbf{e}_i^T  \mbf{B}_k \mbf{x} - \mbf{x}^T \mbf{B}_k^T \mbf{e}_j \mbf{e}_i^T  \mbf{C}_k \mbf{x} = 0 \\
     \implies
-    \mathbf{x}^T (\mathbf{C}_k^T \mathbf{e}_j \mathbf{e}_i^T  \mathbf{B}_k - \mathbf{B}_k^T \mathbf{e}_j \mathbf{e}_i^T \mathbf{C}_k) \mathbf{x} = 0 \label{eq:par}
+    \mbf{x}^T (\mbf{C}_k^T \mbf{e}_j \mbf{e}_i^T  \mbf{B}_k - \mbf{B}_k^T \mbf{e}_j \mbf{e}_i^T \mbf{C}_k) \mbf{x} = 0 \label{eq:par}
 \end{align}
-which is of the desired form. Note that when $i = j$, $(\mathbf{C}_k^T \mathbf{e}_j \mathbf{e}_i^T  \mathbf{B}_k - \mathbf{B}_k^T \mathbf{e}_j \mathbf{e}_i^T \mathbf{C}_k)$
+which is of the desired form. Note that when $i = j$, $(\mbf{C}_k^T \mbf{e}_j \mbf{e}_i^T  \mbf{B}_k - \mbf{B}_k^T \mbf{e}_j \mbf{e}_i^T \mbf{C}_k)$
 is skew symmetric, so equation \ref{eq:par} is trivially satisfied. Therefore, we will add $(16 - 4)K = 12K$ constraints to the SDP.
 
 \section{Iterative SDP Method}

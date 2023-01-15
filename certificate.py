@@ -1,16 +1,15 @@
 from typing import Optional
 import numpy as np
 from sdp_relaxation import (
-    build_general_SDP_problem,
-    block_diagonal,
-    build_cost_matrix,
+    build_cost_matrix_v2,
+    build_homo_constraint,
     build_rotation_constraint_matrices,
     build_measurement_constraint_matrices,
+    build_measurement_constraint_matrices_v2,
 )
 from local_solver import StereoLocalizationProblem, StereoLocalizationSolution
 
 class StereoLocalizationCertificate:
-
     def __init__(self, certified: bool, H: np.array, eig_values: Optional[np.array] = None):
         self.certified = certified 
         self.H = H
@@ -34,27 +33,25 @@ def run_certificate(problem: StereoLocalizationProblem, solution: StereoLocaliza
         Ws[i] = problem.W
 
     # build cost matrix and compare to local solution
-    n = 13 + 3 * num_landmarks
-    Q = build_cost_matrix(num_landmarks, problem.y, Ws, problem.M, problem.r_0, problem.gamma_r)
+    Q = build_cost_matrix_v2(num_landmarks, problem.y, Ws, problem.M, problem.r_0, problem.gamma_r)
     Q = Q / np.mean(np.abs(Q)) # improve numerics 
     As = []
     bs = []
 
     # rotation matrix
-    rot_matrix_As, bs = build_rotation_constraint_matrices()
-    for rot_matrix_A in rot_matrix_As:
-        A = np.zeros((n, n))
-        A[:9, :9] = rot_matrix_A
+    As_rot, bs = build_rotation_constraint_matrices()
+    for A_rot in As_rot:
+        A = np.zeros((13 + 3*num_landmarks, 13 + 3 *num_landmarks))
+        A[:9, :9] = A_rot
         As.append(A)
 
     # homogenization variable
-    A = np.zeros((n, n))
-    A[-1, -1] = 1
+    A, b = build_homo_constraint(num_landmarks)
     As.append(A)
-    bs.append(1)
+    bs.append(b)
 
     # measurements
-    A_measure, b_measure = build_measurement_constraint_matrices(num_landmarks, problem.p_w)
+    A_measure, b_measure = build_measurement_constraint_matrices_v2(problem.p_w)
     As += A_measure
     bs += b_measure
 

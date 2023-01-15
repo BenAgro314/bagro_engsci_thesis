@@ -154,9 +154,9 @@ def metrics_fcn(problem, num_tries = 100):
 
 def main():
 
-    var_list = [0.1, 0.3, 0.5, 0.7, 0.9, 1]#, 3, 5, 7, 9, 10]
+    var_list = [0.1, 0.3, 0.5, 0.7, 0.9, 1, 3, 5, 7, 9, 10]
     num_problem_instances = 5
-    num_landmarks = 10
+    num_landmarks = 20
     num_local_solve_tries = 100
 
     cam = sim.Camera(

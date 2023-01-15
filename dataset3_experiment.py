@@ -94,7 +94,7 @@ def metrics_fcn(problem, num_tries = 100):
     mosek_params = {}
     datum = {}
     local_solution = local_solver.stereo_localization_gauss_newton(problem, log = False, max_iters = 100, num_tries = num_tries, record_history=RECORD_HISTORY)
-    iter_sdp_soln = iterative_sdp_solution(problem, problem.T_init, max_iters = 1, min_update_norm = 1e-10, return_X = False, mosek_params=mosek_params, max_num_tries = num_tries, record_history=RECORD_HISTORY)
+    iter_sdp_soln = iterative_sdp_solution(problem, problem.T_init, max_iters = 10, min_update_norm = 0.02, return_X = False, mosek_params=mosek_params, max_num_tries = num_tries, record_history=RECORD_HISTORY)
     datum["local_solution"] = local_solution
     datum["iterative_sdp_solution"] = iter_sdp_soln
 

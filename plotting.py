@@ -89,7 +89,10 @@ def plot_minimum_eigenvalues(metrics: List[Dict[str, Any]], path: str):
         scene_ind = m["scene_ind"]
         min_cost = min_costs[var][scene_ind]
         color = 'b' if np.isclose(min_cost, cost) else 'r'
-        plt.scatter([var], min(m["certificate"].eig_values.real), color = color)
+        if color == 'b':
+            plt.scatter([var], min(m["certificate"].eig_values.real), color = color)
+        else:
+            plt.scatter([var * 1.05], min(m["certificate"].eig_values.real), color = color)
 
     plt.yscale("symlog")
     plt.xscale("log")

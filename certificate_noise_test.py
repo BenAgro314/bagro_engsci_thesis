@@ -34,10 +34,10 @@ def metrics_fcn(problem):
 
 def main():
 
-    var_list = [0.1, 0.3,  0.5 , 0.7, 0.9, 1, 3, 5, 7, 9, 10]
-    num_problem_instances = 10
-    num_landmarks = 20
-    num_local_solve_tries = 40 #100
+    var_list = [0.1, 0.3, 0.5, 0.7, 0.9, 1]#, 3, 5, 7, 9, 10]
+    num_problem_instances = 5
+    num_landmarks = 3
+    num_local_solve_tries = 100
 
     cam = sim.Camera(
         f_u = 160, # focal length in horizonal pixels
@@ -52,11 +52,11 @@ def main():
     p_wc_extent = np.array([[3], [3], [0]])
 
     r0 = np.zeros((3, 1))
-    gamma_r = 0#1e-1
+    gamma_r = 0 #1e-1
 
     metrics = []
 
-    metrics, exp_dir = run_experiment(metrics_fcn, var_list, num_problem_instances, num_landmarks, num_local_solve_tries, cam, p_wc_extent, r0, gamma_r)
+    metrics, exp_dir = run_experiment(metrics_fcn, var_list, num_problem_instances, num_landmarks, num_local_solve_tries, cam, p_wc_extent, r0 = r0, gamma_r = gamma_r)
     plotting.plot_minimum_eigenvalues(metrics, os.path.join(exp_dir, "min_eigs_plt.png"))
 
 

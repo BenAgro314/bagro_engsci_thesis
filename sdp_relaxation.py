@@ -3,6 +3,77 @@ from typing import List, Optional, Tuple
 import cvxpy as cp
 import numpy as np
 
+e_1 = np.array([[1, 0, 0, 0]]).T
+e_2 = np.array([[0, 1, 0, 0]]).T
+e_3 = np.array([[0, 0, 1, 0]]).T
+e_4 = np.array([[0, 0, 0, 1]]).T
+
+def Bk(k: int, D: int):
+    # shape = (4, D)
+    Bk = np.zeros((4, D))
+    Bk[0, 12 + 3*k] = 1
+    Bk[1, 12 + 3*k + 1] = 1
+    Bk[2, -1] = 1
+    Bk[3, 12 + 3*k + 2] = 1
+    return Bk
+
+def a(D: int):
+    a = np.zeros((D, 1))
+    a[-1, 0] = 1
+    return a
+
+def Ck(p_k: np.array, D: int):
+    # p_k.shape = (4, 1)
+    Ck = np.zeros((4, D))
+    Ck[:3, :3] = np.eye(3) * p_k[0]
+    Ck[:3, 3:6] = np.eye(3) * p_k[1]
+    Ck[:3, 6:9] = np.eye(3) * p_k[2]
+    Ck[:3, 9:12] = np.eye(3) * p_k[3]
+    Ck[-1, -1] = 1
+    return Ck
+
+def r_from_x_matrix(D):
+    E = np.zeros((3, D))
+    E[:, 9:12] = np.eye(3)
+    return E
+
+def build_homo_constraint(num_datapoints: int):
+    D = 13 + 3 * num_datapoints
+    A = np.zeros((D, D))
+    A[-1, -1] = 1
+    return A, 1
+
+def build_cost_matrix_v2(num_datapoints: int, y: np.array, Ws: np.array, M: np.array, r0: Optional[np.array] = None, gamma_r: float = 0, C0: Optional[np.array] = None, gamma_c: float = 0) -> np.array:
+    """Build cost matrix Q for the SDP relaxation
+
+    Args:
+        num_datapoints (int): Number of landmarks in the world (N)
+        y (np.array): Measurments from each landmark, (N, 4, 1)
+        W (np.array): Cost weighting matrices for each datapoint, (N, 4, 4)
+        M (np.array): Intrinsic camera matrix, (4, 4)
+        r0 (Optional[np.array], optional): Position prior, (3, 1). Defaults to None.
+        C0 (Optional[np.array], optional): Orientation prior (3, 3). Defaults to None.
+        gamma_r (float, optional): Weighting on position prior cost term. Defaults to 0.
+        gamma_c (float, optional): Weighting on oririention prior cost term. Defaults to 0.
+    """
+    assert y.shape[0] == num_datapoints
+    D = 13 + 3 * num_datapoints
+    Q = sum((y[k] @ a(D).T - M @ Bk(k, D)).T @ Ws[k] @ (y[k] @ a(D).T - M @ Bk(k, D)) for k in range(num_datapoints))
+    Q_r = np.zeros_like(Q)
+    if r0 is not None:
+        Q_r = gamma_r * (r_from_x_matrix(D) - r0 @ a(D).T).T @ (r_from_x_matrix(D) - r0 @ a(D).T)
+    if C0 is not None:
+        pass
+    Q_c = np.zeros_like(Q)
+    if C0 is not None:
+        Q_c[-1, :3] = - C0.T[0, :3]
+        Q_c[-1, 3:6] = - C0.T[1, :3]
+        Q_c[-1, 6:9] = - C0.T[2, :3]
+        Q_c[-1, -1] = 3
+        Q_c = gamma_c * 0.5 * (Q_c + Q_c.T)
+    return Q + Q_r + Q_c
+
+
 def build_cost_matrix(num_datapoints: int, y: np.array, Ws: np.array, M: np.array, r0: Optional[np.array] = None, gamma_r: float = 0, C0: Optional[np.array] = None, gamma_c: float = 0) -> np.array:
     """Build cost matrix Q for the SDP relaxation
 
@@ -69,8 +140,29 @@ def build_cost_matrix(num_datapoints: int, y: np.array, Ws: np.array, M: np.arra
         Q_c_prior[-1, -1] = 3
         Q_c_prior = 0.5 * (Q_c_prior + Q_c_prior.T)
 
+
     Q = Q + gamma_r * Q_r_prior  + gamma_c * Q_c_prior
     return Q
+
+def build_measurement_constraint_matrices_v2(p_w: np.array) -> Tuple[List[np.array], List[np.array]]:
+    As = []
+    bs = []
+    num_datapoints = p_w.shape[0]
+    D = 13 + 3 * num_datapoints
+    _a = a(D)
+    I = np.eye(4)
+    for k in range(num_datapoints):
+        for i in [0, 1, 3]:
+            _Ck = Ck(p_w[k], D)
+            if i != 3:
+                A =  _a @ I[:, i:i+1].T @ _Ck  - Bk(k, D).T @ I[:, i:i+1] @ I[:, 2:3].T @ _Ck
+                bs.append(0)
+            else:
+                A = Bk(k, D).T @ I[:, i:i+1] @ I[:, 2:3].T @ _Ck
+                bs.append(1)
+            A = 0.5 * (A + A.T)
+            As.append(A)
+    return As, bs
 
 def build_measurement_constraint_matrices(p_w: np.array) -> Tuple[List[np.array], List[np.array]]:
     As = []
@@ -116,6 +208,12 @@ def build_measurement_constraint_matrices(p_w: np.array) -> Tuple[List[np.array]
         As.append(A)
         bs.append(1)
 
+    #As_other, bs_other = build_measurement_constraint_matrices_v2(p_w)
+    #for A, A_other in zip(As, As_other):
+    #    assert np.allclose(A, A_other), f"A:\n{A}\nA_other:\n{A_other}"
+    #for b, b_other in zip(bs, bs_other):
+    #    assert b == b_other, f"{b}, {b_other}"
+
     return As, bs
 
 def build_rotation_constraint_matrices() -> Tuple[List[np.array], List[np.array]]:
@@ -128,40 +226,12 @@ def build_rotation_constraint_matrices() -> Tuple[List[np.array], List[np.array]
     """
     As = []
     bs = []
-
-    A = np.zeros((9, 9))
-    A[0:3, 0:3] = np.eye(3)
-    As.append(A)
-    bs.append(1)
-
-    A = np.zeros((9, 9))
-    A[3:6, 3:6] = np.eye(3)
-    As.append(A)
-    bs.append(1)
-
-    A = np.zeros((9, 9))
-    A[6:9, 6:9] = np.eye(3)
-    As.append(A)
-    bs.append(1)
-
-    A = np.zeros((9, 9))
-    A[0:3, 3:6] = np.eye(3)
-    A = 0.5 * (A + A.T)
-    As.append(A)
-    bs.append(0)
-
-    A = np.zeros((9, 9))
-    A[0:3, 6:9] = np.eye(3)
-    A = 0.5 * (A + A.T)
-    As.append(A)
-    bs.append(0)
-
-
-    A = np.zeros((9, 9))
-    A[3:6, 6:9] = np.eye(3)
-    A = 0.5 * (A + A.T)
-    As.append(A)
-    bs.append(0)
+    for i in range(0, 9, 3):
+        for j in range(i, 9, 3):
+            A = np.zeros((9, 9))
+            A[i:i+3, j:j+3] = np.eye(3)
+            As.append(0.5 * (A + A.T))
+            bs.append(int(i == j))
 
     return As, bs
 
@@ -169,36 +239,16 @@ def build_parallel_constraint_matrices(p_w: np.array) -> Tuple[List[np.array], L
     As = []
     bs = []
     num_datapoints = p_w.shape[0]
-    n = 13 + 3 * num_datapoints
-    e_1 = np.zeros((4, 1))
-    e_1[0, 0] = 1
-    e_2 = np.zeros((4, 1))
-    e_2[1, 0] = 1
-    e_3 = np.zeros((4, 1))
-    e_3[2, 0] = 1
-    e_4 = np.zeros((4, 1))
-    e_4[3, 0] = 1
-
-    e = [e_1, e_2, e_3, e_4]
-
+    D = 13 + 3 * num_datapoints
+    I = np.eye(4)
     for k in range(num_datapoints):
-        C_k = np.zeros((4, n))
-        C_k[-1, -1] = 1
-        for i in range(4):
-            C_k[:3, 3*i:3*i+3] = np.eye(3) * p_w[k, i, 0]
-        B_k = np.zeros((4, n))
-        B_k[:, -1:] = e_3
-
-        B_k[:, 12 + 3*k : 12 + 3*k + 1] = e_1
-        B_k[:, 12 + 3*k + 1 : 12 + 3*k + 2] = e_2
-        B_k[:, 12 + 3*k + 2 : 12 + 3*k + 3] = e_4
-
-
+        C_k = Ck(p_w[k], D)
+        B_k = Bk(k, D)
         for i in range(4):
             for j in range(4):
                 if i == j:
                     continue
-                A = C_k.T @ e[j] @ e[i].T @ B_k - B_k.T @ e[j] @ e[i].T @ C_k
+                A = C_k.T @ I[:, j:j+1] @ I[:, i:i+1].T @ B_k - B_k.T @ I[:, j:j+1] @ I[:, i:i+1].T @ C_k
                 A = 0.5 * (A + A.T)
                 As.append(A)
                 bs.append(0)
