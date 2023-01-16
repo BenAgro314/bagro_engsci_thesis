@@ -4,11 +4,11 @@ from pylgmath.so3.operations import hat
 import os
 import pickle
 from thesis.experiments import StereoLocalizationProblem
-import thesis.local_solver as local_solver
-from thesis.relaxations.iterative_sdp import iterative_sdp_solution
-from thesis.sim import Camera
-import thesis.plotting as plotting
-import thesis.sim as sim
+import thesis.solvers.local_solver as local_solver
+from thesis.solvers.iterative_sdp import iterative_sdp_solution
+from thesis.simulation.sim import Camera
+import thesis.visualization.plotting as plotting
+import thesis.simulation.sim as sim
 from typing import List
 from datetime import datetime
 from copy import deepcopy

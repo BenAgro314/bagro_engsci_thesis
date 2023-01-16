@@ -6,24 +6,11 @@ import numpy as np
 from thesis.relaxations.certificate import run_certificate
 import thesis.visualization.plotting as plotting
 import thesis.simulation.sim as sim
-import thesis.local_solver as local_solver
-
-def make_sim_instances(num_instances: int, num_landmarks: int, p_wc_extent: np.array, cam: sim.Camera) -> List[Tuple[np.array, np.array]]:
-    instances = []
-    for _ in range(num_instances):
-        world = sim.World(
-            cam = cam,
-            p_wc_extent = p_wc_extent,
-            num_landmarks = num_landmarks,
-        )
-        world.clear_sim_instance()
-        world.make_random_sim_instance()
-        instances.append(local_solver.StereoLocalizationProblem(world.T_wc, world.p_w, cam.M()))
-    return instances
+from thesis.solvers.local_solver import stereo_localization_gauss_newton
 
 def metrics_fcn(problem):
     datum = {}
-    solution = local_solver.stereo_localization_gauss_newton(problem, log = False, max_iters = 100)
+    solution = stereo_localization_gauss_newton(problem, log = False, max_iters = 100)
     datum["local_solution"] = solution
     if solution.T_cw is not None:
         certificate = run_certificate(problem, solution)

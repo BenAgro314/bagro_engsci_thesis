@@ -5,7 +5,7 @@ import cvxpy as cp
 import numpy as np
 import matplotlib.pyplot as plt
 from thesis.simulation.sim import render_camera_points, World, Camera
-from thesis.local_solver import projection_error, StereoLocalizationProblem
+from thesis.solvers.local_solver import projection_error, StereoLocalizationProblem
 from thesis.relaxations.sdp_relaxation import (
     build_general_SDP_problem,
     build_cost_matrix,
@@ -17,7 +17,7 @@ from thesis.relaxations.sdp_relaxation import (
 
 #%% make problem
 
-cam = sim.Camera(
+cam = Camera(
     f_u = 160, # focal length in horizontal pixels
     f_v = 160, # focal length in vertical pixels
     c_u = 320, # pinhole projection in horizontal pixels

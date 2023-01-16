@@ -1,15 +1,15 @@
 import os
 from copy import deepcopy
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
 import cvxpy as cp
 import numpy as np
-import thesis.local_solver as local_solver
-import thesis.plotting as plotting
+import thesis.solvers.local_solver as local_solver
+import thesis.visualization.plotting as plotting
 from experiments import (StereoLocalizationProblem, StereoLocalizationSolution,
                          run_experiment)
 from scipy.linalg import fractional_matrix_power
-from thesis.local_solver import projection_error
+from thesis.solvers.local_solver import projection_error
 from thesis.relaxations.sdp_relaxation import (
     build_general_SDP_problem, build_rotation_constraint_matrices,
     extract_solution_from_X)
@@ -107,7 +107,7 @@ def iterative_sdp_solution(
                 if prob.status != "optimal":
                     assert False
             except Exception:
-                T_init[:3, :3] = sim.generate_random_rot()
+                T_init[:3, :3] = generate_random_rot()
                 success = False
                 break
             X_sdp = X_var.value
@@ -162,7 +162,7 @@ def main():
     num_landmarks = 20
     num_local_solve_tries = 100
 
-    cam = sim.Camera(
+    cam = Camera(
         f_u = 160, # focal length in horizonal pixels
         f_v = 160, # focal length in vertical pixels
         c_u = 320, # pinhole projection in horizonal pixels
