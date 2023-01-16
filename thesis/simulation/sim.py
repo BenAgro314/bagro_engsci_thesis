@@ -1,17 +1,11 @@
 from dataclasses import dataclass
 from typing import List, Optional, Tuple, Union
-import json
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pylgmath
-from matplotlib.patches import FancyArrowPatch
-from matplotlib.text import Annotation
-from mpl_toolkits import mplot3d
-from mpl_toolkits.mplot3d import Axes3D, proj3d
 from pylgmath.so3.operations import vec2rot
 
-import thesis.plotting as plotting
+from thesis.visualization.plotting import add_coordinate_frame
 
 
 def make_stereo_camera_matrix(f_u: int, f_v: int, c_u: int, c_v:int, b: float) -> np.array:
@@ -168,8 +162,8 @@ class World:
         fig = plt.figure()
         ax = fig.add_subplot(projection='3d')
         if include_world_frame:
-            plotting.add_coordinate_frame(np.eye(4), ax, "$\mathfrak{F}_w$")
-        plotting.add_coordinate_frame(self.T_wc, ax, "$\mathfrak{F}_c$")
+            add_coordinate_frame(np.eye(4), ax, "$\mathfrak{F}_w$")
+        add_coordinate_frame(self.T_wc, ax, "$\mathfrak{F}_c$")
         # set aspect ratio
 
         colors = np.random.rand(self.num_landmarks, 3)

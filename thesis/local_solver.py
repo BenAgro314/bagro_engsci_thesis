@@ -3,7 +3,7 @@ from copy import deepcopy
 from typing import Optional
 from pylgmath.so3.operations import hat
 from pylgmath.se3.operations import vec2tran
-import thesis.sim as sim
+from thesis.simulation.sim import generative_camera_model, generate_random_rot
 from thesis.experiments import StereoLocalizationProblem, StereoLocalizationSolution
 
 
@@ -91,7 +91,7 @@ def projection_error(y: np.array, T: np.array, M: np.array, p_w: np.array, W: np
     Returns:
         error: scalar error value
     """
-    y_pred = sim.generative_camera_model(M, T, p_w)
+    y_pred = generative_camera_model(M, T, p_w)
     e = y - y_pred
     return np.sum(e.transpose((0, 2, 1)) @ W @ e, axis = 0)[0][0]
 
@@ -118,7 +118,7 @@ def stereo_localization_gauss_newton(problem: StereoLocalizationProblem, max_ite
         )
         if soln.solved:
             break
-        problem.T_init[:3, :3] = sim.generate_random_rot()
+        problem.T_init[:3, :3] = generate_random_rot()
         count_local_tries+=1
     return soln
 

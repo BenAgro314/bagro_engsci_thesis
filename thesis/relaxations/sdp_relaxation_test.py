@@ -3,44 +3,32 @@
 # Imports
 import cvxpy as cp
 import numpy as np
-import pylgmath
 import matplotlib.pyplot as plt
-from mpl_toolkits import mplot3d
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib.patches import FancyArrowPatch
-from mpl_toolkits.mplot3d import proj3d
-from matplotlib.text import Annotation
-from pylgmath.so3.operations import vec2rot
-import thesis.plotting as plotting
-import thesis.sim as sim
-import thesis.local_solver
+from thesis.simulation.sim import render_camera_points, World, Camera
 from thesis.local_solver import projection_error, StereoLocalizationProblem
 from thesis.relaxations.sdp_relaxation import (
     build_general_SDP_problem,
-    block_diagonal,
     build_cost_matrix,
     build_rotation_constraint_matrices,
     build_measurement_constraint_matrices,
     build_parallel_constraint_matrices,
     extract_solution_from_X,
 )
-import mosek
-import thesis.relaxations.iterative_sdp as iterative_sdp
-import scipy as sp
 
 #%% make problem
 
 cam = sim.Camera(
-    f_u = 160, # focal length in horizonal pixels
+    f_u = 160, # focal length in horizontal pixels
     f_v = 160, # focal length in vertical pixels
-    c_u = 320, # pinhole projection in horizonal pixels
-    c_v = 240, # pinhold projection in vertical pixels
+    c_u = 320, # pinhole projection in horizontal pixels
+    c_v = 240, # pinhole projection in vertical pixels
     b = 0.25, # baseline (meters)
-    R = 0.5 * np.eye(4), # covarience matrix for image-space noise
-    fov = np.array([[-1,1], [-1, 1], [2, 5]])
+    R = 0 * np.eye(4), # co-variance matrix for image-space noise
+    fov_phi_range = (-np.pi / 12, np.pi / 12),
+    fov_depth_range = (0.2, 3),
 )
 
-world = sim.World(
+world = World(
     cam = cam,
     p_wc_extent = np.array([[3], [3], [0]]),
     num_landmarks = 5,
@@ -52,7 +40,7 @@ fig, ax, colors = world.render()
 
 # Generative camera model 
 y = cam.take_picture(world.T_wc, world.p_w)
-camfig, (l_ax, r_ax) = sim.render_camera_points(y, colors)
+camfig, (l_ax, r_ax) = render_camera_points(y, colors)
 
 W =  np.eye(4)
 r0 = np.zeros((3, 1))

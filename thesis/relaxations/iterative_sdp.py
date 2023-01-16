@@ -1,16 +1,19 @@
-from typing import List, Optional, Dict
-from copy import deepcopy
-import thesis.plotting as plotting
 import os
-from scipy.linalg import fractional_matrix_power
-from experiments import StereoLocalizationSolution, StereoLocalizationProblem, run_experiment
+from copy import deepcopy
+from typing import Dict, List, Optional
 
-import numpy as np
-import thesis.sim as sim
-import thesis.local_solver as local_solver
-from thesis.local_solver import projection_error
-from thesis.relaxation.sdp_relaxation import build_rotation_constraint_matrices, build_general_SDP_problem, extract_solution_from_X
 import cvxpy as cp
+import numpy as np
+import thesis.local_solver as local_solver
+import thesis.plotting as plotting
+from experiments import (StereoLocalizationProblem, StereoLocalizationSolution,
+                         run_experiment)
+from scipy.linalg import fractional_matrix_power
+from thesis.local_solver import projection_error
+from thesis.relaxations.sdp_relaxation import (
+    build_general_SDP_problem, build_rotation_constraint_matrices,
+    extract_solution_from_X)
+from thesis.simulation.sim import Camera, generate_random_rot
 
 RECORD_HISTORY=True
 

@@ -4,8 +4,8 @@ from typing import Dict, Tuple, List
 from thesis.experiments import run_experiment
 import numpy as np
 from thesis.relaxations.certificate import run_certificate
-import thesis.plotting as plotting
-import thesis.sim as sim
+import thesis.visualization.plotting as plotting
+import thesis.simulation.sim as sim
 import thesis.local_solver as local_solver
 
 def make_sim_instances(num_instances: int, num_landmarks: int, p_wc_extent: np.array, cam: sim.Camera) -> List[Tuple[np.array, np.array]]:
@@ -38,11 +38,11 @@ def main():
     num_local_solve_tries = 100
 
     cam = sim.Camera(
-        f_u = 160, # focal length in horizontal pixels
-        f_v = 160, # focal length in vertical pixels
-        c_u = 320, # pinhole projection in horizontal pixels
-        c_v = 240, # pinhole projection in vertical pixels
-        b = 0.25, # baseline (meters)
+        f_u = 484.5,
+        f_v = 484.5,
+        c_u = 322,
+        c_v = 247,
+        b = 0.24,
         R = 0 * np.eye(4), # co-variance matrix for image-space noise
         fov_phi_range = (-np.pi / 12, np.pi / 12),
         fov_depth_range = (0.2, 3),

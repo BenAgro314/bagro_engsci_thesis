@@ -8,9 +8,8 @@ from typing import List, Tuple
 
 import numpy as np
 
-import thesis.sim as sim
 from thesis.experiments import StereoLocalizationProblem
-from thesis.sim import Camera, World
+from thesis.simulation.sim import Camera, World, generate_random_T
 
 
 @dataclass
@@ -86,7 +85,7 @@ class StereoLocalizationDataset():
                 fov_phi_range = config.fov_phi_range,
                 fov_depth_range = config.fov_depth_range,
             )
-            world = sim.World(
+            world = World(
                 cam = cam,
                 p_wc_extent = config.p_wc_extent,
                 num_landmarks = num_landmarks
@@ -96,7 +95,7 @@ class StereoLocalizationDataset():
                 world.make_random_sim_instance()
                 y = cam.take_picture(world.T_wc, world.p_w)
                 for _ in range(config.num_T_inits_per_example):
-                    T_init = sim.generate_random_T(config.p_wc_extent)
+                    T_init = generate_random_T(config.p_wc_extent)
                     example = StereoLocalizationExample(
                         problem = StereoLocalizationProblem(world.T_wc, world.p_w, cam.M(), y = y, T_init = T_init),
                         camera = deepcopy(cam),
@@ -115,7 +114,7 @@ def main(out_path: str):
         num_examples_per_var_num_landmarks = 10,
         num_T_inits_per_example = 100,
         f_u = 484.5,
-        f_v = 484.5, 
+        f_v = 484.5,
         c_u = 322,
         c_v = 247,
         b = 0.24,

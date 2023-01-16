@@ -6,7 +6,7 @@ from typing import Optional, List, Tuple
 from copy import deepcopy
 
 import numpy as np
-import sim
+from thesis.simulation.sim import World, Camera, generate_random_T
 
 
 @dataclass
@@ -53,10 +53,10 @@ class StereoLocalizationSolution:
         self.cost = cost
         self.T_cw_history = T_cw_history
 
-def make_sim_instances(num_instances: int, num_landmarks: int, p_wc_extent: np.array, cam: sim.Camera) -> List[Tuple[np.array, np.array]]:
+def make_sim_instances(num_instances: int, num_landmarks: int, p_wc_extent: np.array, cam: Camera) -> List[Tuple[np.array, np.array]]:
     instances = []
     for _ in range(num_instances):
-        world = sim.World(
+        world = World(
             cam = cam,
             p_wc_extent = p_wc_extent,
             num_landmarks = num_landmarks,
@@ -77,7 +77,7 @@ def run_experiment(metrics_fcn, var_list, num_problem_instances, num_landmarks, 
 
     instances = make_sim_instances(num_problem_instances, num_landmarks, p_wc_extent, cam)
 
-    world = sim.World(
+    world = World(
         cam = cam,
         p_wc_extent = p_wc_extent,
         num_landmarks = num_landmarks,
@@ -101,7 +101,7 @@ def run_experiment(metrics_fcn, var_list, num_problem_instances, num_landmarks, 
             problem.gamma_r = gamma_r
 
             for _ in range(num_local_solve_tries):
-                T_op = sim.generate_random_T(p_wc_extent)
+                T_op = generate_random_T(p_wc_extent)
                 problem.T_init = T_op
                 metrics.append(metrics_fcn(problem))
                 metrics[-1]["world"] = deepcopy(world)
