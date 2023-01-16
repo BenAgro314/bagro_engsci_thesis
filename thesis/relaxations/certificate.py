@@ -1,13 +1,13 @@
 from typing import Optional
 import numpy as np
-from sdp_relaxation import (
+from thesis.relaxations.sdp_relaxation import (
     build_cost_matrix_v2,
     build_homo_constraint,
     build_rotation_constraint_matrices,
     build_measurement_constraint_matrices,
     build_measurement_constraint_matrices_v2,
 )
-from local_solver import StereoLocalizationProblem, StereoLocalizationSolution
+from thesis.local_solver import StereoLocalizationProblem, StereoLocalizationSolution
 
 class StereoLocalizationCertificate:
     def __init__(self, certified: bool, H: np.array, eig_values: Optional[np.array] = None):

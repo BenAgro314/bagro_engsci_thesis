@@ -1,14 +1,12 @@
 import os 
-import pickle
-from datetime import datetime
 from typing import Dict, Tuple, List
 
-from experiments import run_experiment
+from thesis.experiments import run_experiment
 import numpy as np
-from certificate import run_certificate
-import plotting
-import sim
-import local_solver
+from thesis.relaxations.certificate import run_certificate
+import thesis.plotting as plotting
+import thesis.sim as sim
+import thesis.local_solver as local_solver
 
 def make_sim_instances(num_instances: int, num_landmarks: int, p_wc_extent: np.array, cam: sim.Camera) -> List[Tuple[np.array, np.array]]:
     instances = []
@@ -36,7 +34,7 @@ def main():
 
     var_list = [0.1, 0.3, 0.5, 0.7, 0.9, 1]#, 3, 5, 7, 9, 10]
     num_problem_instances = 5
-    num_landmarks = 4
+    num_landmarks = 20
     num_local_solve_tries = 100
 
     cam = sim.Camera(
@@ -46,7 +44,8 @@ def main():
         c_v = 240, # pinhole projection in vertical pixels
         b = 0.25, # baseline (meters)
         R = 0 * np.eye(4), # co-variance matrix for image-space noise
-        fov = np.array([[-1,1], [-1, 1], [2, 5]])
+        fov_phi_range = (-np.pi / 12, np.pi / 12),
+        fov_depth_range = (0.2, 3),
     )
 
     p_wc_extent = np.array([[3], [3], [0]])

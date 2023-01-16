@@ -11,11 +11,11 @@ from matplotlib.patches import FancyArrowPatch
 from mpl_toolkits.mplot3d import proj3d
 from matplotlib.text import Annotation
 from pylgmath.so3.operations import vec2rot
-import plotting
-import sim
-import local_solver
-from local_solver import projection_error, StereoLocalizationProblem
-from sdp_relaxation import (
+import thesis.plotting as plotting
+import thesis.sim as sim
+import thesis.local_solver
+from thesis.local_solver import projection_error, StereoLocalizationProblem
+from thesis.relaxations.sdp_relaxation import (
     build_general_SDP_problem,
     block_diagonal,
     build_cost_matrix,
@@ -25,7 +25,7 @@ from sdp_relaxation import (
     extract_solution_from_X,
 )
 import mosek
-import iterative_sdp
+import thesis.relaxations.iterative_sdp as iterative_sdp
 import scipy as sp
 
 #%% make problem

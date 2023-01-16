@@ -11,7 +11,7 @@ from mpl_toolkits import mplot3d
 from mpl_toolkits.mplot3d import Axes3D, proj3d
 from pylgmath.so3.operations import vec2rot
 
-import plotting
+import thesis.plotting as plotting
 
 
 def make_stereo_camera_matrix(f_u: int, f_v: int, c_u: int, c_v:int, b: float) -> np.array:

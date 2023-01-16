@@ -3,8 +3,8 @@ from copy import deepcopy
 from typing import Optional
 from pylgmath.so3.operations import hat
 from pylgmath.se3.operations import vec2tran
-import sim
-from experiments import StereoLocalizationProblem, StereoLocalizationSolution
+import thesis.sim as sim
+from thesis.experiments import StereoLocalizationProblem, StereoLocalizationSolution
 
 
 

@@ -2,9 +2,9 @@
 
 import pickle
 import numpy as np
-import sim
-from sim import World, Camera
-import plotting
+import thesis.sim as sim
+from thesis.sim import World, Camera
+import thesis.plotting as plotting
 import os
 
 

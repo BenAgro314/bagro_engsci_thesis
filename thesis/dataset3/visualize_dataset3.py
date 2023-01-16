@@ -44,7 +44,7 @@ b = dataset3["b"]
 fig = plt.figure()
 ax = fig.add_subplot(projection='3d')
 for landmark_pt in rho_i_pj_i.T:
-    ax.scatter3D(landmark_pt[0], landmark_pt[1], landmark_pt[2])
+    ax.scatter3D(landmark_pt[0], landmark_pt[1], landmark_pt[2], color = 'r')
 
 
 list_T_vk_i = np.stack([np.eye(4)] * theta_vk_i.shape[1], axis = 0)
@@ -69,19 +69,19 @@ for k, psi in enumerate(theta_vk_i.T):
     list_T_i_ck[k] = np.linalg.inv(T_ck_i)
 
 
-for k, T_i_ck in enumerate(list_T_i_ck):
-    if k % 100 != 0:
-        continue
-    plotting.add_coordinate_frame(T_i_ck, ax, "$\mathcal{F}" + f"_{k}$", size = 0.5)
+# for k, T_i_ck in enumerate(list_T_i_ck):
+#     if k % 100 != 0:
+#         continue
+#     plotting.add_coordinate_frame(T_i_ck, ax, "$\mathcal{F}" + f"_{k}$", size = 0.5)
 
 ax.plot3D(list_T_i_ck[:, 0, -1], list_T_i_ck[:, 1, -1], list_T_i_ck[:, 2, -1])
 plt.show()
 
 # %%
-ind = 900
+ind = 800
 
 #Camera(fu, fv, cu, cv, b, np.diag(y_var), None) # is this noise correct?
-no_noise_camera = Camera(fu, fv, cu, cv, b, 0 * np.eye(4), None) # is this noise correct?
+no_noise_camera = Camera(fu, fv, cu, cv, b, 0 * np.eye(4), fov_depth_range=(0,0), fov_phi_range=(0,0)) # is this noise correct?
 # 3 x 20
 p_w = rho_i_pj_i.T[:, :, None]
 p_w = np.concatenate((p_w, np.ones_like(p_w[:, 0:1, :])), axis = 1)

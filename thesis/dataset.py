@@ -8,9 +8,9 @@ from typing import List, Tuple
 
 import numpy as np
 
-import sim
-from experiments import StereoLocalizationProblem
-from sim import Camera, World
+import thesis.sim as sim
+from thesis.experiments import StereoLocalizationProblem
+from thesis.sim import Camera, World
 
 
 @dataclass

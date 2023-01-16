@@ -3,12 +3,12 @@ import numpy as np
 from pylgmath.so3.operations import hat
 import os
 import pickle
-from experiments import StereoLocalizationProblem
-import local_solver
-from iterative_sdp import iterative_sdp_solution
-from sim import Camera
-import plotting
-import sim
+from thesis.experiments import StereoLocalizationProblem
+import thesis.local_solver as local_solver
+from thesis.relaxations.iterative_sdp import iterative_sdp_solution
+from thesis.sim import Camera
+import thesis.plotting as plotting
+import thesis.sim as sim
 from typing import List
 from datetime import datetime
 from copy import deepcopy
