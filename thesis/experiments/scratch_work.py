@@ -2,9 +2,8 @@
 
 import pickle
 import numpy as np
-import thesis.sim as sim
-from thesis.sim import World, Camera
-import thesis.plotting as plotting
+from thesis.simulation.sim import render_camera_points
+import thesis.visualization.plotting as plotting
 import os
 
 
@@ -34,7 +33,7 @@ for i in range(len(unsolved)):
 
     # Generative camera model 
     y = world.cam.take_picture(np.linalg.inv(problem.T_init), world.p_w)
-    camfig, (l_ax, r_ax) = sim.render_camera_points(y, colors)
+    camfig, (l_ax, r_ax) = render_camera_points(y, colors)
     camfig.savefig(os.path.join(dir_path, f"unsolved/unsolved_cam_{i}.png"))
 
 for i in range(len(solved)):
@@ -50,5 +49,5 @@ for i in range(len(solved)):
 
     # Generative camera model 
     y = world.cam.take_picture(np.linalg.inv(problem.T_init), world.p_w)
-    camfig, (l_ax, r_ax) = sim.render_camera_points(y, colors)
+    camfig, (l_ax, r_ax) = render_camera_points(y, colors)
     camfig.savefig(os.path.join(dir_path, f"solved/solved_cam_{i}.png"))   
