@@ -1,4 +1,5 @@
 import os
+from dataclasses import dataclass
 import pickle
 from datetime import datetime
 from typing import Optional, List, Tuple
@@ -8,30 +9,41 @@ import numpy as np
 import sim
 
 
+@dataclass
 class StereoLocalizationProblem:
-    def __init__(
-        self,
-        T_wc: np.array,
-        p_w: np.array,
-        M: np.array,
-        W: Optional[np.array] = None,
-        y: Optional[np.array] = None,
-        gamma_r: float = 0.0,
-        r_0: Optional[np.array] = None,
-        gamma_C: float = 0.0,
-        C_0: Optional[np.array] = None,
-        T_init: Optional[np.array] = None,
-    ):
-        self.T_wc = T_wc
-        self.p_w = p_w
-        self.y = y
-        self.W = W
-        self.M = M
-        self.gamma_r = gamma_r
-        self.r_0 = r_0
-        self.gamma_C = gamma_C
-        self.C_0 = C_0
-        self.T_init = T_init
+    T_wc: np.array
+    p_w: np.array
+    M: np.array
+    W: Optional[np.array] = None
+    y: Optional[np.array] = None
+    gamma_r: float = 0.0
+    r_0: Optional[np.array] = None
+    gamma_C: float = 0.0
+    C_0: Optional[np.array] = None
+    T_init: Optional[np.array] = None
+    #def __init__(
+    #    self,
+    #    T_wc: np.array,
+    #    p_w: np.array,
+    #    M: np.array,
+    #    W: Optional[np.array] = None,
+    #    y: Optional[np.array] = None,
+    #    gamma_r: float = 0.0,
+    #    r_0: Optional[np.array] = None,
+    #    gamma_C: float = 0.0,
+    #    C_0: Optional[np.array] = None,
+    #    T_init: Optional[np.array] = None,
+    #):
+    #    self.T_wc = T_wc
+    #    self.p_w = p_w
+    #    self.y = y
+    #    self.W = W
+    #    self.M = M
+    #    self.gamma_r = gamma_r
+    #    self.r_0 = r_0
+    #    self.gamma_C = gamma_C
+    #    self.C_0 = C_0
+    #    self.T_init = T_init
 
 class StereoLocalizationSolution:
 

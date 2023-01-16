@@ -52,6 +52,7 @@ class StereoLocalizationDataset():
     @staticmethod
     def from_pickle(filepath: str):
         with open(filepath, "rb") as f:
+            f.seek(0)
             return pickle.load(f)
 
     def to_pickle(self, filepath: str, force: bool = False):
@@ -59,6 +60,9 @@ class StereoLocalizationDataset():
             assert not os.path.exists(filepath), f"{filepath} already exists"
         with open(filepath, "wb") as f:
             return pickle.dump(self, f)
+
+    def __getitem__(self, index: int):
+        return self.examples[index]
 
     def __getstate__(self):
         return {"examples": self.examples}
