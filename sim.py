@@ -95,7 +95,8 @@ class Camera:
     c_v: int
     b: float
     R: np.array # noise covariance matrix
-    fov: Optional[np.array] # field of view of camera 
+    fov_phi_range: Optional[Tuple[float, float]] # min, max
+    fov_depth_range: Optional[Tuple[float, float]] # min, max
 
     def M(self):
         return make_stereo_camera_matrix(
@@ -133,10 +134,21 @@ class World:
 
     def place_landmarks_in_camera_fov(self):
         assert self.T_wc is not None, "Need camera frame in world to place landmarks in camera FOV!"
-        ranges = self.cam.fov[:, 1] - self.cam.fov[:, 0]
+        #ranges = self.cam.fov[:, 1] - self.cam.fov[:, 0]
         # generate points
-        p_c = np.random.rand(self.num_landmarks, 3) * ranges + self.cam.fov[:, 0] # (N, 3), camera frame points
-        homo_p_c = np.concatenate((p_c, np.ones_like(p_c[:, 0:1])), axis = 1) # (N, 4, 1)
+        #p_c = np.random.rand(self.num_landmarks, 3) * ranges + self.cam.fov[:, 0] # (N, 3), camera frame points
+        min_phi, max_phi = self.cam.fov_phi_range
+        assert min_phi < max_phi
+        min_rho, max_rho = self.cam.fov_depth_range
+        assert min_rho < max_rho
+        phi = np.random.rand(self.num_landmarks, 1) * (max_phi - min_phi) + min_phi
+        theta = np.random.rand(self.num_landmarks, 1) * 2*np.pi
+        rho = np.random.rand(self.num_landmarks, 1) * (max_rho - min_rho) + min_rho
+        z = np.cos(phi) * rho
+        x = np.sin(phi) * np.cos(theta) * rho
+        y = np.sin(phi) * np.sin(theta) * rho
+
+        homo_p_c = np.concatenate((x, y, z, np.ones_like(x)), axis = 1) # (N, 4, 1)
         self.p_w = self.T_wc @ homo_p_c[:, :, None] # (N, 4, 1), world frame points
 
     def clear_sim_instance(self):

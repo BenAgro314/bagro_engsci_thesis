@@ -39,8 +39,9 @@ def read_dataset(path: str):
     cu = dataset3["cu"]
     cv = dataset3["cv"]
     b = dataset3["b"]
+    print(fu, fv, cu, cv, b)
 
-    cam = Camera(fu, fv, cu, cv, b, 0 * np.eye(4), None) # is this noise correct?
+    cam = Camera(fu, fv, cu, cv, b, R = 0 * np.eye(4), fov_phi_range=(0, 0), fov_depth_range=(0, 0)) # is this noise correct?
     M = np.array(cam.M(), dtype=np.float64)
 
     T_c_v = np.eye(4)
