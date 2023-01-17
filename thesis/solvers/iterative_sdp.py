@@ -1,19 +1,15 @@
-import os
 from copy import deepcopy
 from typing import Dict, Optional
 
 import cvxpy as cp
 import numpy as np
-import thesis.solvers.local_solver as local_solver
-import thesis.visualization.plotting as plotting
-from experiments import (StereoLocalizationProblem, StereoLocalizationSolution,
-                         run_experiment)
+from thesis.experiments.utils import StereoLocalizationProblem, StereoLocalizationSolution
 from scipy.linalg import fractional_matrix_power
-from thesis.solvers.local_solver import projection_error
+from thesis.solvers.local_solver import projection_error, stereo_localization_gauss_newton
 from thesis.relaxations.sdp_relaxation import (
     build_general_SDP_problem, build_rotation_constraint_matrices,
     extract_solution_from_X)
-from thesis.simulation.sim import Camera, generate_random_rot
+from thesis.simulation.sim import generate_random_rot
 
 RECORD_HISTORY=True
 
@@ -121,7 +117,8 @@ def iterative_sdp_solution(
             if log:
                 print(f"Update norm: {norm}")
             if norm < min_update_norm:
-                print(f"Small update, breaking on iteration {i + 1}")
+                if log:
+                    print(f"Small update, breaking on iteration {i + 1}")
                 break
             X_old = X_sdp
 
@@ -135,7 +132,7 @@ def iterative_sdp_solution(
         if refine:
             problem = deepcopy(problem)
             problem.T_init = T
-            soln = local_solver.stereo_localization_gauss_newton(problem, log = False, max_iters = 100, record_history = record_history)
+            soln = stereo_localization_gauss_newton(problem, log = False, max_iters = 100, record_history = record_history)
             if record_history:
                 soln.T_cw_history = T_cw_history + soln.T_cw_history
             return soln
@@ -144,43 +141,3 @@ def iterative_sdp_solution(
                 T_cw_history.append(T)
             cost = projection_error(problem.y, T, problem.M, problem.p_w, problem.W)
             return StereoLocalizationSolution(True, T, cost, T_cw_history)
-
-def metrics_fcn(problem, num_tries = 100):
-    mosek_params = {}
-    datum = {}
-    local_solution = local_solver.stereo_localization_gauss_newton(problem, log = False, max_iters = 100, num_tries = num_tries, record_history=RECORD_HISTORY)
-    iter_sdp_soln = iterative_sdp_solution(problem, problem.T_init, max_iters = 1, min_update_norm = 1e-10, return_X = False, mosek_params=mosek_params, max_num_tries = num_tries, record_history=RECORD_HISTORY)
-    datum["local_solution"] = local_solution
-    datum["iterative_sdp_solution"] = iter_sdp_soln
-
-    return datum
-
-def main():
-
-    var_list = [0.1, 0.3, 0.5, 0.7, 0.9, 1, 3, 5, 7, 9, 10]
-    num_problem_instances = 5
-    num_landmarks = 20
-    num_local_solve_tries = 100
-
-    cam = Camera(
-        f_u = 160, # focal length in horizonal pixels
-        f_v = 160, # focal length in vertical pixels
-        c_u = 320, # pinhole projection in horizonal pixels
-        c_v = 240, # pinhole projection in vertical pixels
-        b = 0.25, # baseline (meters)
-        R = 0 * np.eye(4), # covarience matrix for image-space noise
-        fov = np.array([[-1,1], [-1, 1], [2, 5]])
-    )
-
-    p_wc_extent = np.array([[3], [3], [0]])
-
-    metrics, exp_dir = run_experiment(metrics_fcn, var_list, num_problem_instances, num_landmarks, num_local_solve_tries, cam, p_wc_extent, W = np.eye(4))
-
-    #plotting.plot_local_and_iterative_compare(metrics, os.path.join(exp_dir, "local_vs_iterative_cost.png"))
-    plotting.plot_percent_succ_vs_noise(metrics, os.path.join(exp_dir, "local_vs_iterative_bar.png"))
-    plotting.plot_min_cost_vs_noise(metrics, os.path.join(exp_dir, "local_cost_vs_noise_level.png"))
-    plotting.plot_select_solutions_history(metrics, exp_dir)
-
-
-if __name__ == "__main__":
-    main()

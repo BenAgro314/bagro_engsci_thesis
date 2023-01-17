@@ -7,8 +7,9 @@ from dataclasses import dataclass
 from typing import List, Tuple
 
 import numpy as np
+from common.utils import get_data_dir_path
 
-from thesis.experiments import StereoLocalizationProblem
+from thesis.experiments.utils import StereoLocalizationProblem
 from thesis.simulation.sim import Camera, World, generate_random_T
 
 
@@ -43,7 +44,7 @@ class StereoLocalizationDataset():
         return len(self.examples)
 
     def __iter__(self):
-        return self.examples
+        return self.examples.__iter__()
 
     def add_example(self, example: StereoLocalizationExample):
         self.examples.append(example)
@@ -72,47 +73,56 @@ class StereoLocalizationDataset():
     @staticmethod
     def from_config(config: StereoLocalizationDatasetConfig):
         dataset = StereoLocalizationDataset()
-        example_id = 0
-        for var, num_landmarks in itertools.product(config.variances, config.num_landmarks):
-            print(f"On: variance: {var}, num_landmarks: {num_landmarks}")
-            cam = Camera(
-                f_u = config.f_u,
-                f_v = config.f_v,
-                c_u = config.c_u,
-                c_v = config.c_v,
-                b = config.b,
-                R = var * np.eye(4),
-                fov_phi_range = config.fov_phi_range,
-                fov_depth_range = config.fov_depth_range,
-            )
-            world = World(
-                cam = cam,
-                p_wc_extent = config.p_wc_extent,
-                num_landmarks = num_landmarks
-            )
+
+        cam = Camera(
+            f_u = config.f_u,
+            f_v = config.f_v,
+            c_u = config.c_u,
+            c_v = config.c_v,
+            b = config.b,
+            R = 1 * np.eye(4),
+            fov_phi_range = config.fov_phi_range,
+            fov_depth_range = config.fov_depth_range,
+        )
+
+        worlds = []
+
+        # create world first so we can re-use the same landmark configs across noise levels
+        for num_landmarks in config.num_landmarks:
             for _ in range(config.num_examples_per_var_num_landmarks):
+                world = World(
+                    cam = cam,
+                    p_wc_extent = config.p_wc_extent,
+                    num_landmarks = num_landmarks
+                )
                 world.clear_sim_instance()
                 world.make_random_sim_instance()
-                y = cam.take_picture(world.T_wc, world.p_w)
+                worlds.append(deepcopy(world))
+
+        for world in worlds:
+            for var in config.variances:
+                world.cam.R = var * np.eye(4)
+                y = world.cam.take_picture(world.T_wc, world.p_w)
+                W = (1/var)*np.eye(4)
                 for _ in range(config.num_T_inits_per_example):
                     T_init = generate_random_T(config.p_wc_extent)
                     example = StereoLocalizationExample(
-                        problem = StereoLocalizationProblem(world.T_wc, world.p_w, cam.M(), y = y, T_init = T_init),
-                        camera = deepcopy(cam),
+                        problem = StereoLocalizationProblem(world.T_wc, world.p_w, cam.M(), y = y, T_init = T_init, W = W),
+                        camera = deepcopy(world.cam),
                         world = deepcopy(world),
-                        example_id = example_id,
+                        example_id = hash(str(world.T_wc) + str(world.p_w) + str(y)),
                     )
                     dataset.add_example(example)
-                example_id += 1
+
         return dataset
 
-def main(out_path: str):
-    np.random.seed(42)
+
+def main(dataset_name: str):
     config = StereoLocalizationDatasetConfig(
-        variances = [0.1, 0.3, 0.5, 0.7, 1],
-        num_landmarks = [5, 10, 20],
-        num_examples_per_var_num_landmarks = 10,
-        num_T_inits_per_example = 100,
+        variances = [0.1, 0.3, 0.5, 0.7, 1],#, 3, 5],
+        num_landmarks = [5, 10], #, 15, 20],
+        num_examples_per_var_num_landmarks = 2,
+        num_T_inits_per_example = 30,
         f_u = 484.5,
         f_v = 484.5,
         c_u = 322,
@@ -123,9 +133,10 @@ def main(out_path: str):
         p_wc_extent = np.array([[3], [3], [0]]),
     )
     dataset = StereoLocalizationDataset.from_config(config)
-    dataset.to_pickle(out_path)
+    dataset_path = os.path.join(get_data_dir_path(), dataset_name)
+    dataset.to_pickle(dataset_path, force = True)
 
 if __name__ == "__main__":
-    assert len(sys.argv) == 2, "python dataset.py <out_path>"
-    out_path = sys.argv[1]
-    main(out_path)
+    assert len(sys.argv) == 2, "python dataset.py <dataset_name>"
+    dataset_name = sys.argv[1]
+    main(dataset_name)

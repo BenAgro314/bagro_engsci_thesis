@@ -72,32 +72,44 @@ def add_coordinate_frame(T_wc: np.array, ax: plt.axes, label: str, size: float =
         ax.add_artist(a)
 
 def plot_minimum_eigenvalues(metrics: List[Dict[str, Any]], path: str):
-    vars = [m["noise_var"] for m in metrics]
-    vars_set = set(vars)
-    scene_inds = [m["scene_ind"] for m in metrics]
-    min_costs = {}
-    for var in vars_set:
-        min_costs[var] = {}
-        for scene_ind in scene_inds:
-            min_costs[var][scene_ind] = min([m["local_solution"].cost for m in metrics if (m["noise_var"] == var and m["scene_ind"] == scene_ind)])
+    min_cost_per_scene_ind = {}
+    for m in metrics:
+        if not m["local_solution"].solved:
+           continue
+        scene_ind = m["scene_ind"]
+        if scene_ind not in min_cost_per_scene_ind:
+            min_cost_per_scene_ind[scene_ind] = np.inf
+        min_cost_per_scene_ind[scene_ind] = min(min_cost_per_scene_ind[scene_ind], m["local_solution"].cost)
+
+    min_global_solution = np.inf
+    max_non_global_solution = -np.inf
+    min_var = np.inf
+    max_var = -np.inf
 
     for m in metrics:
         if not m["local_solution"].solved:
-            continue
+           continue
         var = m["noise_var"]
+        min_var = min(min_var, var)
+        max_var = max(max_var, var)
         cost = m["local_solution"].cost
         scene_ind = m["scene_ind"]
-        min_cost = min_costs[var][scene_ind]
+        min_cost = min_cost_per_scene_ind[scene_ind] #min_costs[var][scene_ind]
         color = 'b' if np.isclose(min_cost, cost) else 'r'
+        y_val = min(m["certificate"].eig_values.real)
         if color == 'b':
-            plt.scatter([var], min(m["certificate"].eig_values.real), color = color)
+            plt.scatter([np.sqrt(var)], y_val, color = color)
+            min_global_solution = min(min_global_solution, y_val)
         else:
-            plt.scatter([var * 1.05], min(m["certificate"].eig_values.real), color = color)
+            plt.scatter([np.sqrt(var)], y_val, color = color)
+            max_non_global_solution = max(max_non_global_solution, y_val)
 
     plt.yscale("symlog")
     plt.xscale("log")
+    plt.hlines([max_non_global_solution], colors = ['r'], linestyles=['dashed'], xmin = min_var, xmax = max_var)
+    plt.hlines([min_global_solution], colors = ['b'], linestyles=['dashed'], xmin = min_var, xmax = max_var)
     plt.ylabel("Log of minimum eigenvalue from local solver")
-    plt.xlabel("Pixel space gaussian measurement variance")
+    plt.xlabel("Noise Std Dev [pixels]")
     plt.savefig(path)
     plt.show()
     plt.close("all")
@@ -141,7 +153,7 @@ def plot_min_cost_vs_noise(metrics: List[Dict[str, Any]], path: str):
     fig, ax = plt.subplots()
     bar_plot(ax, data, tick_labels = vars)
     ax.set_ylabel("Minimum Cost")
-    ax.set_xlabel("Pixel-space Noise Variance")
+    ax.set_xlabel("Pixel-space Noise Standard")
 
     #fig.subplots_adjust(hspace=0.5)
     plt.savefig(path)
@@ -150,42 +162,45 @@ def plot_min_cost_vs_noise(metrics: List[Dict[str, Any]], path: str):
 
 
 def plot_percent_succ_vs_noise(metrics: List[Dict[str, Any]], path: str):
+    min_cost_per_scene_ind = {}
+    vars = set()
+    for m in metrics:
+        scene_ind = m["scene_ind"]
+        vars.add(m["noise_var"])
+        if scene_ind not in min_cost_per_scene_ind:
+            min_cost_per_scene_ind[scene_ind] = np.inf
+        min_for_solvers = min([m["local_solution"].cost, m["iterative_sdp_solution"].cost, m["global_sdp_solution"].cost])
+        min_cost_per_scene_ind[scene_ind] = min(min_cost_per_scene_ind[scene_ind], min_for_solvers)
+    vars = list(vars)
 
-    vars = [m["noise_var"] for m in metrics]
-    vars = list(set(vars))
-    vars.sort()
-    scene_inds = [m["scene_ind"] for m in metrics]
-    min_costs = {}
-    local_counts = {v: 0 for v in vars}
-    iter_sdp_counts = {v: 0 for v in vars}
-    totals = {v: 0 for v in vars}
-    for var in vars:
-        min_costs[var] = {}
-        for scene_ind in scene_inds:
-            min_costs[var][scene_ind] = min([m["local_solution"].cost for m in metrics if (m["noise_var"] == var and m["scene_ind"] == scene_ind)])
-
+    local_counts = {var: 0 for var in vars}
+    iter_sdp_counts = {var: 0 for var in vars}
+    global_sdp_counts = {var: 0 for var in vars}
+    totals = {var: 0 for var in vars}
 
     for m in metrics:
         var = m["noise_var"]
         scene_ind = m["scene_ind"]
         local_cost = m["local_solution"].cost
         iterative_sdp_cost = m["iterative_sdp_solution"].cost
-        local_counts[var] += 1 if np.isclose(local_cost, min_costs[var][scene_ind]) else 0
-        iter_sdp_counts[var] += 1 if np.isclose(iterative_sdp_cost, min_costs[var][scene_ind]) else 0
+        global_sdp_cost = m["global_sdp_solution"].cost
+        local_counts[var] += 1 if np.isclose(local_cost, min_cost_per_scene_ind[scene_ind]) else 0
+        iter_sdp_counts[var] += 1 if np.isclose(iterative_sdp_cost, min_cost_per_scene_ind[scene_ind]) else 0
+        global_sdp_counts[var] += 1 if np.isclose(global_sdp_cost, min_cost_per_scene_ind[scene_ind]) else 0
         totals[var] += 1
 
     data = {
         "local solver": [local_counts[var]/totals[var] for var in vars],
         "iterative sdp": [iter_sdp_counts[var]/totals[var] for var in vars],
+        "global sdp": [global_sdp_counts[var]/totals[var] for var in vars],
     }
 
     fig, ax = plt.subplots()
-    bar_plot(ax, data, tick_labels = vars)
+    bar_plot(ax, data, tick_labels = [np.sqrt(v) for v in vars])
     ax.set_ylabel("Percentage of Globally Optimal Solutions")
-    ax.set_xlabel("Pixel-space Noise Variance")
+    plt.xlabel("Noise Std Dev [pixels]")
     ax.set_ylim([0, 1.1])
 
-    #fig.subplots_adjust(hspace=0.5)
     plt.savefig(path)
     plt.show()
     plt.close("all")

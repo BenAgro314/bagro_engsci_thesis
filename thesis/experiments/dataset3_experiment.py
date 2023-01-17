@@ -3,7 +3,7 @@ import numpy as np
 from pylgmath.so3.operations import hat
 import os
 import pickle
-from thesis.experiments.experiments import StereoLocalizationProblem
+from thesis.experiments.utils import StereoLocalizationProblem
 import thesis.solvers.local_solver as local_solver
 from thesis.solvers.iterative_sdp import iterative_sdp_solution
 from thesis.simulation.sim import Camera

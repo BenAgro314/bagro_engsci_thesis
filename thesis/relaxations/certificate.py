@@ -7,7 +7,7 @@ from thesis.relaxations.sdp_relaxation import (
     build_measurement_constraint_matrices,
     build_measurement_constraint_matrices_v2,
 )
-from thesis.experiments import StereoLocalizationProblem, StereoLocalizationSolution
+from thesis.experiments.utils import StereoLocalizationProblem, StereoLocalizationSolution
 
 class StereoLocalizationCertificate:
     def __init__(self, certified: bool, H: np.array, eig_values: Optional[np.array] = None):

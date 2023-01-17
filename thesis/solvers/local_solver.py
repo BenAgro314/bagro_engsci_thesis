@@ -4,7 +4,7 @@ from typing import Optional
 from pylgmath.so3.operations import hat
 from pylgmath.se3.operations import vec2tran
 from thesis.simulation.sim import generative_camera_model, generate_random_rot
-from thesis.experiments import StereoLocalizationProblem, StereoLocalizationSolution
+from thesis.experiments.utils import StereoLocalizationProblem, StereoLocalizationSolution
 
 
 

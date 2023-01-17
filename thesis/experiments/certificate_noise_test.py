@@ -1,50 +1,33 @@
 import os 
-from typing import Dict, Tuple, List
-
-from thesis.experiments import run_experiment
+import sys
 import numpy as np
-from thesis.relaxations.certificate import run_certificate
-import thesis.visualization.plotting as plotting
-import thesis.simulation.sim as sim
-from thesis.solvers.local_solver import stereo_localization_gauss_newton
 
-def metrics_fcn(problem):
+from thesis.datasets.dataset import StereoLocalizationDataset, StereoLocalizationExample
+from thesis.common.utils import get_data_dir_path
+from thesis.experiments.experiments_runner import run_experiment
+from thesis.relaxations.certificate import run_certificate
+from thesis.solvers.local_solver import stereo_localization_gauss_newton
+from thesis.visualization.plotting import plot_minimum_eigenvalues
+
+def metrics_fcn(example: StereoLocalizationExample):
+    problem = example.problem
     datum = {}
     solution = stereo_localization_gauss_newton(problem, log = False, max_iters = 100)
     datum["local_solution"] = solution
+    datum["noise_var"] = example.camera.R[0, 0]
+    datum["scene_ind"] = example.example_id
+    assert np.all(example.camera.R == datum["noise_var"] * np.eye(4)), f"{example.camera.R}"
     if solution.T_cw is not None:
         certificate = run_certificate(problem, solution)
         datum["certificate"] = certificate
     return datum
 
-def main():
-
-    var_list = [0.1, 0.3, 0.5, 0.7, 0.9, 1]#, 3, 5, 7, 9, 10]
-    num_problem_instances = 5
-    num_landmarks = 20
-    num_local_solve_tries = 100
-
-    cam = sim.Camera(
-        f_u = 484.5,
-        f_v = 484.5,
-        c_u = 322,
-        c_v = 247,
-        b = 0.24,
-        R = 0 * np.eye(4), # co-variance matrix for image-space noise
-        fov_phi_range = (-np.pi / 12, np.pi / 12),
-        fov_depth_range = (0.2, 3),
-    )
-
-    p_wc_extent = np.array([[3], [3], [0]])
-
-    r0 = np.zeros((3, 1))
-    gamma_r = 0 #1e-1
-
-    metrics = []
-
-    metrics, exp_dir = run_experiment(metrics_fcn, var_list, num_problem_instances, num_landmarks, num_local_solve_tries, cam, p_wc_extent, r0 = r0, gamma_r = gamma_r)
-    plotting.plot_minimum_eigenvalues(metrics, os.path.join(exp_dir, "min_eigs_plt.png"))
-
+def main(dataset_name: str):
+    dataset = StereoLocalizationDataset.from_pickle(os.path.join(get_data_dir_path(), dataset_name))
+    metrics, exp_dir = run_experiment(dataset=dataset, metrics_fcn=metrics_fcn)
+    plot_minimum_eigenvalues(metrics, os.path.join(exp_dir, "min_eigs.png"))
 
 if __name__ == "__main__":
-    main()
+    assert len(sys.argv) == 2, "python certificate_noise_test.py <dataset_name>"
+    dataset_name = sys.argv[1]
+    main(dataset_name)
