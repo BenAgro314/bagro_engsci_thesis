@@ -14,9 +14,9 @@ def metrics_fcn(example: StereoLocalizationExample):
     datum = {}
     solution = stereo_localization_gauss_newton(problem, log = False, max_iters = 100)
     datum["local_solution"] = solution
-    datum["noise_var"] = example.camera.R[0, 0]
+    datum["noise_var"] = np.mean(np.diag(example.camera.R))
     datum["scene_ind"] = example.example_id
-    assert np.all(example.camera.R == datum["noise_var"] * np.eye(4)), f"{example.camera.R}"
+    #assert np.all(example.camera.R == datum["noise_var"] * np.eye(4)), f"{example.camera.R}"
     if solution.T_cw is not None:
         certificate = run_certificate(problem, solution)
         datum["certificate"] = certificate

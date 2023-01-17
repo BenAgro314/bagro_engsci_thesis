@@ -1,10 +1,10 @@
-import itertools
+from typing import Optional
 import sys
 import os
 import pickle
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import List, Tuple
+from typing import List, Tuple, Any
 
 import numpy as np
 from common.utils import get_data_dir_path
@@ -32,8 +32,8 @@ class StereoLocalizationDatasetConfig():
 class StereoLocalizationExample():
     problem: StereoLocalizationProblem
     camera: Camera
-    world: World
-    example_id: int # uniquely identifies scenarios generated with the same landmarks configs and pixel measurments
+    world: Optional[World]
+    example_id: Any # uniquely identifies scenarios generated with the same landmarks configs and pixel measurments
     
 class StereoLocalizationDataset():
 
@@ -119,10 +119,10 @@ class StereoLocalizationDataset():
 
 def main(dataset_name: str):
     config = StereoLocalizationDatasetConfig(
-        variances = [0.1, 0.3, 0.5, 0.7, 1],#, 3, 5],
-        num_landmarks = [5, 10], #, 15, 20],
-        num_examples_per_var_num_landmarks = 2,
-        num_T_inits_per_example = 30,
+        variances = [0.1, 0.3, 0.5, 0.7, 1, 3, 5],
+        num_landmarks = [5, 10, 15, 20],
+        num_examples_per_var_num_landmarks = 5,
+        num_T_inits_per_example = 50,
         f_u = 484.5,
         f_v = 484.5,
         c_u = 322,
@@ -135,6 +135,7 @@ def main(dataset_name: str):
     dataset = StereoLocalizationDataset.from_config(config)
     dataset_path = os.path.join(get_data_dir_path(), dataset_name)
     dataset.to_pickle(dataset_path, force = True)
+    print(f"Written dataset of lenght {len(dataset)}")
 
 if __name__ == "__main__":
     assert len(sys.argv) == 2, "python dataset.py <dataset_name>"

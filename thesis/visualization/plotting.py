@@ -171,7 +171,7 @@ def plot_percent_succ_vs_noise(metrics: List[Dict[str, Any]], path: str):
             min_cost_per_scene_ind[scene_ind] = np.inf
         min_for_solvers = min([m["local_solution"].cost, m["iterative_sdp_solution"].cost, m["global_sdp_solution"].cost])
         min_cost_per_scene_ind[scene_ind] = min(min_cost_per_scene_ind[scene_ind], min_for_solvers)
-    vars = list(vars)
+    vars = sorted(list(vars))
 
     local_counts = {var: 0 for var in vars}
     iter_sdp_counts = {var: 0 for var in vars}
@@ -190,13 +190,13 @@ def plot_percent_succ_vs_noise(metrics: List[Dict[str, Any]], path: str):
         totals[var] += 1
 
     data = {
-        "local solver": [local_counts[var]/totals[var] for var in vars],
-        "iterative sdp": [iter_sdp_counts[var]/totals[var] for var in vars],
-        "global sdp": [global_sdp_counts[var]/totals[var] for var in vars],
+        "local solver": [round(local_counts[var]/totals[var], 2) for var in vars],
+        "iterative sdp": [round(iter_sdp_counts[var]/totals[var], 2) for var in vars],
+        "global sdp": [round(global_sdp_counts[var]/totals[var], 2) for var in vars],
     }
 
     fig, ax = plt.subplots()
-    bar_plot(ax, data, tick_labels = [np.sqrt(v) for v in vars])
+    bar_plot(ax, data, tick_labels = [round(np.sqrt(v), 2) for v in vars])
     ax.set_ylabel("Percentage of Globally Optimal Solutions")
     plt.xlabel("Noise Std Dev [pixels]")
     ax.set_ylim([0, 1.1])
