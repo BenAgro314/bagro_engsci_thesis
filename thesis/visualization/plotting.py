@@ -7,6 +7,7 @@ from mpl_toolkits.mplot3d import proj3d
 from copy import deepcopy
 from matplotlib.text import Annotation
 import matplotlib.pyplot as plt
+import tikzplotlib
 
 
 class Arrow3D(FancyArrowPatch):
@@ -104,14 +105,17 @@ def plot_minimum_eigenvalues(metrics: List[Dict[str, Any]], path: str):
             plt.scatter([np.sqrt(var)], y_val, color = color)
             max_non_global_solution = max(max_non_global_solution, y_val)
 
+
     plt.yscale("symlog")
     plt.xscale("log")
     plt.hlines([max_non_global_solution], colors = ['r'], linestyles=['dashed'], xmin = min_var, xmax = max_var)
     plt.hlines([min_global_solution], colors = ['b'], linestyles=['dashed'], xmin = min_var, xmax = max_var)
     plt.ylabel("Log of minimum eigenvalue from local solver")
     plt.xlabel("Noise Std Dev [pixels]")
-    plt.savefig(path)
-    plt.show()
+
+    tikzplotlib.save(path + ".tex")
+    plt.savefig(path + ".png", dpi = 400)
+    #plt.show()
     plt.close("all")
 
 def plot_local_and_iterative_compare(metrics: List[Dict[str, Any]], path: str):
@@ -201,8 +205,9 @@ def plot_percent_succ_vs_noise(metrics: List[Dict[str, Any]], path: str):
     plt.xlabel("Noise Std Dev [pixels]")
     ax.set_ylim([0, 1.1])
 
-    plt.savefig(path)
-    plt.show()
+
+    tikzplotlib.save(path + ".tex")
+    plt.savefig(path + ".png", dpi = 400)
     plt.close("all")
 
 def plot_solution_history(path: str, problem, solution, world):

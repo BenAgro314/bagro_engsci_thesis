@@ -2,6 +2,7 @@ from typing import Optional
 import sys
 import os
 import pickle
+import random
 from copy import deepcopy
 from dataclasses import dataclass
 from typing import List, Tuple, Any
@@ -15,6 +16,7 @@ from thesis.simulation.sim import Camera, World, generate_random_T
 
 @dataclass
 class StereoLocalizationDatasetConfig():
+    name: str
     variances: List[float] # list of noise variances to generate examples with
     num_landmarks: List[int] # list of number of landmarks to put in examples
     num_examples_per_var_num_landmarks: int # number of examples to generate for each (variance, num_landmarks) pair
@@ -37,42 +39,10 @@ class StereoLocalizationExample():
     
 class StereoLocalizationDataset():
 
-    def __init__(self):
+    def __init__(self, config: StereoLocalizationDatasetConfig):
+        self.config = config
+
         self.examples = []
-
-    def __len__(self):
-        return len(self.examples)
-
-    def __iter__(self):
-        return self.examples.__iter__()
-
-    def add_example(self, example: StereoLocalizationExample):
-        self.examples.append(example)
-
-    @staticmethod
-    def from_pickle(filepath: str):
-        with open(filepath, "rb") as f:
-            f.seek(0)
-            return pickle.load(f)
-
-    def to_pickle(self, filepath: str, force: bool = False):
-        if not force:
-            assert not os.path.exists(filepath), f"{filepath} already exists"
-        with open(filepath, "wb") as f:
-            return pickle.dump(self, f)
-
-    def __getitem__(self, index: int):
-        return self.examples[index]
-
-    def __getstate__(self):
-        return {"examples": self.examples}
-
-    def __setstate__(self, state):
-        self.examples = state["examples"]
-
-    @staticmethod
-    def from_config(config: StereoLocalizationDatasetConfig):
-        dataset = StereoLocalizationDataset()
 
         cam = Camera(
             f_u = config.f_u,
@@ -112,17 +82,51 @@ class StereoLocalizationDataset():
                         world = deepcopy(world),
                         example_id = hash(str(world.T_wc) + str(world.p_w) + str(y)),
                     )
-                    dataset.add_example(example)
+                    self.add_example(example)
 
-        return dataset
+        self.shuffle()
 
+    def __len__(self):
+        return len(self.examples)
+
+    def shuffle(self):
+        random.shuffle(self.examples)
+
+    def __iter__(self):
+        return self.examples.__iter__()
+
+    def add_example(self, example: StereoLocalizationExample):
+        self.examples.append(example)
+
+    @staticmethod
+    def from_pickle(filepath: str):
+        with open(filepath, "rb") as f:
+            f.seek(0)
+            return pickle.load(f)
+
+    def to_pickle(self, filepath: str, force: bool = False):
+        if not force:
+            assert not os.path.exists(filepath), f"{filepath} already exists"
+        with open(filepath, "wb") as f:
+            return pickle.dump(self, f)
+
+    def __getitem__(self, index: int):
+        return self.examples[index]
+
+    def __getstate__(self):
+        return {"examples": self.examples, "config": self.config}
+
+    def __setstate__(self, state):
+        self.examples = state["examples"]
+        self.config = state["config"]
 
 def main(dataset_name: str):
     config = StereoLocalizationDatasetConfig(
-        variances = [0.1, 0.3, 0.5, 0.7, 1, 3, 5],
-        num_landmarks = [5, 10, 15, 20],
-        num_examples_per_var_num_landmarks = 5,
-        num_T_inits_per_example = 50,
+        name = dataset_name,
+        variances = [0.1, 0.3, 0.5, 0.7, 1, 4],
+        num_landmarks = [5, 10, 15],
+        num_examples_per_var_num_landmarks = 4,
+        num_T_inits_per_example = 25,
         f_u = 484.5,
         f_v = 484.5,
         c_u = 322,
@@ -132,10 +136,10 @@ def main(dataset_name: str):
         fov_depth_range = (0.2, 3),
         p_wc_extent = np.array([[3], [3], [0]]),
     )
-    dataset = StereoLocalizationDataset.from_config(config)
-    dataset_path = os.path.join(get_data_dir_path(), dataset_name)
+    dataset = StereoLocalizationDataset(config)
+    dataset_path = os.path.join(get_data_dir_path(), dataset_name + ".pkl")
     dataset.to_pickle(dataset_path, force = True)
-    print(f"Written dataset of lenght {len(dataset)}")
+    print(f"Written dataset of lengh {len(dataset)}")
 
 if __name__ == "__main__":
     assert len(sys.argv) == 2, "python dataset.py <dataset_name>"
