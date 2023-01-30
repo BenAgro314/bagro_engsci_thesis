@@ -87,6 +87,10 @@ def plot_minimum_eigenvalues(metrics: List[Dict[str, Any]], path: str):
     min_var = np.inf
     max_var = -np.inf
 
+    xs = []
+    ys = []
+    colors = []
+
     for m in metrics:
         if not m["local_solution"].solved:
            continue
@@ -98,20 +102,24 @@ def plot_minimum_eigenvalues(metrics: List[Dict[str, Any]], path: str):
         min_cost = min_cost_per_scene_ind[scene_ind] #min_costs[var][scene_ind]
         color = 'b' if np.isclose(min_cost, cost) else 'r'
         y_val = min(m["certificate"].eig_values.real)
+        xs.append(np.sqrt(var))
+        ys.append(y_val)
+        colors.append(color)
         if color == 'b':
-            plt.scatter([np.sqrt(var)], y_val, color = color)
             min_global_solution = min(min_global_solution, y_val)
         else:
-            plt.scatter([np.sqrt(var)], y_val, color = color)
             max_non_global_solution = max(max_non_global_solution, y_val)
 
-
-    plt.yscale("symlog")
+    ys = np.array(ys)
+    assert np.all(ys < 0), "Woah you got a positive eigvalue"
+    plt.scatter(xs, np.abs(ys), c = colors)
+    plt.hlines([np.abs(max_non_global_solution)], colors = ['r'], linestyles=['dashed'], xmin = np.sqrt(min_var), xmax = np.sqrt(max_var))
+    plt.hlines([np.abs(min_global_solution)], colors = ['b'], linestyles=['dashed'], xmin = np.sqrt(min_var), xmax = np.sqrt(max_var))
+    plt.yscale("log")
     plt.xscale("log")
-    plt.hlines([max_non_global_solution], colors = ['r'], linestyles=['dashed'], xmin = min_var, xmax = max_var)
-    plt.hlines([min_global_solution], colors = ['b'], linestyles=['dashed'], xmin = min_var, xmax = max_var)
-    plt.ylabel("Log of minimum eigenvalue from local solver")
+    plt.ylabel("Minimum Eigenvalue")
     plt.xlabel("Noise Std Dev [pixels]")
+    plt.gca().invert_yaxis()
 
     tikzplotlib.save(path + ".tex")
     plt.savefig(path + ".png", dpi = 400)
@@ -164,6 +172,46 @@ def plot_min_cost_vs_noise(metrics: List[Dict[str, Any]], path: str):
     plt.show()
     plt.close("all")
 
+def plot_solution_time_vs_num_landmarks(metrics: List[Dict[str, Any]], path: str):
+    average_time_per_num_landmarks = {
+        "local_solution_time": {},
+        "iterative_sdp_solution_time": {},
+        "global_sdp_solution_time": {},
+    }
+    for m in metrics:
+        num_landmarks = m["example"].problem.y.shape[0]
+        for k, v in average_time_per_num_landmarks.items():
+            if num_landmarks not in v:
+                v[num_landmarks] = [m[k]]
+            else:
+                v[num_landmarks].append(m[k])
+    
+    num_landmarks_list = sorted(list(average_time_per_num_landmarks["local_solution_time"].keys()))
+
+    data = {
+        "local_solution_time": [],
+        "iterative_sdp_solution_time": [],
+        "global_sdp_solution_time": [],
+    }
+
+    for solver_time_name, solver_time_dict in average_time_per_num_landmarks.items():
+        for nl in num_landmarks_list:
+            data[solver_time_name].append(sum(solver_time_dict[nl]) / len(solver_time_dict[nl]))
+
+    fig, ax = plt.subplots()
+
+    ax.scatter(num_landmarks_list, data["local_solution_time"], label = "\localsolver{}")
+    ax.scatter(num_landmarks_list, data["iterative_sdp_solution_time"], label = "\iterSDP{}")
+    ax.scatter(num_landmarks_list, data["global_sdp_solution_time"], label = "\globalSDP{}")
+
+    ax.set_xlabel("Number of Landmarks")
+    ax.set_ylabel("Average Solution Time")
+    ax.legend()
+
+    tikzplotlib.save(path + ".tex")
+    plt.savefig(path + ".png", dpi = 400)
+    plt.close("all")
+    pass
 
 def plot_percent_succ_vs_noise(metrics: List[Dict[str, Any]], path: str):
     min_cost_per_scene_ind = {}
@@ -211,7 +259,7 @@ def plot_percent_succ_vs_noise(metrics: List[Dict[str, Any]], path: str):
     plt.close("all")
 
 def plot_solution_history(path: str, problem, solution, world):
-    assert solution.T_cw_history is not None
+    assert solution.T_cw_history is not None, "Must include T_cw_history"
     world = deepcopy(world)
     world.T_wc = problem.T_wc
     world.p_w = problem.p_w
@@ -238,10 +286,12 @@ def plot_select_solutions_history(metrics: List[Dict[str, Any]], exp_dir: str, n
         for i, m in enumerate(ms):
             local_solution = m["local_solution"]
             iterative_sdp_solution = m["iterative_sdp_solution"]
-            world = m["world"]
-            problem = m["problem"]
+            global_sdp_solution = m["global_sdp_solution"]
+            world = m["example"].world
+            problem = m["example"].problem
             plot_solution_history(os.path.join(exp_dir, str(var), f"local_solution_{var}_{i}.png"), problem, local_solution, world)
             plot_solution_history(os.path.join(exp_dir, str(var), f"iterative_sdp_solution_{var}_{i}.png"), problem, iterative_sdp_solution, world)
+            plot_solution_history(os.path.join(exp_dir, str(var), f"global_sdp_solution_{var}_{i}.png"), problem, global_sdp_solution, world)
 
 def bar_plot(ax, data, colors=None, total_width=0.8, single_width=1, legend=True, tick_labels = None):
     """Draws a bar plot with multiple bars per data point.

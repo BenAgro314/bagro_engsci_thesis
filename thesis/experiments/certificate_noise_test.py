@@ -2,7 +2,7 @@ import os
 import sys
 import numpy as np
 
-from thesis.datasets.dataset import StereoLocalizationDataset, StereoLocalizationExample
+from thesis.datasets.dataset import StereoLocalizationDataset, StereoLocalizationExample, StereoLocalizationDatasetConfig
 from thesis.common.utils import get_data_dir_path
 from thesis.experiments.experiments_runner import run_experiment
 from thesis.relaxations.certificate import run_certificate
@@ -23,9 +23,9 @@ def metrics_fcn(example: StereoLocalizationExample):
     return datum
 
 def main(dataset_name: str):
-    dataset = StereoLocalizationDataset.from_pickle(os.path.join(get_data_dir_path(), dataset_name))
+    dataset = StereoLocalizationDataset.from_pickle(os.path.join(get_data_dir_path(), dataset_name + ".pkl"))
     metrics, exp_dir = run_experiment(dataset=dataset, metrics_fcn=metrics_fcn)
-    plot_minimum_eigenvalues(metrics, os.path.join(exp_dir, "min_eigs.png"))
+    plot_minimum_eigenvalues(metrics, os.path.join(exp_dir, "min_eigs"))
 
 if __name__ == "__main__":
     assert len(sys.argv) == 2, "python certificate_noise_test.py <dataset_name>"

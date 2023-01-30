@@ -9,7 +9,7 @@ from thesis.solvers.local_solver import projection_error, stereo_localization_ga
 from thesis.relaxations.sdp_relaxation import (
     build_general_SDP_problem, build_rotation_constraint_matrices,
     extract_solution_from_X)
-from thesis.simulation.sim import generate_random_rot
+from thesis.simulation.sim import generate_random_rot, generate_random_T
 
 RECORD_HISTORY=True
 
@@ -72,6 +72,8 @@ def iterative_sdp_solution(
     num_tries = 0
     T_init = deepcopy(T_init)
     while not success and num_tries < max_num_tries:
+        if log:
+            print(f"Try number {num_tries + 1}")
         success = True
         X_sdp = vec_T(T_init) @ vec_T(T_init).T # remove last row; we already know those values
         T = None
@@ -94,15 +96,19 @@ def iterative_sdp_solution(
         num_tries += 1
         T_cw_history = [] if record_history else None
         for i in range(max_iters):
+            if log:
+                print(f"Iteration {i + 1}")
             if record_history:
                 T_cw_history.append(extract_solution_from_X(X_sdp))
             Q = _build_Q(problem, _X_sdp_to_X(X_sdp))
             prob, X_var = build_general_SDP_problem(Q, As, bs)
             try:
-                prob.solve(solver=cp.MOSEK, mosek_params = mosek_params)#, verbose = True)
+                prob.solve(solver=cp.MOSEK, mosek_params = mosek_params, verbose = False)
                 if prob.status != "optimal":
                     assert False
-            except Exception:
+            except Exception as e:
+                if log:
+                    print(e)
                 T_init[:3, :3] = generate_random_rot()
                 success = False
                 break
@@ -123,7 +129,7 @@ def iterative_sdp_solution(
             X_old = X_sdp
 
     if not success:
-        print(f"Failed to solve in {max_num_tries} tries")
+        print(f"Iterative SDP failed to solve in {max_num_tries} tries")
 
     if return_X:
         return X_sdp

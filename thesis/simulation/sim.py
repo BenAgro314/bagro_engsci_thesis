@@ -163,7 +163,7 @@ class World:
         ax = fig.add_subplot(projection='3d')
         if include_world_frame:
             add_coordinate_frame(np.eye(4), ax, "$\mathfrak{F}_w$")
-        add_coordinate_frame(self.T_wc, ax, "$\mathfrak{F}_c$")
+        add_coordinate_frame(self.T_wc, ax, "$\mathfrak{F}_s$")
         # set aspect ratio
 
         colors = np.random.rand(self.num_landmarks, 3)

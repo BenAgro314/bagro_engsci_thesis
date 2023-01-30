@@ -83,7 +83,7 @@ def read_dataset(in_path: str, dataset_name: str, num_T_inits_per_example: int =
 
     p_wc_extent = p_max
 
-    dataset = StereoLocalizationDataset()
+    dataset = StereoLocalizationDataset(dataset_name)
 
     for problem in problems:
         num_landmarks = problem.y.shape[0]

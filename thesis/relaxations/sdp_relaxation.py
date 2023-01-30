@@ -216,6 +216,11 @@ def build_measurement_constraint_matrices(p_w: np.array) -> Tuple[List[np.array]
 
     return As, bs
 
+def Ei(i, dim = 9):
+    E = np.zeros((3, dim))
+    E[:, 3*i:3*i + 3] = np.eye(3, 3)
+    return E
+
 def build_rotation_constraint_matrices() -> Tuple[List[np.array], List[np.array]]:
     """Builds the 6 9x9 rotation matrix constraint matrices
 
@@ -226,12 +231,57 @@ def build_rotation_constraint_matrices() -> Tuple[List[np.array], List[np.array]
     """
     As = []
     bs = []
-    for i in range(0, 9, 3):
-        for j in range(i, 9, 3):
+    for i in range(0, 3):
+        for j in range(i, 3):
             A = np.zeros((9, 9))
-            A[i:i+3, j:j+3] = np.eye(3)
+            A = Ei(j).T @ Ei(i)
             As.append(0.5 * (A + A.T))
             bs.append(int(i == j))
+
+    return As, bs
+
+def Uki(k, i, dim = 9):
+    U = np.zeros((dim, 3))
+    eye = np.eye(3)
+    if k == 0:
+        U[3*i:3*i+3, 1:2] = -eye[:, 2:3]
+        U[3*i:3*i+3, 2:3] = eye[:, 1:2]
+    if k == 1:
+        U[3*i:3*i+3, 0:1] = eye[:, 2:3]
+        U[3*i:3*i+3, 2:3] = -eye[:, 0:1]
+    if k == 2:
+        U[3*i:3*i+3, 0:1] = -eye[:, 1:2]
+        U[3*i:3*i+3, 1:2] = eye[:, 0:1]
+    return U
+
+
+
+def build_redundant_rotation_constraint_matrices(dim) -> Tuple[List[np.array], List[np.array]]:
+    As = []
+    bs = []
+    for i in range(0, 3):
+        R_i = np.zeros((dim, 3))
+        R_i[i, 0] = 1
+        R_i[i+3, 1] = 1
+        R_i[i+6, 2] = 1
+        for j in range(i, 3):
+            R_j = np.zeros((dim, 3))
+            R_j[j, 0] = 1
+            R_j[j+3, 1] = 1
+            R_j[j+6, 2] = 1
+            A = R_i @ R_j.T
+            #A[-1, -1] = -int(i == j)
+            As.append(0.5 * (A + A.T))
+            #bs.append(0)
+            bs.append(int(i == j))
+
+    for i in range(0, 3):
+        for k in range(0, 3):
+            ek = np.zeros((3, 1))
+            ek[k] = 1
+            A = Uki(k, i % 3, dim = dim) @ Ei((i + 1) % 3, dim = dim) - a(dim) @ ek.T @ Ei((i + 2) % 3, dim = dim)
+            As.append(0.5 * (A + A.T))
+            bs.append(0)
 
     return As, bs
 

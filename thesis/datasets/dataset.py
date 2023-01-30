@@ -39,10 +39,14 @@ class StereoLocalizationExample():
     
 class StereoLocalizationDataset():
 
-    def __init__(self, config: StereoLocalizationDatasetConfig):
-        self.config = config
-
+    def __init__(self, name: str):
         self.examples = []
+        self.name = name
+        self.config = None
+
+    @staticmethod
+    def from_config(config: StereoLocalizationDatasetConfig):
+        examples = []
 
         cam = Camera(
             f_u = config.f_u,
@@ -82,9 +86,13 @@ class StereoLocalizationDataset():
                         world = deepcopy(world),
                         example_id = hash(str(world.T_wc) + str(world.p_w) + str(y)),
                     )
-                    self.add_example(example)
+                    examples.append(example)
 
-        self.shuffle()
+        dataset = StereoLocalizationDataset(config.name)
+        dataset.examples = examples
+        dataset.shuffle()
+        dataset.config = config
+        return dataset
 
     def __len__(self):
         return len(self.examples)
@@ -114,19 +122,20 @@ class StereoLocalizationDataset():
         return self.examples[index]
 
     def __getstate__(self):
-        return {"examples": self.examples, "config": self.config}
+        return {"examples": self.examples, "config": self.config, "name": self.name}
 
     def __setstate__(self, state):
         self.examples = state["examples"]
         self.config = state["config"]
+        self.name = state["name"]
 
 def main(dataset_name: str):
     config = StereoLocalizationDatasetConfig(
         name = dataset_name,
-        variances = [0.1, 0.3, 0.5, 0.7, 1, 4],
-        num_landmarks = [5, 10, 15],
-        num_examples_per_var_num_landmarks = 4,
-        num_T_inits_per_example = 25,
+        variances = [1, 10, 100, 1000],
+        num_landmarks = [10],
+        num_examples_per_var_num_landmarks = 2,
+        num_T_inits_per_example = 100,
         f_u = 484.5,
         f_v = 484.5,
         c_u = 322,
@@ -136,7 +145,7 @@ def main(dataset_name: str):
         fov_depth_range = (0.2, 3),
         p_wc_extent = np.array([[3], [3], [0]]),
     )
-    dataset = StereoLocalizationDataset(config)
+    dataset = StereoLocalizationDataset.from_config(config)
     dataset_path = os.path.join(get_data_dir_path(), dataset_name + ".pkl")
     dataset.to_pickle(dataset_path, force = True)
     print(f"Written dataset of lengh {len(dataset)}")
