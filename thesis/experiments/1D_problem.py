@@ -1,4 +1,4 @@
-
+#%%
 import numpy as np
 import cvxpy as cp
 import sys
@@ -23,11 +23,11 @@ def local_solver(a, y, x_init, num_iters, eps = 1e-5):
             return x_op
     return None
 
+x = 5
+N = 5
 
 #%% generate ground truth
 
-x = 5
-N = 10
 # ground truth landmark positions
 a = x + 1 + np.random.rand(N, 1) * 10 #np.linspace(0, N, N).reshape((N, 1)) 
 # measurments
@@ -88,11 +88,13 @@ mdict = {
     "y": y,
 }
 
+#%%
+
 scipy.io.savemat(f"/home/agrobenj/bagro_engsci_thesis/thesis/matlab/1D_problem_{N}_landmarks_full.mat", mdict)
 
 #%% load problem
 
-mdict = scipy.io.loadmat(f"/home/agrobenj/bagro_engsci_thesis/thesis/matlab/1D_problem_10_landmarks_full.mat")
+mdict = scipy.io.loadmat(f"/home/agrobenj/bagro_engsci_thesis/thesis/matlab/1D_problem_5_landmarks_full.mat")
 Q = mdict["Q"]
 As = mdict["As"]
 bs = mdict["bs"][0]
