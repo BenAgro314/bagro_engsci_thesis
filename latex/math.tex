@@ -345,4 +345,26 @@ the constraint
 \mbf{v}_k (\mbf{T} \mbf{p}_k)^T = (\mbf{T} \mbf{p}_k) \mbf{v}_k^T \quad \forall k \\
 \end{align}
 
+\section{1D problem}
+
+
+\begin{align}
+    \mathcal{L} = \sum_{n = 1}^N \left( y_n - \frac{1}{x - a_n}\right)^2
+\end{align}
+Let $z_n = \frac{1}{x - a_n}$, $\omega = 1$:
+\begin{align}
+    \mathcal{L} = \sum_n \left( \omega y_n - z_n \right)^2 \\
+    \text{ subject to }  z_n(x - a_n) = 1, \forall n \in {1, \dots, N} \\
+    \omega^2 = 1
+\end{align}
+
+\subsection{Redundant Constraints}
+
+\begin{align}
+    z_j - z_i  &= \frac{1}{x - a_j} - \frac{1}{x - a_i}\\
+    &= \frac{a_j - a_i}{(x - a_j)(x - a_i)} \\
+    &= z_j z_i (a_j - a_i)
+\end{align}
+
+
 \end{document}
