@@ -4,8 +4,8 @@
 import sys
 from ncpol2sdpa import *
 
-sys.path.append("/Users/benagro/bagro_engsci_thesis")
-sys.path.append("/Users/benagro/bagro_engsci_thesis/thesis/")
+sys.path.append("/home/agrobenj/bagro_engsci_thesis")
+sys.path.append("/home/agrobenj/bagro_engsci_thesis/thesis/")
 import cvxpy as cp
 from thesis.relaxations.sdp_relaxation import build_cost_matrix_v2, build_general_SDP_problem, build_homo_constraint, build_measurement_constraint_matrices_v2, build_parallel_constraint_matrices, build_rotation_constraint_matrices, extract_solution_from_X, build_redundant_rotation_constraint_matrices
 import numpy as np
@@ -24,6 +24,8 @@ from thesis.relaxations.sdp_relaxation import (
     extract_solution_from_X,
 )
 import tikzplotlib
+import scipy
+import scipy.io
 
 #%% make problem
 
@@ -154,8 +156,18 @@ A_measure, b_measure = build_measurement_constraint_matrices_v2(problem.p_w)
 As += A_measure
 bs += b_measure
 
+mdict = {
+    "Q": Q,
+    "As": As,
+    "bs": bs
+}
+
+scipy.io.savemat("/home/agrobenj/bagro_engsci_thesis/thesis/matlab/sdp_test.mat", mdict)
+
+#%%
+
 n_vars = Q.shape[0]
-level = 2
+level = 1
 x = generate_variables('x', n_vars)
 obj = np.dot(x, np.dot(Q, np.transpose(x)))
 #inequalities = [-x[1]**2 + x[1] + 0.5>=0]
@@ -186,3 +198,7 @@ tikzplotlib.save("global_sdp_eigs_las.tex")
 cost = projection_error(y, T_las, cam.M(), world.p_w, W)
 print("SDP Solution Cost Las:", cost)
 print("Local Solution Cost:", local_minima[0][0])
+
+#%% easier way ?
+
+

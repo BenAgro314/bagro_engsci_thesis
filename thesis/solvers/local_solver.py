@@ -74,7 +74,7 @@ def _svdsolve(A: np.array, b: np.array):
     """
     u,s,v = np.linalg.svd(A)
     c = np.dot(u.T,b)
-    w = np.linalg.solve(np.diag(s),c)
+    w = np.linalg.lstsq(np.diag(s),c)[0]
     x = np.dot(v.T,w)
     return x
 
