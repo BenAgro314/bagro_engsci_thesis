@@ -4,23 +4,23 @@
 import sys
 from ncpol2sdpa import *
 
-sys.path.append("/home/agrobenj/bagro_engsci_thesis")
 sys.path.append("/home/agrobenj/bagro_engsci_thesis/thesis/")
+sys.path.append("/Users/benagro/bagro_engsci_thesis/thesis/")
+sys.path.append("/Users/benagro/bagro_engsci_thesis/")
 import cvxpy as cp
-from thesis.relaxations.sdp_relaxation import build_cost_matrix_v2, build_general_SDP_problem, build_homo_constraint, build_measurement_constraint_matrices_v2, build_parallel_constraint_matrices, build_rotation_constraint_matrices, extract_solution_from_X, build_redundant_rotation_constraint_matrices
 import numpy as np
 import matplotlib.pyplot as plt
-from thesis.solvers.unknown_scale_sdp import unknown_scale_sdp
 from thesis.simulation.sim import render_camera_points, World, Camera
 import thesis.solvers.local_solver as local_solver
 from thesis.solvers.global_sdp import global_sdp_solution
 from thesis.solvers.local_solver import projection_error, StereoLocalizationProblem
-from thesis.relaxations.sdp_relaxation import (
+from thesis.relaxations.sdp_relaxation_v2 import (
     build_general_SDP_problem,
     build_cost_matrix,
     build_rotation_constraint_matrices,
     build_measurement_constraint_matrices,
     build_parallel_constraint_matrices,
+    build_homo_constraint,
     extract_solution_from_X,
 )
 import tikzplotlib
@@ -35,7 +35,7 @@ cam = Camera(
     c_u = 322,
     c_v = 247,
     b = 0.24,
-    R = 0.1 * np.eye(4),
+    R = 1e-2 * np.eye(4),
     fov_phi_range = (-np.pi / 12, np.pi / 12),
     fov_depth_range = (0.2, 3),
 )
@@ -68,11 +68,19 @@ for i in range(world.num_landmarks):
 
 # local solver
 
-problem = StereoLocalizationProblem(world.T_wc, world.p_w, cam.M(), W, y, r_0 = r0, gamma_r = gamma_r)
-problem.T_init = T_op
-solution = local_solver.stereo_localization_gauss_newton(problem, log = True)
-T_op = solution.T_cw
-local_minima = solution.cost
+global_minimum = np.inf
+T_global = None
+for i in range(25):
+    problem = StereoLocalizationProblem(world.T_wc, world.p_w, cam.M(), W, y, r_0 = r0, gamma_r = gamma_r)
+    problem.T_init = T_op
+    solution = local_solver.stereo_localization_gauss_newton(problem, log = False, max_iters=100, num_tries=1)
+    T_op = solution.T_cw
+    local_minima = solution.cost
+    if local_minima < global_minimum:
+        global_minimum = local_minima
+        T_global = T_op
+global_minimum = global_minimum.item()
+print(f"Global best: {global_minimum}")
 print("Estimate:\n", T_op)
 print("Ground Truth:\n", np.linalg.inv(world.T_wc))
 
@@ -86,13 +94,13 @@ mosek_params = {
 }
 
 X_sdp = global_sdp_solution(problem, return_X = True, mosek_params=mosek_params, record_history=False, redundant_constraints = False, log = True)
+print(f"Global optimum: {global_minimum}")
 
-print("Ground Truth:\n", np.linalg.inv(world.T_wc))
+print("Global Best Solution:\n", T_global)
 T_sdp = extract_solution_from_X(X_sdp)
 print("SDP Solution:\n", T_sdp)
 cost = projection_error(y, T_sdp, cam.M(), world.p_w, W)
 print("SDP Solution Cost:", cost)
-print("Local Solution Cost:", local_minima[0][0])
 
 eig_values, eig_vectors = np.linalg.eig(X_sdp)
 plt.close("all")
@@ -105,14 +113,10 @@ tikzplotlib.save("global_sdp_eigs.tex")
 #%%
 X = global_sdp_solution(problem, return_X = True, mosek_params=mosek_params, record_history=False, redundant_constraints = True, log = True)
 
-#print("Ground Truth:\n", np.linalg.inv(world.T_wc))
-#T_sdp = extract_solution_from_X(X)
-#print("SDP Solution:\n", T_sdp)
-#cost = projection_error(y, T_sdp, cam.M(), world.p_w, W)
 T_sdp = extract_solution_from_X(X)
 cost = projection_error(y, T_sdp, cam.M(), world.p_w, W)
+print(f"Global optimum: {global_minimum}")
 print("SDP With Redundant Constraints Solution Cost:", cost)
-print("Local Solution Cost:", local_minima[0][0])
 
 
 eig_values, eig_vectors = np.linalg.eig(X)
@@ -123,28 +127,44 @@ plt.ylabel("Eigenvalues of $\mathbf{X}$ ($\lambda$)")
 #plt.savefig("eigs.png")
 tikzplotlib.save("global_sdp_eigs_redundant.tex")
 
+#%% cross-coupling constraints
+
+X = global_sdp_solution(problem, return_X = True, mosek_params=mosek_params, include_coupling = True, redundant_constraints = True, record_history=False, log = True)
+
+T_sdp = extract_solution_from_X(X)
+cost = projection_error(y, T_sdp, cam.M(), world.p_w, W)
+print(f"Global optimum: {global_minimum}")
+print("SDP With Redundant Constraints Solution Cost:", cost)
+
+
+eig_values, eig_vectors = np.linalg.eig(X)
+plt.close("all")
+eig_values
+plt.scatter(range(len(eig_values)), eig_values)
+plt.ylabel("Eigenvalues of $\mathbf{X}$ ($\lambda$)")
+#plt.savefig("eigs.png")
+tikzplotlib.save("global_sdp_eigs_redundant.tex")
+
+print("Global Best Solution:\n", T_global)
+print("SDP Solution:\n", T_sdp)
+
+
 #%% Laserrres
 
 num_landmarks = problem.y.shape[0]
+
+D = 13 + 3 * num_landmarks
 Ws = np.zeros((num_landmarks, 4, 4))
 for i in range(num_landmarks):
     Ws[i] = problem.W
 
-Q = build_cost_matrix_v2(num_landmarks, problem.y, Ws, problem.M, problem.r_0, problem.gamma_r)
+Q = build_cost_matrix(D, problem.y, Ws, problem.M, problem.r_0, problem.gamma_r)
 Q = Q / np.mean(np.abs(Q)) # improve numerics 
-As = []
-bs = []
 
-d = 13 + 3 * num_landmarks
-assert Q.shape == (d, d)
+assert Q.shape == (D, D)
 
 # rotation matrix
-As_rot, bs = build_rotation_constraint_matrices()
-for A_rot in As_rot:
-    A = np.zeros((d, d))
-    A[:9, :9] = A_rot
-    As.append(A)
-
+As, bs = build_rotation_constraint_matrices()
 
 # homogenization variable
 A, b = build_homo_constraint(num_landmarks)
@@ -152,7 +172,7 @@ As.append(A)
 bs.append(b)
 
 # measurements
-A_measure, b_measure = build_measurement_constraint_matrices_v2(problem.p_w)
+A_measure, b_measure = build_measurement_constraint_matrices(problem.p_w)
 As += A_measure
 bs += b_measure
 

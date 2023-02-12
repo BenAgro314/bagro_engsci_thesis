@@ -1,11 +1,10 @@
 from typing import Optional
 import numpy as np
-from thesis.relaxations.sdp_relaxation import (
-    build_cost_matrix_v2,
+from thesis.relaxations.sdp_relaxation_v2 import (
+    build_cost_matrix,
     build_homo_constraint,
     build_rotation_constraint_matrices,
     build_measurement_constraint_matrices,
-    build_measurement_constraint_matrices_v2,
 )
 from thesis.experiments.utils import StereoLocalizationProblem, StereoLocalizationSolution
 
@@ -33,25 +32,20 @@ def run_certificate(problem: StereoLocalizationProblem, solution: StereoLocaliza
         Ws[i] = problem.W
 
     # build cost matrix and compare to local solution
-    Q = build_cost_matrix_v2(num_landmarks, problem.y, Ws, problem.M, problem.r_0, problem.gamma_r)
+    D = 13 + 3*num_landmarks
+    Q = build_cost_matrix(D, problem.y, Ws, problem.M, problem.r_0, problem.gamma_r)
     Q = Q / np.mean(np.abs(Q)) # improve numerics 
-    As = []
-    bs = []
 
     # rotation matrix
-    As_rot, bs = build_rotation_constraint_matrices()
-    for A_rot in As_rot:
-        A = np.zeros((13 + 3*num_landmarks, 13 + 3 *num_landmarks))
-        A[:9, :9] = A_rot
-        As.append(A)
+    As, bs = build_rotation_constraint_matrices(D)
 
     # homogenization variable
-    A, b = build_homo_constraint(num_landmarks)
+    A, b = build_homo_constraint(D)
     As.append(A)
     bs.append(b)
 
     # measurements
-    A_measure, b_measure = build_measurement_constraint_matrices_v2(problem.p_w)
+    A_measure, b_measure = build_measurement_constraint_matrices(D, problem.p_w)
     As += A_measure
     bs += b_measure
 

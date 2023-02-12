@@ -9,7 +9,7 @@ sys.path.append("/home/agrobenj/bagro_engsci_thesis/thesis/")
 
 
 from thesis.ncpol2sdpa import generate_variables, SdpRelaxation
-from relaxations.sdp_relaxation import build_general_SDP_problem
+from relaxations.sdp_relaxation_v2 import build_general_SDP_problem
 
 
 def local_solver(a, y, x_init, num_iters, eps = 1e-5):

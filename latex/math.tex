@@ -347,7 +347,18 @@ the constraint
 
 \subsection{From 1D problem}
 
-Recall $\mbf{v}_n = \frac{1}{\mbf{e}_3^T \mbf{T} \mbf{p}_n} \mbf{T} \mbf{p}_n$
+Recall $\mbf{v}_n = \frac{1}{\mbf{e}_3^T \mbf{T} \mbf{p}_n} \mbf{T} \mbf{p}_n$.
+
+\begin{align}
+    \mbf{e}_4^T (\mbf{v}_i - \mbf{v}_j) = \frac{\mbf{e}_3^T \mbf{T} \mbf{p}_j - \mbf{e}_3^T \mbf{T} \mbf{p}_i}{(\mbf{e}_3 ^T \mbf{T} \mbf{p_i})(\mbf{e}_e^T \mbf{T} \mbf{p}_j)} \\
+    \mbf{e}_4^T (\mbf{v}_i - \mbf{v}_j) = (\mbf{e}_4^T \mbf{v}_i )(\mbf{e}_4^T \mbf{v}_j ) (\mbf{e}_3^T \mbf{T} \mbf{p}_j - \mbf{e}_3^T \mbf{T} \mbf{p}_i).
+\end{align}
+Introduce new variables $q_{ij} = (\mbf{e}_4^T \mbf{v}_i ) (\mbf{e}_4^T \mbf{v}_j )= \mbf{u}_{i3} \mbf{u}_{j3}$.
+Then we add the quadratic constraints:
+\begin{align}
+    \mbf{e}_4^T (\mbf{v}_i - \mbf{v}_j) = q_{ij} (\mbf{e}_3^T \mbf{T} \mbf{p}_j - \mbf{e}_3^T \mbf{T} \mbf{p}_i), \\
+    \omega q_{ij} = \mbf{u}_{i3} \mbf{u}_{j3}
+\end{align}
 
 
 \section{1D problem}

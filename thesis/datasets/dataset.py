@@ -132,10 +132,10 @@ class StereoLocalizationDataset():
 def main(dataset_name: str):
     config = StereoLocalizationDatasetConfig(
         name = dataset_name,
-        variances = [1, 10, 100, 1000],
-        num_landmarks = [10],
+        variances = [0.1, 0.5, 0.7, 1.0],
+        num_landmarks = [5],
         num_examples_per_var_num_landmarks = 2,
-        num_T_inits_per_example = 100,
+        num_T_inits_per_example = 25,
         f_u = 484.5,
         f_v = 484.5,
         c_u = 322,

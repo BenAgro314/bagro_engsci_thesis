@@ -6,7 +6,7 @@ import numpy as np
 from thesis.experiments.utils import StereoLocalizationProblem, StereoLocalizationSolution
 from scipy.linalg import fractional_matrix_power
 from thesis.solvers.local_solver import projection_error, stereo_localization_gauss_newton
-from thesis.relaxations.sdp_relaxation import (
+from thesis.relaxations.sdp_relaxation_v2 import (
     build_general_SDP_problem, build_rotation_constraint_matrices,
     extract_solution_from_X)
 from thesis.simulation.sim import generate_random_rot, generate_random_T
@@ -81,14 +81,10 @@ def iterative_sdp_solution(
             assert momentum_param_k > 0 and momentum_param_k < 1
             T = T_init
         # rotation matrix constraints
-        rot_As, bs = build_rotation_constraint_matrices()
-        As = []
-        for rot_A in rot_As:
-            A = np.zeros((13, 13))
-            A[:9, :9] = rot_A
-            As.append(A)
+        D = 13
+        As, bs = build_rotation_constraint_matrices(D)
         # homogenization variable
-        A = np.zeros((13, 13))
+        A = np.zeros((D, D))
         A[-1, -1] = 1
         As.append(A)
         bs.append(1)

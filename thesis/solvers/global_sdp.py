@@ -3,8 +3,9 @@ import cvxpy as cp
 import numpy as np
 from typing import Dict, Optional
 from thesis.solvers.local_solver import stereo_localization_gauss_newton, projection_error
-from thesis.relaxations.sdp_relaxation import build_cost_matrix_v2, build_general_SDP_problem, build_homo_constraint, build_measurement_constraint_matrices_v2, build_parallel_constraint_matrices, build_rotation_constraint_matrices, extract_solution_from_X, build_redundant_rotation_constraint_matrices
+from thesis.relaxations.sdp_relaxation_v2 import build_cost_matrix, build_general_SDP_problem, build_homo_constraint, build_measurement_constraint_matrices, build_parallel_constraint_matrices, build_rotation_constraint_matrices, extract_solution_from_X, build_redundant_rotation_constraint_matrices, build_coupling_constraint_matrices
 from thesis.experiments.utils import StereoLocalizationProblem, StereoLocalizationSolution
+from scipy.special import comb
 
 def global_sdp_solution(
     problem: StereoLocalizationProblem,
@@ -13,6 +14,7 @@ def global_sdp_solution(
     refine: bool = True,
     record_history: bool = False,
     redundant_constraints: bool = False,
+    include_coupling: bool = False,
     log: bool = False,
 ):
     T_cw_history = []
@@ -24,42 +26,44 @@ def global_sdp_solution(
     success = True
 
     # build cost matrix and compare to local solution
-    Q = build_cost_matrix_v2(num_landmarks, problem.y, Ws, problem.M, problem.r_0, problem.gamma_r)
-    Q = Q / np.mean(np.abs(Q)) # improve numerics 
-    As = []
-    bs = []
 
-    d = 13 + 3 * num_landmarks
-    assert Q.shape == (d, d)
+    D = 13 + 3 * num_landmarks
+    if include_coupling:
+        D += comb(num_landmarks, 2, exact = True)
+
+    Q = build_cost_matrix(D, problem.y, Ws, problem.M, problem.r_0, problem.gamma_r)
+    Q = Q / np.mean(np.abs(Q)) # improve numerics 
+
+    assert Q.shape == (D, D)
 
     # rotation matrix
-    As_rot, bs = build_rotation_constraint_matrices()
-    for A_rot in As_rot:
-        A = np.zeros((d, d))
-        A[:9, :9] = A_rot
-        As.append(A)
-
+    As, bs = build_rotation_constraint_matrices(D)
 
     # homogenization variable
-    A, b = build_homo_constraint(num_landmarks)
+    A, b = build_homo_constraint(D)
     As.append(A)
     bs.append(b)
 
     # measurements
-    A_measure, b_measure = build_measurement_constraint_matrices_v2(problem.p_w)
+    A_measure, b_measure = build_measurement_constraint_matrices(D, problem.p_w)
     As += A_measure
     bs += b_measure
 
     # redundant constraints
     if redundant_constraints:
 
-        As_par, bs_par = build_parallel_constraint_matrices(problem.p_w)
+        As_par, bs_par = build_parallel_constraint_matrices(D, problem.p_w)
         As += As_par
         bs += bs_par
 
-        As_rot, bs_rot = build_redundant_rotation_constraint_matrices(d)
+        As_rot, bs_rot = build_redundant_rotation_constraint_matrices(D)
         As += As_rot
         bs += bs_rot
+
+    if include_coupling:
+        As_coup, bs_coup = build_coupling_constraint_matrices(D, problem.p_w)
+        As += As_coup
+        bs += bs_coup
 
     prob, X = build_general_SDP_problem(Q, As, bs)
 
