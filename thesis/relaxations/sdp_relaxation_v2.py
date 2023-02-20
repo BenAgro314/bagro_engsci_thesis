@@ -231,31 +231,47 @@ def build_coupling_constraint_matrices(D: int, p_w: np.array):
     I = np.eye(4)
     for i in range(N):
         for j in range(i+1, N):
+
+            # definition of q_{ij} -- (N choose 2)
             _E_q = E_q(i, j, D, N)
             A = (E_omega(D).T @ _E_q) - (E_Tp(p_w[i], D).T @  I[:, 2:3] @ I[:, 2:3].T @ E_Tp(p_w[j], D))
             As.append(0.5 * (A + A.T))
             bs.append(0)
 
+            # q_{ij} v_i = T p_i (e_3^T T p_j) -- 3 * 2 * (N choose 2) = 12 (N choose 2)
             for k in [0, 1, 3]:
-                A = (E_q(i, j, D, N).T @ I[:, k:k+1].T @ (E_v(i, D) - E_v(j, D))) \
-                    - (E_Tp(p_w[j], D).T @ I[:, 2:3] @ I[:, k:k+1].T @ E_Tp(p_w[i], D)) \
-                         + (E_Tp(p_w[i], D).T @ I[:, 2:3] @ I[:, k:k+1].T @ E_Tp(p_w[j], D))
+                A = E_q(i, j, D, N).T @ I[:, k:k+1].T @ E_v(i, D) - \
+                    E_Tp(p_w[i], D).T @ I[:, k:k+1] @ I[:, 2:3].T @ E_Tp(p_w[j], D)
+                As.append(0.5 * (A + A.T))
+                bs.append(0)
+                A = E_q(i, j, D, N).T @ I[:, k:k+1].T @ E_v(j, D) - \
+                    E_Tp(p_w[j], D).T @ I[:, k:k+1] @ I[:, 2:3].T @ E_Tp(p_w[i], D)
                 As.append(0.5 * (A + A.T))
                 bs.append(0)
 
+            # q_{ij} / q_{im} = e_3^T T p_j / (e_3^T T p_m) --- (N choose 3)
             for m in range(j + 1, N):
-
                 A = E_Tp(p_w[m], D).T @ I[:, 2:3] @ E_q(i, j, D, N) - E_Tp(p_w[j], D).T @ I[:, 2:3] @ E_q(i, m, D, N)
                 As.append(0.5 * (A + A.T))
                 bs.append(0)
 
-                A = E_v(i, D).T @ I[:, 3:4] @ (E_q(i, j, D, N) - E_q(i, m, D, N)) - \
-                    E_omega(D).T @ I[:, 2:3].T @ E_Tp(p_w[j], D) + \
-                        E_omega(D).T @ I[:, 2:3].T @ E_Tp(p_w[m], D)
-                As.append(0.5 * (A + A.T))
-                bs.append(0)
+            # q_{ij} q_{km} = q_{im} q_{kj} = q_{jm} q_{ik} ---  3(N choose 4)
+            if N >= 4:
+                for m in range(j + 1, N):
+                    for k in range(m + 1, N):
+                        A = E_q(i, j, D, N).T @ E_q(m, k, D, N) - E_q(i, m, D, N).T @ E_q(j, k, D, N)
+                        As.append(0.5 * (A + A.T))
+                        bs.append(0)
+                        A = E_q(i, j, D, N).T @ E_q(m, k, D, N) - E_q(j, m, D, N).T @ E_q(i, k, D, N)
+                        As.append(0.5 * (A + A.T))
+                        bs.append(0)
+                        A = E_q(i, m, D, N).T @ E_q(j, k, D, N) - E_q(j, m, D, N).T @ E_q(i, k, D, N)
+                        As.append(0.5 * (A + A.T))
+                        bs.append(0)
 
-    assert len(As) == (4 * comb(N, 2, exact=True)) + (2 * comb(N, 3, exact=True))
+
+    #assert len(As) == (4 * comb(N, 2, exact=True)) + (2 * comb(N, 3, exact=True))
+    assert len(As) == (7 * comb(N, 2, exact=True)) + comb(N, 3, exact=True) + 3 * comb(N, 4, exact=True)
     assert len(bs) == len(As)
     return As, bs
 

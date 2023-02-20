@@ -3,8 +3,10 @@
 \usepackage{amsmath}
 \usepackage{bm}
 \usepackage{amsfonts}
+%\usepackage{xcolor}
 
 \newcommand{\mbf}[1]{\mathbf{#1}}
+%\newcommand{\ben}[1]{\textcolor{red}{#1}}
 
 \setcounter{MaxMatrixCols}{20}
 
@@ -350,16 +352,38 @@ the constraint
 Recall $\mbf{v}_n = \frac{1}{\mbf{e}_3^T \mbf{T} \mbf{p}_n} \mbf{T} \mbf{p}_n$.
 
 \begin{align}
-    \mbf{e}_4^T (\mbf{v}_i - \mbf{v}_j) = \frac{\mbf{e}_3^T \mbf{T} \mbf{p}_j - \mbf{e}_3^T \mbf{T} \mbf{p}_i}{(\mbf{e}_3 ^T \mbf{T} \mbf{p_i})(\mbf{e}_e^T \mbf{T} \mbf{p}_j)} \\
-    \mbf{e}_4^T (\mbf{v}_i - \mbf{v}_j) = (\mbf{e}_4^T \mbf{v}_i )(\mbf{e}_4^T \mbf{v}_j ) (\mbf{e}_3^T \mbf{T} \mbf{p}_j - \mbf{e}_3^T \mbf{T} \mbf{p}_i).
+    (\mbf{v}_i - \mbf{v}_j) = \frac{(\mbf{e}_3^T \mbf{T} \mbf{p}_j) \mbf{T} \mbf{p}_i - (\mbf{e}_3^T \mbf{T} \mbf{p}_i) \mbf{T} \mbf{p}_j}{(\mbf{e}_3 ^T \mbf{T} \mbf{p_i})(\mbf{e}_e^T \mbf{T} \mbf{p}_j)} \\
 \end{align}
-Introduce new variables $q_{ij} = (\mbf{e}_4^T \mbf{v}_i ) (\mbf{e}_4^T \mbf{v}_j )= \mbf{u}_{i3} \mbf{u}_{j3}$.
+Introduce new variables $q_{ij} = (\mbf{e}_3^T \mbf{T} \mbf{p}_i) (\mbf{e}_3^T \mbf{T} \mbf{p}_j)$.
 Then we add the quadratic constraints:
 \begin{align}
-    \mbf{e}_4^T (\mbf{v}_i - \mbf{v}_j) = q_{ij} (\mbf{e}_3^T \mbf{T} \mbf{p}_j - \mbf{e}_3^T \mbf{T} \mbf{p}_i), \\
-    \omega q_{ij} = \mbf{u}_{i3} \mbf{u}_{j3}
+    q_{ij} (\mbf{v}_i - \mbf{v}_j) = (\mbf{e}_3^T \mbf{T} \mbf{p}_j) \mbf{T} \mbf{p}_i - (\mbf{e}_3^T \mbf{T} \mbf{p}_i) \mbf{T} \mbf{p}_j \\
+    \omega q_{ij} = (\mbf{e}_3^T \mbf{T} \mbf{p}_i) (\mbf{e}_3^T \mbf{T} \mbf{p}_j)
 \end{align}
 
+\subsubsection{Additional Constraints}
+
+The subtraction above is actually just a linear combination of the more general constraint:
+\begin{align}
+    q_{ij} \mbf{v}_i = \mbf{T} \mbf{p}_i (\mbf{e}_3^T \mbf{T} \mbf{p}_j),
+\end{align}
+So we instead add $6{N \choose 2}$ constraints ($N \choose 2$ for each $q_{ij}$, with two options ($\mbf{v}_i$ or $\mbf{v}_j$)).
+Adding $q_{ij}$ gives other redundant constraints:
+\begin{align}
+    q_{ij} q_{km} = q_{im} q_{kj} = q_{jm} q_{ik}
+\end{align}
+Adding $\frac{1}{2} {4 \choose 2} {N \choose 4} = 3 {N \choose 4}$ constraints. Also:
+\begin{align}
+    \frac{q_{ij}}{q_{im}} &= \frac{(\mbf{e}_3^T \mbf{T} \mbf{p}_i)(\mbf{e}_3^T \mbf{T} \mbf{p}_j)}{(\mbf{e}_3^T\mbf{T} \mbf{p}_i)(\mbf{e}_3^T \mbf{T} \mbf{p}_m)}
+    = \frac{\mbf{e}_3^T \mbf{T} \mbf{p}_j}{\mbf{e}_3^T \mbf{T} \mbf{p}_m} \\
+    \implies \mbf{e}_3^T \mbf{T} \mbf{p}_m q_{ij} &= \mbf{e}_3^T \mbf{T} \mbf{p_j} q_{im}
+\end{align}
+adding ${N \choose 3}$ constraints.
+%\begin{align}
+%    {q}_{ij} - {q}_{im} &= z_i z_j - z_i z_m = z_i (z_j - z_m) \\
+%    \implies \mbf{e}_4^T \mbf{v}_i ({q}_{ij} - {q}_{im}) &= (\mbf{e}_3^T \mbf{T} \mbf{p}_j - \mbf{e}_3^T \mbf{T} \mbf{p}_m)
+%\end{align}
+In total, we have $7{N \choose 2} + {N \choose 3} + 3 {N \choose 4}$ more constraints.
 
 \section{1D problem}
 
@@ -373,6 +397,7 @@ Let $z_n = \frac{1}{x - a_n}$, $\omega = 1$:
     \text{ subject to }  z_n(x - a_n) = 1, \forall n \in {1, \dots, N} \\
     \omega^2 = 1
 \end{align}
+
 
 \subsection{Redundant Constraints}
 

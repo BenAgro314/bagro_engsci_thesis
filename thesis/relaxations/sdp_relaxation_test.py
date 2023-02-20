@@ -35,7 +35,7 @@ cam = Camera(
     c_u = 322,
     c_v = 247,
     b = 0.24,
-    R = 1e-2 * np.eye(4),
+    R = 0.1 * np.eye(4),
     fov_phi_range = (-np.pi / 12, np.pi / 12),
     fov_depth_range = (0.2, 3),
 )
