@@ -7,14 +7,16 @@ import cvxpy as cp
 sys.path.append("/Users/benagro/bagro_engsci_thesis")
 from thesis.relaxations.sdp_relaxation_v2 import build_general_SDP_problem
 
+#M = np.array([1, 0, 0]).reshape((1, 3))
+M = np.array([[1, 0, 1], [1, 0, -1]]).reshape((2, 3))
 
 def forward_exact(T, p_w):
     assert T.shape == (3, 3)
     assert p_w.shape[1:] == (3, 1) and len(p_w.shape) == 3
     assert np.all(p_w[:, -1, 0] == 1)
     e = np.eye(3)
-    y = e[:, 0:1].T @ (T @ p_w) / (e[:, 1:2].T @ T @ p_w)
-    return y.reshape(-1)
+    y = M @ (T @ p_w) / (e[:, 1:2].T @ T @ p_w)
+    return y.reshape(-1, M.shape[0], 1)
 
 def forward_noisy(T, p_w, sigma):
     y = forward_exact(T, p_w) + (sigma * np.random.randn())
@@ -45,7 +47,7 @@ def generate_problem(N, sigma):
     p_w = np.linalg.inv(T) @ p_s
 
     y = forward_noisy(T, p_w, sigma)
-    W = np.ones((N,))
+    W = np.stack([np.eye((M.shape[0]))] * N)
     return y, p_w, phi, W
 
 # x = [c_1 ; c_2 ; r ; u_1 ; u_2 ; \dots ; u_N ; \omega], 2N + 7 variables
@@ -84,8 +86,8 @@ def E_Tp(p_n, dim):
 def build_SDP(p_w, y, W):
     assert len(p_w.shape) == 3 and p_w.shape[1:] == (3, 1) and np.all(p_w[:, -1]) == 1
     N = p_w.shape[0]
-    assert len(W) == N and len(W.shape) == 1
-    assert len(y) == N and len(y.shape) == 1
+    #assert len(W) == N and len(W.shape) == 1
+    #assert len(y) == N and len(y.shape) == 1
 
     dim = 2 * N + 7
 
@@ -97,7 +99,7 @@ def build_SDP(p_w, y, W):
     _E_omega = E_omega(dim)
     # Cost
     Q = sum(
-        (y[n] * _E_omega - e[:, 0:1].T @ E_v(n, dim)).T * W[n] * (y[n] * _E_omega - e[:, 0:1].T @ E_v(n, dim))
+        (y[n] @ _E_omega - M @ E_v(n, dim)).T @ W[n] @ (y[n] @ _E_omega - M @ E_v(n, dim))
         for n in range(N)
     )
 
@@ -159,11 +161,11 @@ def _qn(phi, p_w):
 
 def _un(y, p_w, phi):
     # y = (N, 1)
-    y = y.reshape((p_w.shape[0], 1, 1))
+    y = y.reshape((p_w.shape[0], M.shape[0], 1))
     q = _qn(phi, p_w) # (N, 3, 1)
     I = np.eye(3) # (1, 3) -> (N, 3, 3)
-    u = y - ((I[:, 0:1].T @ q) / (I[:, 1:2].T @ q)) # (N, 1, 1)
-    assert u.shape == (p_w.shape[0], 1, 1)
+    u = y - ((M @ q) / (I[:, 1:2].T @ q)) # (N, 1, 1)
+    #assert u.shape == (p_w.shape[0], 1, 1)
     return u
     
 def _dq_dphi(p_w, phi):
@@ -182,27 +184,27 @@ def _du_dq(p_w, phi):
     # phi: (3, 1)
     q = _qn(phi, p_w) # (N, 3, 1)
     I = np.eye(3)
-    du_dq =  (1 / (I[:, 1:2].T @ q)) * ((1 / (I[:, 1:2].T @ q)) * I[:, 0:1].T @ q @ I[:, 1:2].T - I[:, 0:1].T) # (N, 1, 3)
-    assert du_dq.shape == (p_w.shape[0], 1, 3)
+    du_dq =  (1 / (I[:, 1:2].T @ q)) * ((1 / (I[:, 1:2].T @ q)) * (M @ q @ I[:, 1:2].T) - M) # (N, 1, 3)
+    #assert du_dq.shape == (p_w.shape[0], 1, 3)
     return du_dq
 
 def _du_dphi(p_w, phi):
     # p_w: (N, 3, 1)
     # phi: (3, 1)
     du_dphi = _du_dq(p_w, phi) @ _dq_dphi(p_w, phi) # (N, 1, 3)
-    assert du_dphi.shape == (p_w.shape[0], 1, 3)
+    # assert du_dphi.shape == (p_w.shape[0], 1, 3)
     return du_dphi
     
 
 def _cost(p_w, W, y, phi):
     # W: (N, 1, 1)
-    u = _un(y, p_w, phi).reshape(-1)
-    return np.sum(u * u * W.reshape(-1), axis = 0)
+    u = _un(y, p_w, phi)
+    return np.sum(u.transpose((0, 2, 1)) @ W @ u, axis = 0)
 
 def local_solver(p_w, y, W, init_phi, max_iters = 100, min_update_norm=1e-10, log = False):
     # see notes for math
     # W: (N)
-    W = W.reshape((W.shape[0], 1 , 1)) # (N, 1, 1)
+    W = W.reshape((W.shape[0], M.shape[0] , M.shape[0])) # (N, 2, 2)
     phi = init_phi
     i = 0
     perturb_mag = np.inf
@@ -212,9 +214,9 @@ def local_solver(p_w, y, W, init_phi, max_iters = 100, min_update_norm=1e-10, lo
             print(f"Current cost: {_cost(p_w, W, y, phi)}")
         du_dphi = _du_dphi(p_w, phi) # (N, 1, 3)
         # (3, 1)
-        u = _un(y, p_w, phi) # (N, 1, 1)
-        b = - np.sum(W * u * du_dphi, axis = 0)  # (1, 3)
-        A = np.sum(W * du_dphi.transpose((0, 2, 1)) @ du_dphi, axis = 0) # (3, 3)
+        u = _un(y, p_w, phi) # (N, M.shape[0], 1)
+        b = - np.sum(u.transpose((0, 2, 1)) @ W @ du_dphi, axis = 0)  # (1, 3)
+        A = np.sum(du_dphi.transpose((0, 2, 1)) @ W @ du_dphi, axis = 0) # (3, 3)
         dphi = _svdsolve(A.T, b.T) # (3 , 1)
         phi += dphi
         perturb_mag = np.linalg.norm(dphi)
@@ -233,10 +235,10 @@ def plot_soln(p_w, phi, camera_color = 'k', ax = None):
 
     #y = np.linspace(-1, 1, 10)
 
-    plane_pt_s = np.stack([y, np.ones_like(y), np.ones_like(y)], axis = -1)[:, :, None]
-    plane_pt_w = (np.linalg.inv(_T(phi)) @ plane_pt_s)[:, :-1, :] # (N, 2, 1)
+    #plane_pt_s = np.stack([y, np.ones_like(y), np.ones_like(y)], axis = -1)[:, :, None]
+    #plane_pt_w = (np.linalg.inv(_T(phi)) @ plane_pt_s)[:, :-1, :] # (N, 2, 1)
 
-    ax.scatter(plane_pt_w[:, 0], plane_pt_w[:, 1], color = camera_color)
+    #ax.scatter(plane_pt_w[:, 0], plane_pt_w[:, 1], color = camera_color)
 
 
     ax.scatter(p_w[:, 0], p_w[:, 1], color = 'b')
@@ -289,8 +291,8 @@ def plot_soln(p_w, phi, camera_color = 'k', ax = None):
 
 #%% generate problem
 
-N = 4
-sigma = 0.05
+N = 3
+sigma = 0.1
 y, p_w, phi_gt, W = generate_problem(N, sigma)
 
 #%% local solver
@@ -311,6 +313,8 @@ print(f"Global soln:\n{global_soln}")
 
 ax = plot_soln(p_w, global_soln, camera_color = 'orange')
 plot_soln(p_w, phi_gt, camera_color = 'k', ax = ax)
+
+
 
 # make x from best local solution
 T_global = _T(global_soln)
