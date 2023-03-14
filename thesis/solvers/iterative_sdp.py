@@ -99,7 +99,7 @@ def iterative_sdp_solution(
             Q = _build_Q(problem, _X_sdp_to_X(X_sdp))
             prob, X_var = build_general_SDP_problem(Q, As, bs)
             try:
-                prob.solve(solver=cp.MOSEK, mosek_params = mosek_params, verbose = False)
+                prob.solve(mosek_params = mosek_params, verbose = False)
                 if prob.status != "optimal":
                     assert False
             except Exception as e:

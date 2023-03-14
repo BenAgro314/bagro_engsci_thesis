@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from typing import List, Tuple, Any
 
 import numpy as np
-from common.utils import get_data_dir_path
+from thesis.common.utils import get_data_dir_path
 
 from thesis.experiments.utils import StereoLocalizationProblem
 from thesis.simulation.sim import Camera, World, generate_random_T

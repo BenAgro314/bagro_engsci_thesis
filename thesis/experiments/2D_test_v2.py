@@ -1,11 +1,12 @@
 #%%
+import itertools
 import numpy as np
 import sys
 import matplotlib.pyplot as plt
-from ncpol2sdpa import *
 import cvxpy as cp
 sys.path.append("/Users/benagro/bagro_engsci_thesis")
 from thesis.relaxations.sdp_relaxation_v2 import build_general_SDP_problem
+from thesis.ncpol2sdpa import *
 
 #M = np.array([1, 0, 0]).reshape((1, 3))
 M = np.array([[1, 0, 1], [1, 0, -1]]).reshape((2, 3))
@@ -228,7 +229,7 @@ def local_solver(p_w, y, W, init_phi, max_iters = 100, min_update_norm=1e-10, lo
 
 # ---- plotting -----
 
-def plot_soln(p_w, phi, camera_color = 'k', ax = None):
+def plot_soln(p_w, phi, camera_color = 'k', ax = None, name = ""):
     if ax is None:
         _, ax = plt.subplots()
     y = forward_exact(_T(phi), p_w) # (N, )
@@ -281,18 +282,19 @@ def plot_soln(p_w, phi, camera_color = 'k', ax = None):
 
     ax.set_aspect('equal', adjustable='box')
     #ax.plot([phi[0, 0], to_x], [phi[1, 0], to_y], color = 'k') 
-    ax.plot(looking_towards_w[:, 0], looking_towards_w[:, 1], color = camera_color) 
+    ax.plot(looking_towards_w[:, 0], looking_towards_w[:, 1], color = camera_color, label = name) 
     ax.plot(plane_w[:, 0], plane_w[:, 1], alpha = 0.5, color = camera_color) 
     ax.scatter(looking_towards_w[0, 0], looking_towards_w[0, 1], color = camera_color)
     ax.set_xlim([-2.5, 2.5])
     ax.set_ylim([-2.5, 2.5])
+    ax.legend()
     return ax
 
 
 #%% generate problem
 
 N = 3
-sigma = 0.1
+sigma = 0.05
 y, p_w, phi_gt, W = generate_problem(N, sigma)
 
 #%% local solver
@@ -307,13 +309,8 @@ for i in range(20):
         global_soln = phi_local
         global_min = local_cost
 
-print(f"Global min cost: {global_min}")
 print(f"Ground truth:\n{phi_gt}")
 print(f"Global soln:\n{global_soln}")
-
-ax = plot_soln(p_w, global_soln, camera_color = 'orange')
-plot_soln(p_w, phi_gt, camera_color = 'k', ax = ax)
-
 
 
 # make x from best local solution
@@ -326,7 +323,6 @@ x_global = np.concatenate((x_global, u, [[1, ]]), axis = 0)
 X_global = x_global @ x_global.T
 
 
-
 Q, As, bs = build_SDP(p_w, y, W)
 
 assert np.isclose(np.trace(Q @ X_global), global_min)
@@ -334,9 +330,10 @@ assert np.isclose(np.trace(Q @ X_global), global_min)
 for A, b in zip(As, bs):
     assert np.isclose(np.trace(A @ X_global), b)
 
+#%%
+
 prob, X = build_general_SDP_problem(Q, As, bs)
 prob.solve(solver=cp.MOSEK, mosek_params = {}, verbose = False)
-print(f"Primal: {prob.value}")
 X_value = X.value
 
 
@@ -344,7 +341,7 @@ def extract_solution(X):
     C = X[:4, -1:]
     C = np.concatenate([C[:2, -1:], np.zeros((1, 1)), C[2:, -1:], np.zeros((3, 1)), np.ones((1, 1))], axis=0)
     C = C.reshape((3, 3)).T
-    r = X_value[4:6, -1:]
+    r = X[4:6, -1:]
     v, s, ut = np.linalg.svd(C, full_matrices = True)
     C = v @ np.array([[1, 0, 0], [0, 1, 0], [0, 0, np.linalg.det(ut)*np.linalg.det(v)]]) @ ut
     T_est = np.eye(3)
@@ -360,8 +357,25 @@ def phi_from_T(T):
 T_est = extract_solution(X_value)
 phi_est = phi_from_T(T_est)
 
-plot_soln(p_w, phi_est, camera_color = 'm', ax = ax)
 
+def extract_solution_lag(sdp):
+
+    monomials = sdp.monomial_sets[0]
+    inds_of_interest = [
+        monomials.index(sdp.variables[i] * sdp.variables[-1])
+        for i in range(0, 6)
+    ]
+    x = np.array([sdp.x_mat[0][0, ind] for ind in inds_of_interest])
+    C = x[:4].reshape(4, 1)
+    C = np.concatenate([C[:2, -1:], np.zeros((1, 1)), C[2:, -1:], np.zeros((3, 1)), np.ones((1, 1))], axis=0)
+    C = C.reshape((3, 3)).T
+    r = x[4:6].reshape((2, 1))
+    v, s, ut = np.linalg.svd(C, full_matrices = True)
+    C = v @ np.array([[1, 0, 0], [0, 1, 0], [0, 0, np.linalg.det(ut)*np.linalg.det(v)]]) @ ut
+    T_est = np.eye(3)
+    T_est[:2, :2] = C[:2, :2]
+    T_est[:2, -1:] = r
+    return T_est
 
 n_vars = Q.shape[0]
 level = 2
@@ -375,13 +389,43 @@ print(f"Relaxed problem!")
 print(f"Solving problem")
 sdp.solve(solver = 'mosek')
 print(f"Solved Problem")
-X = sdp.x_mat[0][1:, 1:]
 
-T_lag = extract_solution(X)
+T_lag = extract_solution_lag(sdp)
 phi_lag = phi_from_T(T_lag)
-
-plot_soln(p_w, phi_lag, camera_color = 'y', ax = ax)
-
-print(f"Primal: {sdp.primal}")
 cost = _cost(p_w, W, y, phi_lag)
-print(f"extracted cost: {cost}")
+
+#%%
+
+print(f"Global min cost: {global_min[0][0]}")
+print(f"Global SDP Primal: {prob.value}")
+print(f"Lass Primal: {sdp.primal}")
+ax = plot_soln(p_w, phi_gt, camera_color = 'k', name = 'gt')
+plot_soln(p_w, global_soln, camera_color = 'orange', name='global minima', ax = ax)
+plot_soln(p_w, phi_est, camera_color = 'm', ax = ax, name = 'global SDP')
+plot_soln(p_w, phi_lag, camera_color = 'green', ax = ax, name = "lasserre's")
+
+#%% sparse lasserre's
+
+
+n_vars = Q.shape[0]
+x = generate_variables('x', n_vars)
+obj = np.dot(x, np.dot(Q, np.transpose(x)))
+equalities = [np.dot(x, np.dot(A, np.transpose(x))) - b for A, b in zip(As, bs)]
+sparse_sdp = SdpRelaxation(x)
+#extramonomials = [x[0] * x[1]]
+extramonomials = [] #x 
+#for p in itertools.product(x, x):
+    #extramonomials.append(p[0] * p[1])
+sparse_sdp.get_relaxation(level = 2, objective=obj, equalities=equalities, extramonomials = extramonomials)
+sparse_sdp.solve(solver = 'mosek')
+print(f"Sparse Lass Primal: {sparse_sdp.primal}")
+print(f"Is tight: {sparse_sdp.primal >= global_min[0][0]}")
+
+#%%
+print(f"Global min cost: {global_min[0][0]}")
+print(f"Global SDP Primal: {prob.value}")
+print(f"Lass Primal: {sdp.primal}")
+ax = plot_soln(p_w, phi_gt, camera_color = 'k', name = 'gt')
+plot_soln(p_w, global_soln, camera_color = 'orange', name='global minima', ax = ax)
+plot_soln(p_w, phi_est, camera_color = 'm', ax = ax, name = 'global SDP')
+plot_soln(p_w, phi_lag, camera_color = 'green', ax = ax, name = "lasserre's")

@@ -38,7 +38,7 @@ class Annotation3D(Annotation):
         self.xy=(xs,ys)
         Annotation.draw(self, renderer)
 
-def add_coordinate_frame(T_wc: np.array, ax: plt.axes, label: str, size: float = 1):
+def add_coordinate_frame(T_wc: np.array, ax: plt.axes, label: str, size: float = 1, color = None):
     """
     Adds a coordinate frame (x,y,z axes) to a 3d plot
 
@@ -64,7 +64,9 @@ def add_coordinate_frame(T_wc: np.array, ax: plt.axes, label: str, size: float =
                textcoords='offset points', ha='right',va='bottom')
     ax.add_artist(tag)
 
-    for c, v in zip(['r', 'g', 'b'], [x, y, z]):
+    colors = ['r', 'g', 'b'] if color is None else 3 * [color]
+
+    for c, v in zip(colors, [x, y, z]):
         v = v.reshape(-1)
         a = Arrow3D([r[0], v[0]], [r[1], v[1]],
                         [r[2], v[2]], mutation_scale=10, 

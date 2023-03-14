@@ -309,9 +309,6 @@ print(f"Global min cost: {global_min}")
 print(f"Ground truth:\n{phi_gt}")
 print(f"Global soln:\n{global_soln}")
 
-ax = plot_soln(p_w, global_soln, camera_color = 'orange')
-plot_soln(p_w, phi_gt, camera_color = 'k', ax = ax)
-
 # make x from best local solution
 T_global = _T(global_soln)
 x_global = T_global[:2, :].T.reshape(-1, 1)
@@ -340,7 +337,7 @@ def extract_solution(X):
     C = X[:4, -1:]
     C = np.concatenate([C[:2, -1:], np.zeros((1, 1)), C[2:, -1:], np.zeros((3, 1)), np.ones((1, 1))], axis=0)
     C = C.reshape((3, 3)).T
-    r = X_value[4:6, -1:]
+    r = X[4:6, -1:]
     v, s, ut = np.linalg.svd(C, full_matrices = True)
     C = v @ np.array([[1, 0, 0], [0, 1, 0], [0, 0, np.linalg.det(ut)*np.linalg.det(v)]]) @ ut
     T_est = np.eye(3)
@@ -356,7 +353,6 @@ def phi_from_T(T):
 T_est = extract_solution(X_value)
 phi_est = phi_from_T(T_est)
 
-plot_soln(p_w, phi_est, camera_color = 'm', ax = ax)
 
 
 n_vars = Q.shape[0]
@@ -373,11 +369,35 @@ sdp.solve(solver = 'mosek')
 print(f"Solved Problem")
 X = sdp.x_mat[0][1:, 1:]
 
-T_lag = extract_solution(X)
+def extract_solution_lag(sdp):
+
+    monomials = sdp.monomial_sets[0]
+    inds_of_interest = [
+        monomials.index(sdp.variables[i] * sdp.variables[-1])
+        for i in range(0, 6)
+    ]
+    x = np.array([sdp.x_mat[0][0, ind] for ind in inds_of_interest])
+    C = x[:4].reshape(4, 1)
+    C = np.concatenate([C[:2, -1:], np.zeros((1, 1)), C[2:, -1:], np.zeros((3, 1)), np.ones((1, 1))], axis=0)
+    C = C.reshape((3, 3)).T
+    r = x[4:6].reshape((2, 1))
+    v, s, ut = np.linalg.svd(C, full_matrices = True)
+    C = v @ np.array([[1, 0, 0], [0, 1, 0], [0, 0, np.linalg.det(ut)*np.linalg.det(v)]]) @ ut
+    T_est = np.eye(3)
+    T_est[:2, :2] = C[:2, :2]
+    T_est[:2, -1:] = r
+    return T_est
+
+T_lag = extract_solution_lag(sdp)
 phi_lag = phi_from_T(T_lag)
 
-plot_soln(p_w, phi_lag, camera_color = 'y', ax = ax)
 
 print(f"Primal: {sdp.primal}")
 cost = _cost(p_w, W, y, phi_lag)
 print(f"extracted cost: {cost}")
+
+# %% plotting
+ax = plot_soln(p_w, global_soln, camera_color = 'orange')
+plot_soln(p_w, phi_gt, camera_color = 'k', ax = ax)
+plot_soln(p_w, phi_est, camera_color = 'm', ax = ax)
+plot_soln(p_w, phi_lag, camera_color = 'y', ax = ax)
