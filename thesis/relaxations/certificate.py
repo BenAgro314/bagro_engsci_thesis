@@ -52,6 +52,7 @@ def run_certificate(problem: StereoLocalizationProblem, solution: StereoLocaliza
     lhs = np.concatenate([A @ x_local for A in As], axis = 1) # \in R^((12 + J*5 + 1), (12 + J*3 + 1))
     rhs = Q @ x_local
     lag_mult = np.linalg.lstsq(lhs, rhs, rcond = None)[0]
+    assert np.allclose(lhs @ lag_mult, rhs)
     H = Q - sum([A * lag_mult[i] for i, A in enumerate(As)])
     #np.all(np.linalg.eigvals(H) > 0)
     eig_values, _ = np.linalg.eig(H)

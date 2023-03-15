@@ -17,7 +17,7 @@ def metrics_fcn(example: StereoLocalizationExample):
     datum["noise_var"] = np.mean(np.diag(example.camera.R))
     datum["scene_ind"] = example.example_id
     #assert np.all(example.camera.R == datum["noise_var"] * np.eye(4)), f"{example.camera.R}"
-    if solution.T_cw is not None:
+    if solution.solved:
         certificate = run_certificate(problem, solution)
         datum["certificate"] = certificate
     return datum
@@ -28,6 +28,7 @@ def main(dataset_name: str):
     plot_minimum_eigenvalues(metrics, os.path.join(exp_dir, "min_eigs"))
 
 if __name__ == "__main__":
-    assert len(sys.argv) == 2, "python certificate_noise_test.py <dataset_name>"
-    dataset_name = sys.argv[1]
+    #assert len(sys.argv) == 2, "python certificate_noise_test.py <dataset_name>"
+    #dataset_name = sys.argv[1]
+    dataset_name = "small"
     main(dataset_name)
