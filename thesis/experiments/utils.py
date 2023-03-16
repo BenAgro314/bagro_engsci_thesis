@@ -55,11 +55,12 @@ class StereoLocalizationProblem:
 
 class StereoLocalizationSolution:
 
-    def __init__(self, solved: bool, T_cw: Optional[np.array] = None, cost: Optional[float] = None, T_cw_history: Optional[List[np.array]] = None):
+    def __init__(self, solved: bool, T_cw: Optional[np.array] = None, cost: Optional[float] = None, T_cw_history: Optional[List[np.array]] = None, primal_cost: Optional[float] = None):
         self.solved = solved
         self.T_cw = T_cw
         self.cost = cost
         self.T_cw_history = T_cw_history
+        self.primal_cost = primal_cost # for SDP solvers
 
 #def make_sim_instances(num_instances: int, num_landmarks: int, p_wc_extent: np.array, cam: Camera) -> List[Tuple[np.array, np.array]]:
 #    instances = []

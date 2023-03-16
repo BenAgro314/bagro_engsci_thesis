@@ -5,11 +5,12 @@ import sys
 import scipy.io
 import matplotlib.pyplot as plt
 sys.path.append("/home/agrobenj/bagro_engsci_thesis")
-sys.path.append("/home/agrobenj/bagro_engsci_thesis/thesis/")
+sys.path.append("/Users/benagro/bagro_engsci_thesis")
 
 
 from thesis.ncpol2sdpa import generate_variables, SdpRelaxation
-from relaxations.sdp_relaxation_v2 import build_general_SDP_problem
+from thesis.relaxations.sdp_relaxation_v2 import build_general_SDP_problem
+from thesis.visualization.plotting import bar_plot
 
 
 def local_solver(a, y, x_init, num_iters, eps = 1e-5):
@@ -29,11 +30,38 @@ N = 5
 #%% generate ground truth
 
 # ground truth landmark positions
-a = x + 1 + np.random.rand(N, 1) * 10 #np.linspace(0, N, N).reshape((N, 1)) 
+a = x + np.random.rand(N, 1) * 10 - 5 #np.linspace(0, N, N).reshape((N, 1)) 
 # measurments
+
+fig = plt.figure()
+ax = fig.add_subplot(1, 1, 1)
+
+# Move left y-axis and bottom x-axis to centre, passing through (0,0)
+#ax.spines['left'].set_position('center')
+ax.spines['left'].set_color('none')
+ax.spines['bottom'].set_position('center')
+
+# Eliminate upper and right axes
+ax.spines['right'].set_color('none')
+ax.spines['top'].set_color('none')
+
+# Show ticks in the left and lower axes only
+ax.xaxis.set_ticks_position('bottom')
+ax.yaxis.set_ticks_position('left')
+
+ax.set_yticklabels([])
+ax.set_yticks([])
+
+ax.plot(a, [0] * len(a), color = 'b', linestyle='', marker = 'o', markersize=15) 
+ax.plot([x], [0], color = 'k', linestyle='', marker = '>', markersize=15)
+
 
 sigma = 0.1
 y = (1 / (x - a)) + (sigma * np.random.randn(N, 1))
+
+plt.savefig("1D_problem.png", dpi = 400)
+
+
 
 #%% Construct SDP
 
@@ -88,13 +116,14 @@ mdict = {
     "y": y,
 }
 
+
 #%%
 
-scipy.io.savemat(f"/home/agrobenj/bagro_engsci_thesis/thesis/matlab/1D_problem_{N}_landmarks_full.mat", mdict)
+scipy.io.savemat(f"/Users/benagro/bagro_engsci_thesis/thesis/matlab/1D_problem_{N}_landmarks_full.mat", mdict)
 
 #%% load problem
 
-mdict = scipy.io.loadmat(f"/home/agrobenj/bagro_engsci_thesis/thesis/matlab/1D_problem_5_landmarks_full.mat")
+mdict = scipy.io.loadmat(f"/Users/benagro/bagro_engsci_thesis/thesis/matlab/1D_problem_5_landmarks_full.mat")
 Q = mdict["Q"]
 As = mdict["As"]
 bs = mdict["bs"][0]
@@ -130,6 +159,38 @@ best_local_solution = local_solutions[min_local_ind]
 #%% SDP solution (MOSEK)
 
 
+use_redun = False
+
+As_ineq = []
+for i in range(N):
+    A = a[i]  * e_omega() @ e_omega().T - e_omega() @ e_x().T
+    As_ineq.append(0.5 * (A + A.T))
+
+if use_redun:
+    prob, X = build_general_SDP_problem(
+        Q,
+        np.concatenate((As, As_redun), axis = 0),
+        np.concatenate((bs, bs_redun), axis = 0),
+    )
+else:
+    prob, X = build_general_SDP_problem(
+        Q,
+        As,
+        bs,
+    )
+
+prob.solve(solver=cp.MOSEK)
+print(f"Primal: {prob.value}")
+
+X_sdp = X.value
+
+x_sdp = X_sdp[0, -1] # approx
+print(f"SDP soln: {x_sdp}, cost: {np.sum((y - (1 / (x_sdp - a))) ** 2)}")
+print(f"Best local soln: {best_local_solution}, cost: {min_local_cost}")
+
+bars = {"Global Minima": [min_local_cost], "Primal w/out Redundant Constraints": [prob.value]}
+
+# %%
 use_redun = True
 
 As_ineq = []
@@ -150,20 +211,6 @@ else:
         bs,
     )
 
-#n = Q.shape[0]
-#X = cp.Variable((n, n), PSD = True)
-#constraints = [X >> 0]
-#for i in range(len(As)):
-#    constraints.append(cp.trace(As[i] @ X) == bs[i])
-#if use_redun:
-#    for i in range(len(As_redun)):
-#        constraints.append(cp.trace(As_redun[i] @ X) == bs_redun[i])
-#for i in range(len(As_ineq)):
-#    constraints.append(cp.trace(As_ineq[i] @ X) >= 0)
-
-#prob = cp.Problem(cp.Minimize(cp.trace(Q @ X)),
-#            constraints)
-
 prob.solve(solver=cp.MOSEK)
 print(f"Primal: {prob.value}")
 
@@ -173,11 +220,22 @@ x_sdp = X_sdp[0, -1] # approx
 print(f"SDP soln: {x_sdp}, cost: {np.sum((y - (1 / (x_sdp - a))) ** 2)}")
 print(f"Best local soln: {best_local_solution}, cost: {min_local_cost}")
 
-U, S, V = np.linalg.svd(X_sdp, hermitian=True)
-print(f"eig gap: {np.log10(S[0]) - np.log10(S[1])}")
-plt.plot(S)
-plt.yscale("log")
-plt.show()
+bars["Primal with Redundant Constraints"] = [prob.value]
+
+#%% plotting
+
+fig, ax = plt.subplots()
+bar_plot(ax, bars, loc='center left', bbox_to_anchor=(1, 0.5))
+ax.set_ylim(bottom = 0, top = min_local_cost * 1.1)
+ax.set_ylabel("Primal Cost")
+ax.tick_params(
+    axis='x',          # changes apply to the x-axis
+    which='both',      # both major and minor ticks are affected
+    bottom=False,      # ticks along the bottom edge are off
+    top=False,         # ticks along the top edge are off
+    labelbottom=False) 
+plt.savefig("1D_soln.png", dpi = 400)
+
 
 #%% Lasseres
 

@@ -67,12 +67,14 @@ def global_sdp_solution(
 
     prob, X = build_general_SDP_problem(Q, As, bs)
 
+    primal_value = None
     try:
         prob.solve(solver=cp.MOSEK, mosek_params = mosek_params)#, verbose = True)
         if prob.status != "optimal":
             assert False
+        primal_value = prob.value
         if log:
-            print("The optimal value from the SDP is", prob.value)
+            print("The optimal value from the SDP is", primal_value)
     except Exception:
         success = False
     X_sdp = X.value
@@ -91,7 +93,8 @@ def global_sdp_solution(
             soln = stereo_localization_gauss_newton(problem, log = False, max_iters = 100, record_history = record_history)
             if record_history:
                 soln.T_cw_history = T_cw_history + soln.T_cw_history
+            soln.primal_cost = primal_value
             return soln
         else:
             cost = projection_error(problem.y, T, problem.M, problem.p_w, problem.W)
-            return StereoLocalizationSolution(True, T, cost, T_cw_history)
+            return StereoLocalizationSolution(True, T, cost, T_cw_history, primal_cost=primal_value)

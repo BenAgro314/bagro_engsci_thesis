@@ -295,7 +295,7 @@ def plot_select_solutions_history(metrics: List[Dict[str, Any]], exp_dir: str, n
             plot_solution_history(os.path.join(exp_dir, str(var), f"iterative_sdp_solution_{var}_{i}.png"), problem, iterative_sdp_solution, world)
             plot_solution_history(os.path.join(exp_dir, str(var), f"global_sdp_solution_{var}_{i}.png"), problem, global_sdp_solution, world)
 
-def bar_plot(ax, data, colors=None, total_width=0.8, single_width=1, legend=True, tick_labels = None):
+def bar_plot(ax, data, colors=None, total_width=0.8, single_width=1, legend=True, tick_labels = None, **legend_kwargs):
     """Draws a bar plot with multiple bars per data point.
 
     Parameters
@@ -369,9 +369,46 @@ def bar_plot(ax, data, colors=None, total_width=0.8, single_width=1, legend=True
 
     # Draw legend if we need
     if legend:
-        ax.legend(bars, data.keys())
+        ax.legend(bars, data.keys(), legend_kwargs)
 
     if tick_labels is not None:
         ax.set_xticks(list(range(len(tick_labels))))
         ax.set_xticklabels([str(t) for t in tick_labels])
 
+
+
+def plot_cost_gap(metrics: List[Dict[str, Any]], path: str, key: str, exclude_repeats: bool, attr: str):
+    min_cost_per_scene_ind = {}
+    vars = set()
+    for m in metrics:
+        scene_ind = m["scene_ind"]
+        vars.add(m["noise_var"])
+        if scene_ind not in min_cost_per_scene_ind:
+            min_cost_per_scene_ind[scene_ind] = np.inf
+        min_for_solvers = min([m["local_solution"].cost, m["iterative_sdp_solution"].cost, m["global_sdp_solution"].cost])
+        min_cost_per_scene_ind[scene_ind] = min(min_cost_per_scene_ind[scene_ind], min_for_solvers)
+    vars = sorted(list(vars))
+
+    gaps = []
+    repeat_scene_inds = set()
+ 
+    for m in metrics:
+        scene_ind = m["scene_ind"]
+        if exclude_repeats and scene_ind in repeat_scene_inds:
+            continue
+        repeat_scene_inds.add(scene_ind)
+        cost = getattr(m[key], attr)
+        if attr == "cost":
+            gap = np.log(np.abs(min_cost_per_scene_ind[scene_ind] - cost))
+        else:
+            gap = min_cost_per_scene_ind[scene_ind] - cost
+        gaps.append(gap)
+    
+    plt.hist(gaps, bins = 20)
+    #plt.xlim([0, max(gaps)])
+
+    tikzplotlib.save(path + ".tex")
+    plt.xlabel("$p^{\star} - q^{\star}$")
+    plt.ylabel("Count")
+    plt.savefig(path + ".png", dpi = 400)
+    plt.close("all")

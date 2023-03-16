@@ -7,8 +7,9 @@ from thesis.datasets.dataset import StereoLocalizationDataset, StereoLocalizatio
 from thesis.common.utils import get_data_dir_path
 from thesis.experiments.experiments_runner import run_experiment
 from thesis.solvers.local_solver import stereo_localization_gauss_newton
-from thesis.visualization.plotting import plot_percent_succ_vs_noise, plot_select_solutions_history, plot_solution_time_vs_num_landmarks
+from thesis.visualization.plotting import plot_percent_succ_vs_noise, plot_select_solutions_history, plot_solution_time_vs_num_landmarks, plot_cost_gap
 import numpy as np
+import pickle as pkl
 import time
 
 RECORD_HISTORY=True
@@ -34,7 +35,7 @@ def metrics_fcn(example: StereoLocalizationExample, num_tries = 100):
         "MSK_DPAR_INTPNT_CO_TOL_PFEAS": eps,
         "MSK_DPAR_INTPNT_CO_TOL_REL_GAP": eps,
     }
-    iter_sdp_soln = iterative_sdp_solution(problem, problem.T_init, max_iters = 5, min_update_norm = 0.2, return_X = False, mosek_params=mosek_params, max_num_tries = num_tries, record_history=RECORD_HISTORY)
+    iter_sdp_soln = iterative_sdp_solution(problem, problem.T_init, max_iters = 10, min_update_norm = 1e-5, return_X = False, mosek_params=mosek_params, max_num_tries = num_tries, record_history=RECORD_HISTORY, refine=True)
     datum["iterative_sdp_solution_time"] = time.process_time() - start
 
     if example_id not in global_sdp_solved_example_ids:
@@ -57,12 +58,14 @@ def main(dataset_name: str):
     metrics, exp_dir = run_experiment(dataset=dataset, metrics_fcn=metrics_fcn)
     
     #import pickle as pkl
-    #f = open("/Users/benagro/bagro_engsci_thesis/thesis/experiments/outputs/2023-01-20-08:09:40/metrics.pkl", "rb")
-    #metrics = pkl.load(f)
-    #exp_dir = "/Users/benagro/bagro_engsci_thesis/thesis/experiments/outputs/2023-01-20-08:09:40" 
+    # f = open("/Users/benagro/bagro_engsci_thesis/thesis/experiments/outputs/2023-03-15-20:55:47/metrics.pkl", "rb")
+    # metrics = pkl.load(f)
+    # exp_dir = "/Users/benagro/bagro_engsci_thesis/thesis/experiments/outputs/2023-03-15-20:55:47/" 
 
     plot_percent_succ_vs_noise(metrics, os.path.join(exp_dir, "solver_comparison_success"))
     plot_solution_time_vs_num_landmarks(metrics, os.path.join(exp_dir, "solver_comparison_time"))
+    plot_cost_gap(metrics, os.path.join(exp_dir, "global_sdp_cost_gap"), "global_sdp_solution", exclude_repeats = True, attr = "primal_cost")
+    plot_cost_gap(metrics, os.path.join(exp_dir, "iter_sdp_cost_gap"), "iterative_sdp_solution", exclude_repeats = False, attr = "cost")
     if RECORD_HISTORY:
         plot_select_solutions_history(metrics, exp_dir, num_per_noise = 3)
 

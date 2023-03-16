@@ -132,9 +132,9 @@ class StereoLocalizationDataset():
 def main(dataset_name: str):
     config = StereoLocalizationDatasetConfig(
         name = dataset_name,
-        variances = [0.1, 0.5, 0.7, 1.0],
-        num_landmarks = [5],
-        num_examples_per_var_num_landmarks = 2,
+        variances = [0.5],
+        num_landmarks = [5,6,7,8,9,10],
+        num_examples_per_var_num_landmarks = 5,
         num_T_inits_per_example = 25,
         f_u = 484.5,
         f_v = 484.5,
@@ -142,7 +142,7 @@ def main(dataset_name: str):
         c_v = 247,
         b = 0.24,
         fov_phi_range = (-np.pi / 12, np.pi / 12),
-        fov_depth_range = (0.2, 3),
+        fov_depth_range = (0.2, 5),
         p_wc_extent = np.array([[3], [3], [0]]),
     )
     dataset = StereoLocalizationDataset.from_config(config)

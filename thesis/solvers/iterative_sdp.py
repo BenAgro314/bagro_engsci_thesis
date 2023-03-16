@@ -71,6 +71,7 @@ def iterative_sdp_solution(
     success = False
     num_tries = 0
     T_init = deepcopy(T_init)
+    primal_cost = None
     while not success and num_tries < max_num_tries:
         if log:
             print(f"Try number {num_tries + 1}")
@@ -100,6 +101,7 @@ def iterative_sdp_solution(
             prob, X_var = build_general_SDP_problem(Q, As, bs)
             try:
                 prob.solve(mosek_params = mosek_params, verbose = False)
+                primal_cost = prob.value
                 if prob.status != "optimal":
                     assert False
             except Exception as e:
@@ -137,9 +139,10 @@ def iterative_sdp_solution(
             soln = stereo_localization_gauss_newton(problem, log = False, max_iters = 100, record_history = record_history)
             if record_history:
                 soln.T_cw_history = T_cw_history + soln.T_cw_history
+            soln.primal_cost = primal_cost
             return soln
         else:
             if record_history:
                 T_cw_history.append(T)
             cost = projection_error(problem.y, T, problem.M, problem.p_w, problem.W)
-            return StereoLocalizationSolution(True, T, cost, T_cw_history)
+            return StereoLocalizationSolution(True, T, cost, T_cw_history, primal_cost = primal_cost)

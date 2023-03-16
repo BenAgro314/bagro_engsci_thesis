@@ -28,7 +28,6 @@ def main(dataset_name: str):
     plot_minimum_eigenvalues(metrics, os.path.join(exp_dir, "min_eigs"))
 
 if __name__ == "__main__":
-    #assert len(sys.argv) == 2, "python certificate_noise_test.py <dataset_name>"
-    #dataset_name = sys.argv[1]
-    dataset_name = "small"
+    assert len(sys.argv) == 2, "python certificate_noise_test.py <dataset_name>"
+    dataset_name = sys.argv[1]
     main(dataset_name)
