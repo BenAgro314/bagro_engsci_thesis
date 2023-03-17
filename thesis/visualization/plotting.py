@@ -355,7 +355,7 @@ def bar_plot(ax, data, colors=None, total_width=0.8, single_width=1, legend=True
 
             # Create annotation
             ax.annotate(
-                y,                      # Use `label` as label
+                round(y, 5),                      # Use `label` as label
                 (x+x_offset, y),         # Place label at end of the bar
                 xytext=(0, 5),          # Vertically shift label by `space`
                 textcoords="offset points", # Interpret `xytext` as offset in points
@@ -369,7 +369,7 @@ def bar_plot(ax, data, colors=None, total_width=0.8, single_width=1, legend=True
 
     # Draw legend if we need
     if legend:
-        ax.legend(bars, data.keys(), legend_kwargs)
+        ax.legend(bars, data.keys(), **legend_kwargs)
 
     if tick_labels is not None:
         ax.set_xticks(list(range(len(tick_labels))))

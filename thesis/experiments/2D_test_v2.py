@@ -7,6 +7,7 @@ import cvxpy as cp
 sys.path.append("/Users/benagro/bagro_engsci_thesis")
 from thesis.relaxations.sdp_relaxation_v2 import build_general_SDP_problem
 from thesis.ncpol2sdpa import *
+from thesis.visualization.plotting import bar_plot
 
 #M = np.array([1, 0, 0]).reshape((1, 3))
 M = np.array([[1, 0, 1], [1, 0, -1]]).reshape((2, 3))
@@ -229,7 +230,11 @@ def local_solver(p_w, y, W, init_phi, max_iters = 100, min_update_norm=1e-10, lo
 
 # ---- plotting -----
 
-def plot_soln(p_w, phi, camera_color = 'k', ax = None, name = ""):
+def plot_soln(p_w, phi, camera_color = 'k', ax = None, name = "", stroke = 1, xlims = None, ylims = None):
+    if xlims is None:
+        xlims = [-2.5, 2.5]
+    if ylims is None:
+        ylims = [-2.5, 2.5]
     if ax is None:
         _, ax = plt.subplots()
     y = forward_exact(_T(phi), p_w) # (N, )
@@ -282,11 +287,11 @@ def plot_soln(p_w, phi, camera_color = 'k', ax = None, name = ""):
 
     ax.set_aspect('equal', adjustable='box')
     #ax.plot([phi[0, 0], to_x], [phi[1, 0], to_y], color = 'k') 
-    ax.plot(looking_towards_w[:, 0], looking_towards_w[:, 1], color = camera_color, label = name) 
-    ax.plot(plane_w[:, 0], plane_w[:, 1], alpha = 0.5, color = camera_color) 
+    ax.plot(looking_towards_w[:, 0], looking_towards_w[:, 1], color = camera_color, label = name, linewidth=stroke) 
+    ax.plot(plane_w[:, 0], plane_w[:, 1], alpha = 0.5, color = camera_color, linewidth=stroke) 
     ax.scatter(looking_towards_w[0, 0], looking_towards_w[0, 1], color = camera_color)
-    ax.set_xlim([-2.5, 2.5])
-    ax.set_ylim([-2.5, 2.5])
+    ax.set_xlim(xlims)
+    ax.set_ylim(ylims)
     ax.legend()
     return ax
 
@@ -294,7 +299,7 @@ def plot_soln(p_w, phi, camera_color = 'k', ax = None, name = ""):
 #%% generate problem
 
 N = 3
-sigma = 0.05
+sigma = 0.5
 y, p_w, phi_gt, W = generate_problem(N, sigma)
 
 #%% local solver
@@ -399,10 +404,32 @@ cost = _cost(p_w, W, y, phi_lag)
 print(f"Global min cost: {global_min[0][0]}")
 print(f"Global SDP Primal: {prob.value}")
 print(f"Lass Primal: {sdp.primal}")
-ax = plot_soln(p_w, phi_gt, camera_color = 'k', name = 'gt')
-plot_soln(p_w, global_soln, camera_color = 'orange', name='global minima', ax = ax)
-plot_soln(p_w, phi_est, camera_color = 'm', ax = ax, name = 'global SDP')
-plot_soln(p_w, phi_lag, camera_color = 'green', ax = ax, name = "lasserre's")
+#ax = plot_soln(p_w, phi_gt, camera_color = 'k', name = 'gt')
+ax = plot_soln(p_w, global_soln, camera_color = 'orange', name='Global Min', stroke = 4, ylims = [-3, 1], xlims = [-0.5, 3.5]) #, ax = ax)
+plot_soln(p_w, phi_est, camera_color = 'm', ax = ax, name = 'SDP Relaxation', stroke = 2, ylims = [-3, 1], xlims = [-0.5, 3.5])
+plot_soln(p_w, phi_lag, camera_color = 'green', ax = ax, name = "SDP Relaxation & Lasserre", stroke = 2, ylims = [-3, 1], xlims = [-0.4, 3.5])
+
+plt.savefig("2D_problem.png", dpi = 400)
+
+#%%
+
+
+bars = {
+    "Global Min": [global_min[0][0]],
+    "No Redundant Constraints": [prob.value],
+    "With Redundant Constraints": [sdp.primal],
+}
+fig, ax = plt.subplots()
+bar_plot(ax, bars, loc='center left', bbox_to_anchor=(1, 0.5))
+ax.set_ylim(bottom = 0, top = global_min[0][0] * 1.1)
+ax.set_ylabel("Primal Cost")
+ax.tick_params(
+    axis='x',          # changes apply to the x-axis
+    which='both',      # both major and minor ticks are affected
+    bottom=False,      # ticks along the bottom edge are off
+    top=False,         # ticks along the top edge are off
+    labelbottom=False) 
+plt.savefig("2D_soln.png", dpi = 400)
 
 #%% sparse lasserre's
 
