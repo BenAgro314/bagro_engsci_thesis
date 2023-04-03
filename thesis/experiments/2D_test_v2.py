@@ -1,6 +1,7 @@
 #%%
 import itertools
 import numpy as np
+import time
 import sys
 import matplotlib.pyplot as plt
 import cvxpy as cp
@@ -8,6 +9,7 @@ sys.path.append("/Users/benagro/bagro_engsci_thesis")
 from thesis.relaxations.sdp_relaxation_v2 import build_general_SDP_problem
 from thesis.ncpol2sdpa import *
 from thesis.visualization.plotting import bar_plot
+import tikzplotlib
 
 #M = np.array([1, 0, 0]).reshape((1, 3))
 M = np.array([[1, 0, 1], [1, 0, -1]]).reshape((2, 3))
@@ -338,7 +340,9 @@ for A, b in zip(As, bs):
 #%%
 
 prob, X = build_general_SDP_problem(Q, As, bs)
+start_time = time.time()
 prob.solve(solver=cp.MOSEK, mosek_params = {}, verbose = False)
+no_lass_time = time.time() - start_time
 X_value = X.value
 
 
@@ -392,7 +396,9 @@ print(f"Build optimization problem!")
 sdp.get_relaxation(level, objective=obj, equalities=equalities)
 print(f"Relaxed problem!")
 print(f"Solving problem")
+start_time = time.time()
 sdp.solve(solver = 'mosek')
+lass_time = time.time() - start_time
 print(f"Solved Problem")
 
 T_lag = extract_solution_lag(sdp)
@@ -410,6 +416,7 @@ plot_soln(p_w, phi_est, camera_color = 'm', ax = ax, name = 'SDP Relaxation', st
 plot_soln(p_w, phi_lag, camera_color = 'green', ax = ax, name = "SDP Relaxation & Lasserre", stroke = 2, ylims = [-3, 1], xlims = [-0.4, 3.5])
 
 plt.savefig("2D_problem.png", dpi = 400)
+tikzplotlib.save("2D_problem.tex")
 
 #%%
 
@@ -430,6 +437,11 @@ ax.tick_params(
     top=False,         # ticks along the top edge are off
     labelbottom=False) 
 plt.savefig("2D_soln.png", dpi = 400)
+tikzplotlib.save("2D_soln_bar.tex")
+
+print(f"Time: {no_lass_time} | {lass_time}")
+print(f"Num vars: {Q.shape[0]} | {len(sdp.monomial_sets[0])}")
+print(f"Num constraints: {len(As)} | {len(sdp.x_mat)}")
 
 #%% sparse lasserre's
 
@@ -456,3 +468,5 @@ ax = plot_soln(p_w, phi_gt, camera_color = 'k', name = 'gt')
 plot_soln(p_w, global_soln, camera_color = 'orange', name='global minima', ax = ax)
 plot_soln(p_w, phi_est, camera_color = 'm', ax = ax, name = 'global SDP')
 plot_soln(p_w, phi_lag, camera_color = 'green', ax = ax, name = "lasserre's")
+
+#%%

@@ -21,7 +21,7 @@ import time
 
 #%% Construct problem
 
-num_landmarks = 3
+num_landmarks = 20
 
 # make camera
 cam = Camera(
@@ -30,8 +30,8 @@ cam = Camera(
     c_u = 322,
     c_v = 247,
     b = 0.24,
-    R = 0 * np.eye(4),
-    fov_phi_range = (-np.pi/12, np.pi/12),
+    R = 1 * np.eye(4),
+    fov_phi_range = (-np.pi/6, np.pi/6),
     fov_depth_range = (0.5, 5),
 )
 world = World(
@@ -40,45 +40,45 @@ world = World(
     num_landmarks = num_landmarks,
 )
 world.clear_sim_instance()
-world.T_wc = np.array(
-    [
-        [1, 0, 0, 0],
-        [0, 1, 0, 0],
-        [0, 0, 1, 0],
-        [0, 0, 0, 1],
-    ]
-)
-min_phi, max_phi = world.cam.fov_phi_range
-assert min_phi < max_phi
-min_rho, max_rho = world.cam.fov_depth_range
-assert min_rho < max_rho
-phi = np.random.rand(world.num_landmarks, 1) * (max_phi - min_phi) + min_phi
-theta = np.random.rand(world.num_landmarks, 1) * 2*np.pi
-rho = np.random.rand(world.num_landmarks, 1) * (max_rho - min_rho) + min_rho
-# rho[-1] = 100
-#rho = np.array([
-#    [20],
-#    [10],
-#    [5],
-#    [1],
-#])
-z = np.cos(phi) * rho
-x = np.sin(phi) * np.cos(theta) * rho
-y = np.sin(phi) * np.sin(theta) * rho
-homo_p_c = np.concatenate((x, y, z, np.ones_like(x)), axis = 1) # (N, 4, 1)
-world.p_w = world.T_wc @ homo_p_c[:, :, None] # (N, 4, 1), world frame points
+#$world.T_wc = np.array(
+#$    [
+#$        [1, 0, 0, 0],
+#$        [0, 1, 0, 0],
+#$        [0, 0, 1, 0],
+#$        [0, 0, 0, 1],
+#$    ]
+#$)
+#min_phi, max_phi = world.cam.fov_phi_range
+#assert min_phi < max_phi
+#min_rho, max_rho = world.cam.fov_depth_range
+#assert min_rho < max_rho
+#phi = np.random.rand(world.num_landmarks, 1) * (max_phi - min_phi) + min_phi
+#theta = np.random.rand(world.num_landmarks, 1) * 2*np.pi
+#rho = np.random.rand(world.num_landmarks, 1) * (max_rho - min_rho) + min_rho
+## rho[-1] = 100
+##rho = np.array([
+##    [20],
+##    [10],
+##    [5],
+##    [1],
+##])
+#z = np.cos(phi) * rho
+#x = np.sin(phi) * np.cos(theta) * rho
+#y = np.sin(phi) * np.sin(theta) * rho
+#homo_p_c = np.concatenate((x, y, z, np.ones_like(x)), axis = 1) # (N, 4, 1)
+#world.p_w = world.T_wc @ homo_p_c[:, :, None] # (N, 4, 1), world frame points
 
 
-#world.make_random_sim_instance()
+world.make_random_sim_instance()
 fig, ax, colors = world.render()
 
 # Generative camera model 
 y = cam.take_picture(world.T_wc, world.p_w)
-R = np.eye(4) * 0.5
-dy = generate_stereo_camera_noise(R, size = y.shape[0])[:, :, None]
-#dy[-1] = 100 * (2 * np.random.rand(4, 1) - 1)
-#print(dy)
-y += dy
+#R = np.eye(4) * 0.5
+#dy = generate_stereo_camera_noise(R, size = y.shape[0])[:, :, None]
+##dy[-1] = 100 * (2 * np.random.rand(4, 1) - 1)
+##print(dy)
+#y += dy
 camfig, (l_ax, r_ax) = render_camera_points(y, colors)
 
 
@@ -103,6 +103,125 @@ for i in range(20):
         global_min_cost = local_minima
         global_min_T = T_op
 
+#%% local solution
+
+T_init = generate_random_T(world.p_wc_extent)
+p_tmp = deepcopy(problem)
+p_tmp.T_init = T_init
+local_solution = stereo_localization_gauss_newton(p_tmp, log = False)
+
+#%% plotting local solution
+fig, ax, colors = world.render(include_world_frame=True, include_sensor_frame=False)
+add_coordinate_frame(np.linalg.inv(global_min_T), ax, "$\mathfrak{F}_{global_min}$")
+add_coordinate_frame(np.linalg.inv(local_solution.T_cw), ax, "$\mathfrak{F}_{s}$")
+
+#%% export local solution
+
+def extract_zyz_euler_angles(rotation_matrix):
+    # Ensure the input is a numpy array
+    R = np.array(rotation_matrix)
+    
+    # Check if the input is a valid 3x3 rotation matrix
+    if R.shape != (3, 3):
+        raise ValueError("Input must be a 3x3 matrix.")
+    
+    # Extract the ZYZ Euler angles
+    beta = np.arccos(R[2, 2])
+    if np.isclose(beta, 0.0):
+        # Gimbal lock case: beta is close to 0
+        alpha = np.arctan2(R[1, 0], R[0, 0])
+        gamma = 0.0
+    elif np.isclose(beta, np.pi):
+        # Gimbal lock case: beta is close to pi
+        alpha = np.arctan2(R[1, 0], R[0, 0])
+        gamma = 0.0
+    else:
+        alpha = np.arctan2(R[1, 2], R[0, 2])
+        gamma = np.arctan2(R[2, 1], -R[2, 0])
+    
+    return alpha, beta, gamma
+
+def plot_soln_to_tikz(p_w, Tglobal_wc, Tlocal_wc, out_path):
+    points_string=""
+    for i, p in enumerate(p_w):
+        points_string += str(tuple(p.flatten()[:-1]))
+        if i < p_w.shape[0] - 1:
+            points_string += ","
+    local_zyz = tuple(np.degrees(a) for a in extract_zyz_euler_angles(Tlocal_wc[:3, :3]))
+    global_zyz = tuple(np.degrees(a) for a in extract_zyz_euler_angles(Tglobal_wc[:3, :3]))
+    local_o = tuple(round(p, 4) for p in Tlocal_wc[:3, -1])
+    global_o = tuple(round(p, 4) for p in Tglobal_wc[:3, -1])
+    tikz = r"""\documentclass[class=article, crop=false]{standalone}
+\begin{document}
+\begin{figure}
+\centering
+\usetikzlibrary{arrows.meta, 3d, calc}
+\begin{tikzpicture}[rotate around x={-90}, rotate around z={-35}, scale=1]
+    % World frame
+    \coordinate (O) at (0,0,0);
+    \coordinate (L) at """ + str(local_o) + r""";
+    \coordinate (G) at """ + str(global_o) + r""";
+    \coordinate (X) at (1, 0,0);
+    \coordinate (Y) at (0,1,0);
+    \coordinate (Z) at (0,0,1);
+    \draw[->, thick] (O) -- (X) node[anchor=north west] {$x$};
+    \draw[->, thick] (O) -- (Y) node[anchor=north] {$y$};
+    \draw[->, thick] (O) -- (Z) node[anchor=south] {$z$};
+    \node[anchor=south east] at (O) {$\frm_w$};
+    \begin{scope}[shift={(L)}, rotate around z={"""+str(local_zyz[0]) + r"""},rotate around y={"""+str(local_zyz[1])+r"""},rotate around z={"""+str(local_zyz[2])+r"""}]
+        \coordinate (O) at (0,0,0);
+        \coordinate (X) at (1, 0,0);
+        \coordinate (Y) at (0,1,0);
+        \coordinate (Z) at (0,0,1);
+        \draw[->, thick, red] (O) -- (X) node[anchor=north west] {$x$};
+        \draw[->, thick, red] (O) -- (Y) node[anchor=north] {$y$};
+        \draw[->, thick, red] (O) -- (Z) node[anchor=west] {$z$};
+        %\node[anchor=south west, red] at (0,0,0) {$\frm_s$};
+    \end{scope}
+    \begin{scope}[shift={(G)}, rotate around z={"""+str(global_zyz[0])+ r"""},rotate around y={"""+str(global_zyz[1])+r"""},rotate around z={"""+str(global_zyz[2])+r"""}]
+        \coordinate (O) at (0,0,0);
+        \coordinate (X) at (1, 0,0);
+        \coordinate (Y) at (0,1,0);
+        \coordinate (Z) at (0,0,1);
+        \draw[->, thick, blue] (O) -- (X) node[anchor=north west] {$x$};
+        \draw[->, thick, blue] (O) -- (Y) node[anchor=east] {$y$};
+        \draw[->, thick, blue] (O) -- (Z) node[anchor=west] {$z$};
+        %\node[anchor=south west, red] at (0,0,0) {$\frm_s$};
+    \end{scope}
+    \foreach \point [count=\i] in {""" + points_string + r"""} {
+        \fill[green] \point circle (1pt); %node[anchor=north east] {$\mbf{p}_\i$};
+        %\draw[-, thick, blue, dotted] \point -- (S) node[anchor=south] {};
+    }
+\end{tikzpicture}
+\caption{TODO}
+\label{fig:TODO}
+\end{figure} 
+\end{document}
+    """
+    f = open(out_path, "w")
+    f.write(tikz)
+    f.close()
+
+Tlocal_wc = np.linalg.inv(local_solution.T_cw)
+print([tuple(round(j, 3) for j in p.flatten()[:-1]) for p in world.p_w])
+print("local ZYZ", tuple(np.degrees(a) for a in extract_zyz_euler_angles(Tlocal_wc[:3, :3])))
+print("local trans", tuple(round(p, 4) for p in Tlocal_wc[:3, -1]))
+
+Tglobal_wc = np.linalg.inv(global_min_T)
+print("global ZYZ", tuple(np.degrees(a) for a in extract_zyz_euler_angles(Tglobal_wc[:3, :3])))
+print("global trans", tuple(round(p, 4) for p in Tglobal_wc[:3, -1]))
+
+print("Colors")
+for c in colors:
+    print("{", end = "")
+    for i, j in enumerate(c):
+        print(j, end="")
+        if i < 2:
+            print(",", end="")
+    print("},", end = "")
+#print([tuple(c[:-1]) for c in colors])
+
+plot_soln_to_tikz(world.p_w, Tglobal_wc, Tlocal_wc, out_path="/Users/benagro/bagro_engsci_thesis/figures/local_minima.tex")
 
 #%%
 num_tries = 1

@@ -1,0 +1,457 @@
+This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022) (preloaded format=pdflatex 2022.7.25)  27 MAR 2023 19:35
+entering extended mode
+ restricted \write18 enabled.
+ file:line:error style messages enabled.
+ %&-line parsing enabled.
+**/Users/benagro/bagro_engsci_thesis/figures/local_minima.tex
+(/Users/benagro/bagro_engsci_thesis/figures/local_minima.tex
+LaTeX2e <2021-11-15> patch level 1
+L3 programming layer <2022-02-24> (/usr/local/texlive/2022/texmf-dist/tex/latex/standalone/standalone.cls
+Document Class: standalone 2018/03/26 v1.3a Class to compile TeX sub-files standalone
+(/usr/local/texlive/2022/texmf-dist/tex/latex/tools/shellesc.sty
+Package: shellesc 2019/11/08 v1.0c unified shell escape interface for LaTeX
+Package shellesc Info: Restricted shell escape enabled on input line 77.
+) (/usr/local/texlive/2022/texmf-dist/tex/generic/iftex/ifluatex.sty
+Package: ifluatex 2019/10/25 v1.5 ifluatex legacy package. Use iftex instead.
+ (/usr/local/texlive/2022/texmf-dist/tex/generic/iftex/iftex.sty
+Package: iftex 2022/02/03 v1.0f TeX engine tests
+)) (/usr/local/texlive/2022/texmf-dist/tex/latex/xkeyval/xkeyval.sty
+Package: xkeyval 2020/11/20 v2.8 package option processing (HA)
+ (/usr/local/texlive/2022/texmf-dist/tex/generic/xkeyval/xkeyval.tex (/usr/local/texlive/2022/texmf-dist/tex/generic/xkeyval/xkvutils.tex
+\XKV@toks=\toks16
+\XKV@tempa@toks=\toks17
+ (/usr/local/texlive/2022/texmf-dist/tex/generic/xkeyval/keyval.tex))
+\XKV@depth=\count185
+File: xkeyval.tex 2014/12/03 v2.7a key=value parser (HA)
+))
+\sa@internal=\count186
+\c@sapage=\count187
+ (/usr/local/texlive/2022/texmf-dist/tex/latex/standalone/standalone.cfg
+File: standalone.cfg 2018/03/26 v1.3a Default configuration file for 'standalone' class
+) (/usr/local/texlive/2022/texmf-dist/tex/latex/base/article.cls
+Document Class: article 2021/10/04 v1.4n Standard LaTeX document class
+(/usr/local/texlive/2022/texmf-dist/tex/latex/base/size10.clo
+File: size10.clo 2021/10/04 v1.4n Standard LaTeX file (size option)
+)
+\c@part=\count188
+\c@section=\count189
+\c@subsection=\count190
+\c@subsubsection=\count191
+\c@paragraph=\count192
+\c@subparagraph=\count193
+\c@figure=\count194
+\c@table=\count195
+\abovecaptionskip=\skip47
+\belowcaptionskip=\skip48
+\bibindent=\dimen138
+)) (/usr/local/texlive/2022/texmf-dist/tex/latex/l3backend/l3backend-pdftex.def
+File: l3backend-pdftex.def 2022-02-07 L3 backend support: PDF output (pdfTeX)
+\l__color_backend_stack_int=\count196
+\l__pdf_internal_box=\box50
+) (./local_minima.aux)
+\openout1 = `local_minima.aux'.
+
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 2.
+LaTeX Font Info:    ... okay on input line 2.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 2.
+LaTeX Font Info:    ... okay on input line 2.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 2.
+LaTeX Font Info:    ... okay on input line 2.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 2.
+LaTeX Font Info:    ... okay on input line 2.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 2.
+LaTeX Font Info:    ... okay on input line 2.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 2.
+LaTeX Font Info:    ... okay on input line 2.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 2.
+LaTeX Font Info:    ... okay on input line 2.
+
+/Users/benagro/bagro_engsci_thesis/figures/local_minima.tex:5: Undefined control sequence.
+l.5 \usetikzlibrary
+                   {arrows.meta, 3d, calc}
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+
+/Users/benagro/bagro_engsci_thesis/figures/local_minima.tex:6: LaTeX Error: Environment tikzpicture undefined.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.6 \begin{tikzpicture}
+                       [rotate around x={-90}, rotate around z={-35}, scale=1]
+Your command was ignored.
+Type  I <command> <return>  to replace it with another command,
+or  <return>  to continue without it.
+
+/Users/benagro/bagro_engsci_thesis/figures/local_minima.tex:8: Undefined control sequence.
+l.8     \coordinate
+                    (O) at (0,0,0);
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+/Users/benagro/bagro_engsci_thesis/figures/local_minima.tex:9: Undefined control sequence.
+l.9     \coordinate
+                    (L) at (1.3811, 4.0476, -3.3625);
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+/Users/benagro/bagro_engsci_thesis/figures/local_minima.tex:10: Undefined control sequence.
+l.10     \coordinate
+                     (G) at (0.9161, 1.0413, -0.0008);
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+/Users/benagro/bagro_engsci_thesis/figures/local_minima.tex:11: Undefined control sequence.
+l.11     \coordinate
+                     (X) at (1, 0,0);
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+/Users/benagro/bagro_engsci_thesis/figures/local_minima.tex:12: Undefined control sequence.
+l.12     \coordinate
+                     (Y) at (0,1,0);
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+/Users/benagro/bagro_engsci_thesis/figures/local_minima.tex:13: Undefined control sequence.
+l.13     \coordinate
+                     (Z) at (0,0,1);
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+/Users/benagro/bagro_engsci_thesis/figures/local_minima.tex:14: Undefined control sequence.
+l.14     \draw
+              [->, thick] (O) -- (X) node[anchor=north west] {$x$};
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <7> on input line 14.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <5> on input line 14.
+/Users/benagro/bagro_engsci_thesis/figures/local_minima.tex:15: Undefined control sequence.
+l.15     \draw
+              [->, thick] (O) -- (Y) node[anchor=north] {$y$};
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+/Users/benagro/bagro_engsci_thesis/figures/local_minima.tex:16: Undefined control sequence.
+l.16     \draw
+              [->, thick] (O) -- (Z) node[anchor=south] {$z$};
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+/Users/benagro/bagro_engsci_thesis/figures/local_minima.tex:17: Undefined control sequence.
+l.17     \node
+              [anchor=south east] at (O) {$\frm_w$};
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+/Users/benagro/bagro_engsci_thesis/figures/local_minima.tex:17: Undefined control sequence.
+<recently read> \frm 
+                     
+l.17     \node[anchor=south east] at (O) {$\frm
+                                               _w$};
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+
+/Users/benagro/bagro_engsci_thesis/figures/local_minima.tex:18: LaTeX Error: Environment scope undefined.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.18     \begin{scope}
+                      [shift={(L)}, rotate around z={-142.3111344508873},rot...
+Your command was ignored.
+Type  I <command> <return>  to replace it with another command,
+or  <return>  to continue without it.
+
+/Users/benagro/bagro_engsci_thesis/figures/local_minima.tex:19: Undefined control sequence.
+l.19         \coordinate
+                         (O) at (0,0,0);
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+/Users/benagro/bagro_engsci_thesis/figures/local_minima.tex:20: Undefined control sequence.
+l.20         \coordinate
+                         (X) at (1, 0,0);
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+/Users/benagro/bagro_engsci_thesis/figures/local_minima.tex:21: Undefined control sequence.
+l.21         \coordinate
+                         (Y) at (0,1,0);
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+/Users/benagro/bagro_engsci_thesis/figures/local_minima.tex:22: Undefined control sequence.
+l.22         \coordinate
+                         (Z) at (0,0,1);
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+/Users/benagro/bagro_engsci_thesis/figures/local_minima.tex:23: Undefined control sequence.
+l.23         \draw
+                  [->, thick, red] (O) -- (X) node[anchor=north west] {$x$};
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+/Users/benagro/bagro_engsci_thesis/figures/local_minima.tex:24: Undefined control sequence.
+l.24         \draw
+                  [->, thick, red] (O) -- (Y) node[anchor=north] {$y$};
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+/Users/benagro/bagro_engsci_thesis/figures/local_minima.tex:25: Undefined control sequence.
+l.25         \draw
+                  [->, thick, red] (O) -- (Z) node[anchor=west] {$z$};
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+
+/Users/benagro/bagro_engsci_thesis/figures/local_minima.tex:27: LaTeX Error: \begin{figure} on input line 3 ended by \end{scope}.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.27     \end{scope}
+                    
+Your command was ignored.
+Type  I <command> <return>  to replace it with another command,
+or  <return>  to continue without it.
+
+
+/Users/benagro/bagro_engsci_thesis/figures/local_minima.tex:28: LaTeX Error: Environment scope undefined.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.28     \begin{scope}
+                      [shift={(G)}, rotate around z={91.78186416875467},rota...
+Your command was ignored.
+Type  I <command> <return>  to replace it with another command,
+or  <return>  to continue without it.
+
+/Users/benagro/bagro_engsci_thesis/figures/local_minima.tex:29: Undefined control sequence.
+l.29         \coordinate
+                         (O) at (0,0,0);
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+/Users/benagro/bagro_engsci_thesis/figures/local_minima.tex:30: Undefined control sequence.
+l.30         \coordinate
+                         (X) at (1, 0,0);
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+/Users/benagro/bagro_engsci_thesis/figures/local_minima.tex:31: Undefined control sequence.
+l.31         \coordinate
+                         (Y) at (0,1,0);
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+/Users/benagro/bagro_engsci_thesis/figures/local_minima.tex:32: Undefined control sequence.
+l.32         \coordinate
+                         (Z) at (0,0,1);
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+/Users/benagro/bagro_engsci_thesis/figures/local_minima.tex:33: Undefined control sequence.
+l.33         \draw
+                  [->, thick, blue] (O) -- (X) node[anchor=north west] {$x$};
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+/Users/benagro/bagro_engsci_thesis/figures/local_minima.tex:34: Undefined control sequence.
+l.34         \draw
+                  [->, thick, blue] (O) -- (Y) node[anchor=east] {$y$};
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+/Users/benagro/bagro_engsci_thesis/figures/local_minima.tex:35: Undefined control sequence.
+l.35         \draw
+                  [->, thick, blue] (O) -- (Z) node[anchor=west] {$z$};
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+
+/Users/benagro/bagro_engsci_thesis/figures/local_minima.tex:37: LaTeX Error: \begin{figure} on input line 3 ended by \end{scope}.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.37     \end{scope}
+                    
+Your command was ignored.
+Type  I <command> <return>  to replace it with another command,
+or  <return>  to continue without it.
+
+/Users/benagro/bagro_engsci_thesis/figures/local_minima.tex:38: Undefined control sequence.
+l.38     \foreach
+                  \point [count=\i] in {(1.222698445344828, 3.90715950247239...
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+/Users/benagro/bagro_engsci_thesis/figures/local_minima.tex:38: Undefined control sequence.
+l.38     \foreach \point
+                         [count=\i] in {(1.222698445344828, 3.90715950247239...
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+/Users/benagro/bagro_engsci_thesis/figures/local_minima.tex:39: Missing number, treated as zero.
+<to be read again> 
+                   [
+l.39         \fill[
+                   green] \point circle (1pt); %node[anchor=north east] {$\m...
+A number should have been here; I inserted `0'.
+(If you can't figure out why I needed to see a number,
+look up `weird error' in the index to The TeXbook.)
+
+/Users/benagro/bagro_engsci_thesis/figures/local_minima.tex:39: Illegal unit of measure (pt inserted).
+<to be read again> 
+                   [
+l.39         \fill[
+                   green] \point circle (1pt); %node[anchor=north east] {$\m...
+Dimensions can be in units of em, ex, in, pt, pc,
+cm, mm, dd, cc, nd, nc, bp, or sp; but yours is a new one!
+I'll assume that you meant to say pt, for printer's points.
+To recover gracefully from this error, it's best to
+delete the erroneous units; e.g., type `2' to delete
+two letters. (See Chapter 27 of The TeXbook.)
+
+/Users/benagro/bagro_engsci_thesis/figures/local_minima.tex:39: Undefined control sequence.
+l.39         \fill[green] \point
+                                 circle (1pt); %node[anchor=north east] {$\m...
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+
+/Users/benagro/bagro_engsci_thesis/figures/local_minima.tex:42: LaTeX Error: \begin{figure} on input line 3 ended by \end{tikzpicture}.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.42 \end{tikzpicture}
+                      
+Your command was ignored.
+Type  I <command> <return>  to replace it with another command,
+or  <return>  to continue without it.
+
+[1
+
+{/usr/local/texlive/2022/texmf-var/fonts/map/pdftex/updmap/pdftex.map}] (./local_minima.aux)
+
+LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
+
+ ) 
+Here is how much of TeX's memory you used:
+ 1009 strings out of 478268
+ 19182 string characters out of 5846347
+ 309713 words of memory out of 5000000
+ 19268 multiletter control sequences out of 15000+600000
+ 469259 words of font info for 28 fonts, out of 8000000 for 9000
+ 1141 hyphenation exceptions out of 8191
+ 55i,5n,71p,1332b,121s stack positions out of 10000i,1000n,20000p,200000b,200000s
+</usr/local/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/local/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr/local/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb>
+Output written on local_minima.pdf (1 page, 39243 bytes).
+PDF statistics:
+ 23 PDF objects out of 1000 (max. 8388607)
+ 13 compressed objects within 1 object stream
+ 0 named destinations out of 1000 (max. 500000)
+ 1 words of extra memory for PDF output out of 10000 (max. 10000000)
+

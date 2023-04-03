@@ -2,6 +2,7 @@
 
 # Imports
 import sys
+import time
 from ncpol2sdpa import *
 
 sys.path.append("/home/agrobenj/bagro_engsci_thesis/thesis/")
@@ -43,7 +44,7 @@ cam = Camera(
 world = World(
     cam = cam,
     p_wc_extent = np.array([[3], [3], [0]]),
-    num_landmarks = 5,
+    num_landmarks = 3,
 )
 
 world.clear_sim_instance()
@@ -111,7 +112,24 @@ plt.ylabel("Eigenvalues of $\mathbf{X}$ ($\lambda$)")
 tikzplotlib.save("global_sdp_eigs.tex")
 
 #%%
+
+from thesis.relaxations.sdp_relaxation_v2 import build_redundant_rotation_constraint_matrices, Uki
+As, bs = build_redundant_rotation_constraint_matrices(10)
+C = T_global[:3, :3]
+x = C.T.reshape(-1)
+x = np.concatenate((x, np.array([1])), axis = 0)
+#[x.T @ A @ x - b for A, b in zip(As, bs)]
+
+for i in range(3):
+    for k in range(3):
+        print(x.T @ Uki(k, i, 10))
+    print()
+
+
+#%%
+start_time = time.time()
 X = global_sdp_solution(problem, return_X = True, mosek_params=mosek_params, record_history=False, redundant_constraints = True, log = True)
+no_lass_time = time.time() - start_time
 
 T_sdp = extract_solution_from_X(X)
 cost = projection_error(y, T_sdp, cam.M(), world.p_w, W)
@@ -129,7 +147,7 @@ tikzplotlib.save("global_sdp_eigs_redundant.tex")
 
 #%% cross-coupling constraints
 
-X = global_sdp_solution(problem, return_X = True, mosek_params=mosek_params, include_coupling = True, redundant_constraints = True, record_history=False, log = True)
+X = global_sdp_solution(problem, return_X = True, mosek_params=mosek_params, include_coupling = False, redundant_constraints = False, record_history=False, log = True)
 
 T_sdp = extract_solution_from_X(X)
 cost = projection_error(y, T_sdp, cam.M(), world.p_w, W)
@@ -164,15 +182,15 @@ Q = Q / np.mean(np.abs(Q)) # improve numerics
 assert Q.shape == (D, D)
 
 # rotation matrix
-As, bs = build_rotation_constraint_matrices()
+As, bs = build_rotation_constraint_matrices(D)
 
 # homogenization variable
-A, b = build_homo_constraint(num_landmarks)
+A, b = build_homo_constraint(D)
 As.append(A)
 bs.append(b)
 
 # measurements
-A_measure, b_measure = build_measurement_constraint_matrices(problem.p_w)
+A_measure, b_measure = build_measurement_constraint_matrices(D,problem.p_w)
 As += A_measure
 bs += b_measure
 
@@ -182,12 +200,12 @@ mdict = {
     "bs": bs
 }
 
-scipy.io.savemat("/home/agrobenj/bagro_engsci_thesis/thesis/matlab/sdp_test.mat", mdict)
+#scipy.io.savemat("/home/agrobenj/bagro_engsci_thesis/thesis/matlab/sdp_test.mat", mdict)
 
 #%%
 
 n_vars = Q.shape[0]
-level = 1
+level = 2
 x = generate_variables('x', n_vars)
 obj = np.dot(x, np.dot(Q, np.transpose(x)))
 #inequalities = [-x[1]**2 + x[1] + 0.5>=0]
@@ -197,6 +215,8 @@ print(f"Build optimization problem!")
 sdp.get_relaxation(level, objective=obj, equalities=equalities)
 print(f"Relaxed problem!")
 print(f"Solving problem")
+
+#%%
 sdp.solve(solver = 'mosek')
 print(f"Done solving problem")
 X = sdp.x_mat[0][1:, 1:]

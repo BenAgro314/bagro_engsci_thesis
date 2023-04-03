@@ -188,7 +188,7 @@ x_sdp = X_sdp[0, -1] # approx
 print(f"SDP soln: {x_sdp}, cost: {np.sum((y - (1 / (x_sdp - a))) ** 2)}")
 print(f"Best local soln: {best_local_solution}, cost: {min_local_cost}")
 
-bars = {"Global Minima": [min_local_cost], "Primal w/out Redundant Constraints": [prob.value]}
+bars = {"Primal w/out Redundant Constraints": [prob.value]}
 
 # %%
 use_redun = True
@@ -228,13 +228,18 @@ fig, ax = plt.subplots()
 bar_plot(ax, bars, loc='center left', bbox_to_anchor=(1, 0.5))
 ax.set_ylim(bottom = 0, top = min_local_cost * 1.1)
 ax.set_ylabel("Primal Cost")
+#ax.set_yscale("log")
 ax.tick_params(
     axis='x',          # changes apply to the x-axis
     which='both',      # both major and minor ticks are affected
     bottom=False,      # ticks along the bottom edge are off
     top=False,         # ticks along the top edge are off
     labelbottom=False) 
+ax.axhline(y = min_local_cost, linestyle="--")
 plt.savefig("1D_soln.png", dpi = 400)
+
+import tikzplotlib
+tikzplotlib.save("1D_soln.tex")
 
 
 #%% Lasseres

@@ -13,6 +13,8 @@ import pickle as pkl
 import time
 
 RECORD_HISTORY=True
+REFINE=False
+REDUNDANT_CONSTRAINTS=True
 
 global_sdp_solved_example_ids = {}
 
@@ -35,13 +37,13 @@ def metrics_fcn(example: StereoLocalizationExample, num_tries = 100):
         "MSK_DPAR_INTPNT_CO_TOL_PFEAS": eps,
         "MSK_DPAR_INTPNT_CO_TOL_REL_GAP": eps,
     }
-    iter_sdp_soln = iterative_sdp_solution(problem, problem.T_init, max_iters = 10, min_update_norm = 1e-5, return_X = False, mosek_params=mosek_params, max_num_tries = num_tries, record_history=RECORD_HISTORY, refine=True)
+    iter_sdp_soln = iterative_sdp_solution(problem, problem.T_init, max_iters = 10, min_update_norm = 1e-5, return_X = False, mosek_params=mosek_params, max_num_tries = num_tries, record_history=RECORD_HISTORY, refine=REFINE)
     datum["iterative_sdp_solution_time"] = time.process_time() - start
 
     if example_id not in global_sdp_solved_example_ids:
         mosek_params = {}
         start = time.process_time()
-        global_sdp_soln = global_sdp_solution(problem, return_X = False, mosek_params=mosek_params, record_history=RECORD_HISTORY)
+        global_sdp_soln = global_sdp_solution(problem, return_X = False, mosek_params=mosek_params, record_history=RECORD_HISTORY,refine=False, redundant_constraints=REDUNDANT_CONSTRAINTS, include_coupling=REDUNDANT_CONSTRAINTS)
         datum["global_sdp_solution_time"] = time.process_time() - start
         global_sdp_solved_example_ids[example_id] = global_sdp_soln, datum["global_sdp_solution_time"]
         datum["global_sdp_solution"] = global_sdp_soln
