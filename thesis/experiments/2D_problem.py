@@ -12,7 +12,7 @@ from thesis.visualization.plotting import bar_plot
 import tikzplotlib
 
 #M = np.array([1, 0, 0]).reshape((1, 3))
-M = np.array([[1, 0, 1], [1, 0, -1]]).reshape((2, 3))
+M = np.array([[1, 0, 0.5], [1, 0, -0.5]]).reshape((2, 3))
 
 def forward_exact(T, p_w):
     assert T.shape == (3, 3)
