@@ -21,7 +21,7 @@ import time
 
 #%% Construct problem
 
-num_landmarks = 20
+num_landmarks = 4
 
 # make camera
 cam = Camera(
@@ -40,14 +40,14 @@ world = World(
     num_landmarks = num_landmarks,
 )
 world.clear_sim_instance()
-#$world.T_wc = np.array(
-#$    [
-#$        [1, 0, 0, 0],
-#$        [0, 1, 0, 0],
-#$        [0, 0, 1, 0],
-#$        [0, 0, 0, 1],
-#$    ]
-#$)
+#world.T_wc = np.array(
+#    [
+#        [1, 0, 0, 0],
+#        [0, 1, 0, 0],
+#        [0, 0, 1, 0],
+#        [0, 0, 0, 1],
+#    ]
+#)
 #min_phi, max_phi = world.cam.fov_phi_range
 #assert min_phi < max_phi
 #min_rho, max_rho = world.cam.fov_depth_range
@@ -55,13 +55,12 @@ world.clear_sim_instance()
 #phi = np.random.rand(world.num_landmarks, 1) * (max_phi - min_phi) + min_phi
 #theta = np.random.rand(world.num_landmarks, 1) * 2*np.pi
 #rho = np.random.rand(world.num_landmarks, 1) * (max_rho - min_rho) + min_rho
-## rho[-1] = 100
-##rho = np.array([
-##    [20],
-##    [10],
-##    [5],
-##    [1],
-##])
+#rho = np.array([
+#    [20],
+#    [4],
+#    [5],
+#    [1],
+#])
 #z = np.cos(phi) * rho
 #x = np.sin(phi) * np.cos(theta) * rho
 #y = np.sin(phi) * np.sin(theta) * rho
@@ -70,7 +69,8 @@ world.clear_sim_instance()
 
 
 world.make_random_sim_instance()
-fig, ax, colors = world.render()
+fig, ax, colors = world.render(include_world_frame=False)
+#plt.savefig("/Users/benagro/bagro_engsci_thesis/figures/fail_case_iter.png", dpi = 800, bbox_inches=0)
 
 # Generative camera model 
 y = cam.take_picture(world.T_wc, world.p_w)
@@ -80,6 +80,7 @@ y = cam.take_picture(world.T_wc, world.p_w)
 ##print(dy)
 #y += dy
 camfig, (l_ax, r_ax) = render_camera_points(y, colors)
+#plt.savefig("/Users/benagro/bagro_engsci_thesis/figures/fail_case_iter_camfig.png", dpi = 800)
 
 
 #%% global minima
@@ -231,7 +232,7 @@ mosek_params = {}
 local_solution = stereo_localization_gauss_newton(problem, log = False, max_iters = 100, num_tries = num_tries, record_history=RECORD_HISTORY)
 iter_sdp_soln = iterative_sdp_solution(problem, problem.T_init, max_iters = 10, min_update_norm = 1e-10, return_X = False, mosek_params=mosek_params, max_num_tries = num_tries, record_history=RECORD_HISTORY, refine=False, log = False)
 iter_sdp_soln_refine = iterative_sdp_solution(problem, problem.T_init, max_iters = 20, min_update_norm = 1e-5, return_X = False, mosek_params=mosek_params, max_num_tries = num_tries, record_history=RECORD_HISTORY, refine=True, log=False)
-global_sdp_soln = global_sdp_solution(problem, return_X = False, mosek_params=mosek_params, record_history=RECORD_HISTORY, refine=False)
+global_sdp_soln = global_sdp_solution(problem, return_X = False, mosek_params=mosek_params, record_history=RECORD_HISTORY, refine=False, redundant_constraints=True,  include_coupling=True)
 global_sdp_soln_refine = global_sdp_solution(problem, return_X = False, mosek_params=mosek_params, record_history=RECORD_HISTORY, refine=True)
 
 print(f"Global minima: {global_min_cost}")

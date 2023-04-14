@@ -12,9 +12,10 @@ import numpy as np
 import pickle as pkl
 import time
 
-RECORD_HISTORY=True
+RECORD_HISTORY=False
 REFINE=False
 REDUNDANT_CONSTRAINTS=True
+COUPLING=True
 
 global_sdp_solved_example_ids = {}
 
@@ -43,7 +44,8 @@ def metrics_fcn(example: StereoLocalizationExample, num_tries = 100):
     if example_id not in global_sdp_solved_example_ids:
         mosek_params = {}
         start = time.process_time()
-        global_sdp_soln = global_sdp_solution(problem, return_X = False, mosek_params=mosek_params, record_history=RECORD_HISTORY,refine=False, redundant_constraints=REDUNDANT_CONSTRAINTS, include_coupling=REDUNDANT_CONSTRAINTS)
+        print(problem.y.shape[0])
+        global_sdp_soln = global_sdp_solution(problem, return_X = False, mosek_params=mosek_params, record_history=RECORD_HISTORY,refine=REFINE, redundant_constraints=REDUNDANT_CONSTRAINTS, include_coupling=COUPLING)
         datum["global_sdp_solution_time"] = time.process_time() - start
         global_sdp_solved_example_ids[example_id] = global_sdp_soln, datum["global_sdp_solution_time"]
         datum["global_sdp_solution"] = global_sdp_soln

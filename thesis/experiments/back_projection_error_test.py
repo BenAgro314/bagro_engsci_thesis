@@ -379,59 +379,60 @@ print(f"Global SDP primal cost: {global_sdp_soln.primal_cost}, Global SDP extrac
 gaps = []
 
 for var in [0.1, 1.0, 2.0, 4.0]:
-    for num_landmarks in [10, 20, 30]:
-        cam = Camera(
-            f_u = 484.5,
-            f_v = 484.5, 
-            c_u = 322,
-            c_v = 247,
-            b = 0.24,
-            R = var * np.eye(4),
-            fov_phi_range = (-np.pi/12, np.pi/12),
-            fov_depth_range = (0.5, 3),
-        )
-        world = World(
-            cam = cam,
-            p_wc_extent = np.array([[3], [3], [0]]),
-            num_landmarks = num_landmarks,
-        )
-        world.clear_sim_instance()
-        world.make_random_sim_instance()
+    for num_landmarks in [10, 20, 20, 30]:
+        for _ in range(2):
+            cam = Camera(
+                f_u = 484.5,
+                f_v = 484.5, 
+                c_u = 322,
+                c_v = 247,
+                b = 0.24,
+                R = var * np.eye(4),
+                fov_phi_range = (-np.pi/12, np.pi/12),
+                fov_depth_range = (0.5, 3),
+            )
+            world = World(
+                cam = cam,
+                p_wc_extent = np.array([[3], [3], [0]]),
+                num_landmarks = num_landmarks,
+            )
+            world.clear_sim_instance()
+            world.make_random_sim_instance()
 
-        #world.make_random_sim_instance()
-        #fig, ax, colors = world.render()
+            #world.make_random_sim_instance()
+            #fig, ax, colors = world.render()
 
-        # Generative camera model 
-        y = cam.take_picture(world.T_wc, world.p_w)
-        #camfig, (l_ax, r_ax) = render_camera_points(y, colors)
+            # Generative camera model 
+            y = cam.take_picture(world.T_wc, world.p_w)
+            #camfig, (l_ax, r_ax) = render_camera_points(y, colors)
 
-        W =  np.eye(4)
-        r0 = np.zeros((3, 1))
-        gamma_r = 0
+            W =  np.eye(4)
+            r0 = np.zeros((3, 1))
+            gamma_r = 0
 
-        global_min_cost = np.inf
-        global_min_T = None
+            global_min_cost = np.inf
+            global_min_T = None
 
-        problem = StereoLocalizationProblem(world.T_wc, world.p_w, cam.M(), W, y, r_0 = r0, gamma_r = gamma_r, T_init = generate_random_T(world.p_wc_extent))
+            problem = StereoLocalizationProblem(world.T_wc, world.p_w, cam.M(), W, y, r_0 = r0, gamma_r = gamma_r, T_init = generate_random_T(world.p_wc_extent))
 
-        for i in range(20):
-            T_init = generate_random_T(world.p_wc_extent)
-            p_tmp = deepcopy(problem)
-            p_tmp.T_init = T_init
-            solution = stereo_localization_gauss_newton_back_proj(p_tmp, log = False)
-            T_op = solution.T_cw
-            local_minima = solution.cost[0][0]
-            if solution.solved and local_minima < global_min_cost:
-                global_min_cost = local_minima
-                global_min_T = T_op
+            for i in range(20):
+                T_init = generate_random_T(world.p_wc_extent)
+                p_tmp = deepcopy(problem)
+                p_tmp.T_init = T_init
+                solution = stereo_localization_gauss_newton_back_proj(p_tmp, log = False)
+                T_op = solution.T_cw
+                local_minima = solution.cost[0][0]
+                if solution.solved and local_minima < global_min_cost:
+                    global_min_cost = local_minima
+                    global_min_T = T_op
 
 
-        mosek_params = {}
-        global_sdp_soln = global_sdp_solution_back_proj(problem, return_X = False, mosek_params=mosek_params, record_history=False, refine=False, redundant_constraints=True)
+            mosek_params = {}
+            global_sdp_soln = global_sdp_solution_back_proj(problem, return_X = False, mosek_params=mosek_params, record_history=False, refine=False, redundant_constraints=True)
 
-        print(f"Global minima: {global_min_cost}")
-        print(f"Global SDP primal cost: {global_sdp_soln.primal_cost}, Global SDP extracted cost: {global_sdp_soln.cost}")
-        gaps.append(global_min_cost - global_sdp_soln.primal_cost)
+            print(f"Global minima: {global_min_cost}")
+            print(f"Global SDP primal cost: {global_sdp_soln.primal_cost}, Global SDP extracted cost: {global_sdp_soln.cost}")
+            gaps.append(global_min_cost - global_sdp_soln.primal_cost)
 
 import tikzplotlib
  

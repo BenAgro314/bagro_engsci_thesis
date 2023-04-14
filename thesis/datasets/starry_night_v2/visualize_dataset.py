@@ -22,7 +22,7 @@ dataset = scipy.io.loadmat('april-trial2.mat')
 # F_c: camera frame
 
 theta_vk_i = dataset["theta_vk_i"] # a 3xK matrix
-r_i_vk_i = dataset["r_i_vk_i"] # a 3xK matrix where the kth column is the groundtruth position of the camera at timestep k
+r_i_vk_i = dataset["r_i_vk_i"] *1e-3 # a 3xK matrix where the kth column is the groundtruth position of the camera at timestep k
 
 y_k_j = dataset["y_k_j"] # 4 x K x 20 array of observations. All components of y_k_j(:, k, j) will be -1 if the observation is invalid
 #y_var = dataset["y_var"] # 4 x 1 matrix of computed variances based on ground truth stereo measurements
@@ -30,7 +30,7 @@ rho_i_pj_i = dataset["rho_i_pj_i"] # a 3x20 matrix where the jth column is the p
 
 # camera to vehicle
 C_c_v = dataset["C_c_v"] # 3 x 3 matrix giving rotation from vehicle frame to camera frame
-rho_v_c_v = dataset["rho_v_c_v"].T # 3 x 1
+rho_v_c_v = dataset["rho_v_c_v"].T  # 3 x 1
 assert rho_v_c_v.shape == (3, 1)
 
 # intrinsics

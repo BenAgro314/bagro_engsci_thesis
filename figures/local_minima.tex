@@ -1,0 +1,47 @@
+\documentclass[class=article, crop=false]{standalone}
+\begin{document}
+\begin{figure}
+\centering
+\usetikzlibrary{arrows.meta, 3d, calc}
+\begin{tikzpicture}[rotate around x={-90}, rotate around z={-35}, scale=1]
+    % World frame
+    \coordinate (O) at (0,0,0);
+    \coordinate (L) at (2.4677, 1.8488, 6.2277);
+    \coordinate (G) at (2.258, 2.1303, -0.0009);
+    \coordinate (X) at (1, 0,0);
+    \coordinate (Y) at (0,1,0);
+    \coordinate (Z) at (0,0,1);
+    \draw[->, thick] (O) -- (X) node[anchor=north west] {$x$};
+    \draw[->, thick] (O) -- (Y) node[anchor=north] {$y$};
+    \draw[->, thick] (O) -- (Z) node[anchor=south] {$z$};
+    \node[anchor=south east] at (O) {$\frm_w$};
+    \begin{scope}[shift={(L)}, rotate around z={177.59490111225915},rotate around y={160.02799167730169},rotate around z={33.457290680611514}]
+        \coordinate (O) at (0,0,0);
+        \coordinate (X) at (1, 0,0);
+        \coordinate (Y) at (0,1,0);
+        \coordinate (Z) at (0,0,1);
+        \draw[->, thick, red] (O) -- (X) node[anchor=north west] {$x$};
+        \draw[->, thick, red] (O) -- (Y) node[anchor=north] {$y$};
+        \draw[->, thick, red] (O) -- (Z) node[anchor=west] {$z$};
+        %\node[anchor=south west, red] at (0,0,0) {$\frm_s$};
+    \end{scope}
+    \begin{scope}[shift={(G)}, rotate around z={154.00759290430463},rotate around y={22.808952006847537},rotate around z={-177.46776431943994}]
+        \coordinate (O) at (0,0,0);
+        \coordinate (X) at (1, 0,0);
+        \coordinate (Y) at (0,1,0);
+        \coordinate (Z) at (0,0,1);
+        \draw[->, thick, blue] (O) -- (X) node[anchor=north west] {$x$};
+        \draw[->, thick, blue] (O) -- (Y) node[anchor=east] {$y$};
+        \draw[->, thick, blue] (O) -- (Z) node[anchor=west] {$z$};
+        %\node[anchor=south west, red] at (0,0,0) {$\frm_s$};
+    \end{scope}
+    \foreach \point [count=\i] in {(2.180173077043471, 2.0581338001286085, 0.7271041934628443),(1.1413080974127758, 2.3487801759139795, 2.5586759632264915),(1.4865743787347376, 2.2006549371889528, 1.3327209999618495),(-0.4349971149491014, 3.2525283977195105, 2.706766058433978)} {
+        \fill[green] \point circle (1pt); %node[anchor=north east] {$\mbf{p}_\i$};
+        %\draw[-, thick, blue, dotted] \point -- (S) node[anchor=south] {};
+    }
+\end{tikzpicture}
+\caption{TODO}
+\label{fig:TODO}
+\end{figure} 
+\end{document}
+    

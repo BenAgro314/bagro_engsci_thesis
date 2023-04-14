@@ -25,7 +25,7 @@ def local_solver(a, y, x_init, num_iters, eps = 1e-5):
     return None
 
 x = 5
-N = 5
+N = 10
 
 #%% generate ground truth
 
@@ -56,7 +56,7 @@ ax.plot(a, [0] * len(a), color = 'b', linestyle='', marker = 'o', markersize=15)
 ax.plot([x], [0], color = 'k', linestyle='', marker = '>', markersize=15)
 
 
-sigma = 0.1
+sigma = 0.0
 y = (1 / (x - a)) + (sigma * np.random.randn(N, 1))
 
 plt.savefig("1D_problem.png", dpi = 400)
@@ -119,19 +119,19 @@ mdict = {
 
 #%%
 
-scipy.io.savemat(f"/Users/benagro/bagro_engsci_thesis/thesis/matlab/1D_problem_{N}_landmarks_full.mat", mdict)
+#scipy.io.savemat(f"/Users/benagro/bagro_engsci_thesis/thesis/matlab/1D_problem_{N}_landmarks_full.mat", mdict)
 
 #%% load problem
 
-mdict = scipy.io.loadmat(f"/Users/benagro/bagro_engsci_thesis/thesis/matlab/1D_problem_5_landmarks_full.mat")
-Q = mdict["Q"]
-As = mdict["As"]
-bs = mdict["bs"][0]
-As_redun = mdict["As_redun"]
-bs_redun = mdict["bs_redun"][0]
-x = mdict["x"].item()
-y = mdict["y"]
-a = mdict["a"]
+#mdict = scipy.io.loadmat(f"/Users/benagro/bagro_engsci_thesis/thesis/matlab/1D_problem_5_landmarks_full.mat")
+#Q = mdict["Q"]
+#As = mdict["As"]
+#bs = mdict["bs"][0]
+#As_redun = mdict["As_redun"]
+#bs_redun = mdict["bs_redun"][0]
+#x = mdict["x"].item()
+#y = mdict["y"]
+#a = mdict["a"]
 
 #%%
 

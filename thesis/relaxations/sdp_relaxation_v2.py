@@ -218,7 +218,7 @@ def E_q(i: int, j: int, D: int, N: int):
     assert i != j
     start_ind = D - num_qs - 1
     E = np.zeros((1 ,D))
-    ind = sum((5 - k - 1) for k in range(i)) + j - i - 1
+    ind = sum((N - k - 1) for k in range(i)) + j - i - 1
     E[0, start_ind + ind] = 1
     return E
 
